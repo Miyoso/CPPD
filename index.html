@@ -10,70 +10,89 @@
         ::-webkit-scrollbar-track { background: #1e293b; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        .btn-grid { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; align-items: center; }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans min-h-screen">
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col">
 
-<header class="bg-slate-800 p-4 border-b border-slate-700 sticky top-0 z-20 shadow-lg">
-    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-        <h1 class="text-2xl font-bold text-blue-400 tracking-wider">CPPD • BASE DE DONNÉES</h1>
+<header class="bg-slate-800 p-4 border-b border-slate-700 sticky top-0 z-50 shadow-xl">
+    <div class="max-w-[95%] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-bold text-blue-400 tracking-wider uppercase">CPPD • Base de Données</h1>
+        </div>
         <input
                 type="text"
                 id="searchBar"
                 placeholder="Chargement des lois..."
                 disabled
-                class="w-full md:w-1/3 p-2 rounded bg-slate-700 border border-slate-600 focus:outline-none focus:border-blue-500 text-white placeholder-slate-400 transition-opacity opacity-50"
+                class="w-full md:w-96 p-2.5 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white placeholder-slate-400 transition-all opacity-50"
                 onkeyup="filterLaws()"
         >
     </div>
 </header>
 
-<main class="max-w-6xl mx-auto p-4 flex flex-col-reverse lg:flex-row gap-6 mt-4">
+<main class="max-w-[95%] mx-auto w-full p-4 flex flex-col-reverse lg:flex-row gap-6 mt-4 flex-grow">
 
     <div id="lawsContainer" class="flex-1 space-y-6 pb-20">
-        <div class="text-center text-slate-500 mt-10 animate-pulse">Récupération des données depuis le Gouv...</div>
+        <div class="flex justify-center items-center h-40">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <span class="ml-3 text-slate-400">Synchronisation avec le Gouv...</span>
+        </div>
     </div>
 
-    <div class="lg:w-96 relative">
-        <div class="bg-slate-800 rounded-xl border border-slate-700 p-5 sticky top-24 shadow-2xl">
-            <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-600">
-                <h2 class="text-xl font-bold text-white">Sanctions</h2>
-                <span id="countBadge" class="bg-blue-900 text-blue-200 text-xs px-2 py-1 rounded-full">0 délits</span>
+    <div class="lg:w-[400px] shrink-0 relative">
+        <div class="bg-slate-800 rounded-xl border border-slate-700 p-5 sticky top-24 shadow-2xl flex flex-col max-h-[calc(100vh-120px)]">
+
+            <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-600 shrink-0">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                    Sanctions
+                </h2>
+                <span id="countBadge" class="bg-blue-600 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">0</span>
             </div>
 
-            <div id="cartList" class="mb-6 max-h-[40vh] overflow-y-auto space-y-2 pr-2 text-sm custom-scrollbar">
-                <p class="text-slate-500 text-center italic py-4">Sélectionnez des infractions...</p>
+            <div id="cartList" class="mb-4 overflow-y-auto space-y-2 pr-2 text-sm custom-scrollbar flex-grow">
+                <p class="text-slate-500 text-center italic py-10 flex flex-col items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mb-2 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    Sélectionnez des infractions...
+                </p>
             </div>
 
-            <label class="flex items-center space-x-3 mb-6 p-3 rounded-lg border border-slate-600 bg-slate-700 cursor-pointer hover:bg-slate-600 transition-colors" id="firstOffenseLabel">
-                <input type="checkbox" id="firstOffenseCheck" class="w-5 h-5 accent-green-500" onchange="calculate()">
-                <div class="flex flex-col">
-                    <span class="text-green-100 font-bold text-sm">1ère Interpellation</span>
-                    <span class="text-green-300 text-xs">Amende / 2 + Pas de Ban</span>
-                </div>
-            </label>
+            <div class="shrink-0 space-y-3 pt-2 border-t border-slate-700 bg-slate-800 z-10">
 
-            <div class="space-y-3">
-                <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 flex justify-between items-center">
-                    <span class="text-slate-400 text-sm uppercase font-semibold">Amende</span>
-                    <span id="totalFine" class="text-2xl font-bold text-green-400">0 $</span>
+                <label class="flex items-center space-x-3 p-3 rounded-lg border border-slate-600 bg-slate-700 cursor-pointer hover:bg-slate-650 transition-colors group select-none" id="firstOffenseLabel">
+                    <div class="relative flex items-center">
+                        <input type="checkbox" id="firstOffenseCheck" class="peer sr-only" onchange="calculate()">
+                        <div class="w-5 h-5 border-2 border-slate-400 rounded peer-checked:bg-green-500 peer-checked:border-green-500 transition-all"></div>
+                        <svg class="w-3.5 h-3.5 text-white absolute top-0.5 left-0.5 opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-slate-200 group-hover:text-white font-bold text-sm transition-colors">1ère Interpellation</span>
+                        <span class="text-slate-400 text-xs">Amende ÷ 2 + Pas de Ban</span>
+                    </div>
+                </label>
+
+                <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 flex justify-between items-center shadow-inner">
+                    <span class="text-slate-400 text-xs uppercase font-bold tracking-wider">Total Amende</span>
+                    <span id="totalFine" class="text-3xl font-bold text-green-400 font-mono tracking-tight">0 $</span>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-slate-900 p-3 rounded-lg border border-slate-700 text-center">
-                        <span class="text-slate-400 text-xs uppercase block mb-1">Prison</span>
+                    <div class="bg-slate-900 p-3 rounded-lg border border-slate-700 text-center shadow-inner">
+                        <span class="text-slate-500 text-[10px] uppercase font-bold block mb-1">Prison Fédérale</span>
                         <span id="totalPrison" class="text-lg font-bold text-blue-400">Aucune</span>
                     </div>
-                    <div class="bg-slate-900 p-3 rounded-lg border border-slate-700 text-center">
-                        <span class="text-slate-400 text-xs uppercase block mb-1">Bannissement</span>
+                    <div class="bg-slate-900 p-3 rounded-lg border border-slate-700 text-center shadow-inner">
+                        <span class="text-slate-500 text-[10px] uppercase font-bold block mb-1">Bannissement</span>
                         <span id="maxBan" class="text-lg font-bold text-slate-500">-</span>
                     </div>
                 </div>
-            </div>
 
-            <button onclick="resetAll()" class="w-full mt-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-sm uppercase tracking-wide transition-colors shadow-lg">
-                Réinitialiser
-            </button>
+                <button onclick="resetAll()" class="w-full mt-2 py-3 bg-red-600 hover:bg-red-500 text-white rounded-lg font-bold text-sm uppercase tracking-wider transition-all shadow-lg active:scale-[0.98]">
+                    Nouvelle Arrestation (RAZ)
+                </button>
+            </div>
         </div>
     </div>
 </main>
@@ -85,19 +104,18 @@
     let cart = [];
 
     const categoryColors = {
-        "Code de la route": "bg-green-100 border-green-500 text-green-900",
-        "Délit mineur": "bg-blue-200 border-blue-600 text-blue-900",
-        "Délits moyen": "bg-yellow-100 border-yellow-500 text-yellow-900",
-        "Délits majeur": "bg-red-200 border-red-600 text-red-900",
-        "Crime": "bg-purple-200 border-purple-600 text-purple-900",
-        "Objet illégaux et drogues": "bg-orange-200 border-orange-600 text-orange-900",
-        "Armes": "bg-gray-300 border-gray-600 text-gray-900"
+        "Code de la route": "bg-emerald-900/40 border-emerald-500 text-emerald-100",
+        "Délit mineur": "bg-blue-900/40 border-blue-500 text-blue-100",
+        "Délits moyen": "bg-yellow-900/40 border-yellow-500 text-yellow-100",
+        "Délits majeur": "bg-red-900/40 border-red-500 text-red-100",
+        "Crime": "bg-purple-900/40 border-purple-500 text-purple-100",
+        "Objet illégaux et drogues": "bg-orange-900/40 border-orange-500 text-orange-100",
+        "Armes": "bg-gray-700/50 border-gray-400 text-gray-200"
     };
-    const defaultColor = "bg-gray-200 border-gray-600 text-gray-900";
+    const defaultColor = "bg-slate-800 border-slate-600 text-slate-200";
 
     async function init() {
         try {
-
             const response = await fetch(SHEET_URL + "&t=" + Date.now());
             const data = await response.text();
             parseCSV(data);
@@ -105,11 +123,11 @@
 
             const searchInput = document.getElementById('searchBar');
             searchInput.disabled = false;
-            searchInput.placeholder = "Rechercher (ex: vol, arme...)";
+            searchInput.placeholder = "Rechercher une infraction...";
             searchInput.style.opacity = "1";
 
         } catch (error) {
-            document.getElementById('lawsContainer').innerHTML = `<div class="text-red-500 text-center font-bold p-4 border border-red-500 rounded">Erreur de chargement.<br>Vérifie que le lien est bien en format CSV.<br>Erreur: ${error.message}</div>`;
+            document.getElementById('lawsContainer').innerHTML = `<div class="text-red-400 bg-red-900/20 text-center font-bold p-6 border border-red-500/50 rounded-xl">Erreur de chargement des données.<br><span class="text-sm font-normal text-red-300">Vérifiez la connexion internet ou le lien Google Sheet.</span></div>`;
         }
     }
 
@@ -119,7 +137,6 @@
 
         rows.forEach(row => {
             const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-
             if (cols.length < 5) return;
 
             const catName = cols[0].replace(/"/g, '').trim();
@@ -127,7 +144,6 @@
             const fine = parseInt(cols[2].replace(/\D/g, '')) || 0;
             const prison = parseInt(cols[3].replace(/\D/g, '')) || 0;
             const ban = parseInt(cols[4].replace(/\D/g, '')) || 0;
-
             const sanction = cols[5] ? cols[5].replace(/"/g, '').trim() : "";
 
             if (!catName || !label) return;
@@ -139,7 +155,6 @@
                     items: []
                 };
             }
-
             tempCats[catName].items.push({ label, fine, prison, ban, sanction });
         });
         categories = Object.values(tempCats);
@@ -150,36 +165,40 @@
         container.innerHTML = '';
 
         if(categories.length === 0) {
-            container.innerHTML = '<div class="text-center text-slate-400">Aucune donnée trouvée. Vérifie ton Google Sheet.</div>';
+            container.innerHTML = '<div class="text-center text-slate-400 py-10">Aucune loi chargée.</div>';
             return;
         }
 
         categories.forEach((cat, catIndex) => {
             const section = document.createElement('div');
-            section.className = 'law-category mb-6';
+            section.className = 'law-category mb-8 animate-fade-in';
 
             const title = document.createElement('h2');
-            title.className = `text-lg font-bold px-4 py-2 rounded-t-lg border-b-2 ${cat.colorClass}`;
-            title.innerText = cat.name;
+            title.className = `text-lg font-bold px-4 py-2.5 rounded-t-xl border-b-2 ${cat.colorClass} shadow-lg backdrop-blur-sm`;
+            title.innerHTML = `<span>${cat.name}</span>`;
             section.appendChild(title);
 
             const grid = document.createElement('div');
-            grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-2 bg-slate-800 p-3 rounded-b-lg border border-slate-700';
+            grid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 bg-slate-800/80 p-4 rounded-b-xl border-x border-b border-slate-700 shadow-xl';
 
             cat.items.forEach((item, itemIndex) => {
                 const btn = document.createElement('button');
                 const uniqueId = `btn-${catIndex}-${itemIndex}`;
                 btn.id = uniqueId;
 
-                btn.className = 'law-item flex justify-between items-center p-3 rounded text-sm font-medium transition-all duration-200 border bg-slate-700 border-transparent hover:bg-slate-600 text-slate-200';
+                btn.className = 'law-item group text-left p-3 rounded-lg border bg-slate-700/50 border-slate-600 hover:bg-slate-600 hover:border-slate-500 transition-all duration-150 flex flex-col justify-between h-full shadow-sm hover:shadow-md active:scale-[0.99]';
                 btn.onclick = () => toggleItem(catIndex, itemIndex, uniqueId);
 
                 btn.innerHTML = `
-                        <div class="flex flex-col items-start">
-                            <span class="text-left">${item.label}</span>
-                            ${item.sanction ? `<span class="text-xs text-orange-400 text-left mt-1 italic opacity-80">⚠️ ${item.sanction}</span>` : ''}
+                        <div class="flex justify-between items-start w-full gap-2 mb-1">
+                            <span class="font-medium text-slate-200 text-sm leading-tight group-hover:text-white">${item.label}</span>
+                            <span class="font-mono text-emerald-400 text-sm font-bold whitespace-nowrap bg-emerald-900/20 px-1.5 py-0.5 rounded border border-emerald-900/30">${item.fine.toLocaleString()}$</span>
                         </div>
-                        <span class="ml-2 font-mono opacity-70 whitespace-nowrap">${item.fine.toLocaleString()}$</span>
+                        ${item.sanction ? `
+                            <div class="text-[11px] text-orange-300/90 italic mt-auto pt-2 border-t border-slate-600/50 w-full flex items-center gap-1">
+                                <span class="text-xs">⚠️</span> ${item.sanction}
+                            </div>
+                        ` : ''}
                     `;
                 grid.appendChild(btn);
             });
@@ -197,10 +216,10 @@
 
         if (existingIndex > -1) {
             cart.splice(existingIndex, 1);
-            btn.className = 'law-item flex justify-between items-center p-3 rounded text-sm font-medium transition-all duration-200 border bg-slate-700 border-transparent hover:bg-slate-600 text-slate-200';
+            btn.className = 'law-item group text-left p-3 rounded-lg border bg-slate-700/50 border-slate-600 hover:bg-slate-600 hover:border-slate-500 transition-all duration-150 flex flex-col justify-between h-full shadow-sm hover:shadow-md';
         } else {
             cart.push(item);
-            btn.className = 'law-item flex justify-between items-center p-3 rounded text-sm font-medium transition-all duration-200 border bg-blue-600 border-blue-400 text-white shadow-[0_0_10px_rgba(37,99,235,0.5)] transform scale-[1.02]';
+            btn.className = 'law-item group text-left p-3 rounded-lg border bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-900/20 transform scale-[1.01] transition-all duration-150 flex flex-col justify-between h-full ring-1 ring-blue-300/30';
         }
         calculate();
     }
@@ -210,27 +229,29 @@
         const badge = document.getElementById('countBadge');
 
         list.innerHTML = '';
-        badge.innerText = `${cart.length} délits`;
+        badge.innerText = `${cart.length}`;
 
         if (cart.length === 0) {
-            list.innerHTML = '<p class="text-slate-500 text-center italic py-4">Sélectionnez des infractions...</p>';
+            list.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-slate-500 opacity-60">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                         <span class="text-sm italic">Aucune infraction</span>
+                    </div>`;
         } else {
             cart.forEach(item => {
                 const row = document.createElement('div');
-                row.className = 'bg-slate-700/50 p-2 rounded flex flex-col gap-1 border border-slate-600';
-
+                row.className = 'bg-slate-700/40 p-2.5 rounded border border-slate-600/50 hover:bg-slate-700/60 transition-colors group animate-fade-in-up';
 
                 let content = `
-                        <div class="flex justify-between text-sm text-slate-200 font-semibold">
-                            <span>${item.label}</span>
-                            <span>${item.fine}$</span>
+                        <div class="flex justify-between text-sm text-slate-200 font-medium">
+                            <span class="truncate pr-2">${item.label}</span>
+                            <span class="text-emerald-400 font-mono">${item.fine}$</span>
                         </div>
                     `;
 
-
                 if (item.sanction) {
                     content += `
-                            <div class="text-xs text-orange-300 italic border-t border-slate-600 pt-1 mt-1">
+                            <div class="text-[10px] text-orange-300 italic pt-1 mt-1 border-t border-slate-600/30 opacity-80 group-hover:opacity-100">
                                 ➤ ${item.sanction}
                             </div>
                         `;
@@ -253,15 +274,15 @@
             if (maxBan < 999) {
                 maxBan = 0;
             }
-            offenseLabel.className = "flex items-center space-x-3 mb-6 p-3 rounded-lg border cursor-pointer transition-colors bg-green-900/40 border-green-500";
+            offenseLabel.className = "flex items-center space-x-3 p-3 rounded-lg border border-green-500/50 bg-green-900/20 cursor-pointer transition-colors group select-none shadow-[0_0_10px_rgba(34,197,94,0.1)]";
         } else {
-            offenseLabel.className = "flex items-center space-x-3 mb-6 p-3 rounded-lg border border-slate-600 bg-slate-700 cursor-pointer hover:bg-slate-600 transition-colors";
+            offenseLabel.className = "flex items-center space-x-3 p-3 rounded-lg border border-slate-600 bg-slate-700 cursor-pointer hover:bg-slate-650 transition-colors group select-none";
         }
 
         document.getElementById('totalFine').innerText = totalFine.toLocaleString() + " $";
 
         if (totalPrison > 0) {
-            document.getElementById('totalPrison').innerText = totalPrison + " Minutes";
+            document.getElementById('totalPrison').innerText = totalPrison + " Min";
         } else {
             document.getElementById('totalPrison').innerText = "Aucune";
         }
@@ -269,13 +290,13 @@
         const banEl = document.getElementById('maxBan');
         if (maxBan >= 999) {
             banEl.innerText = "DÉFINITIF";
-            banEl.className = "text-lg font-bold text-red-500 animate-pulse";
+            banEl.className = "text-lg font-bold text-red-500 animate-pulse drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]";
         } else if (maxBan > 0) {
             banEl.innerText = maxBan + " Jours";
             banEl.className = "text-lg font-bold text-red-400";
         } else {
-            banEl.innerText = "Aucun";
-            banEl.className = "text-lg font-bold text-green-400";
+            banEl.innerText = "Non";
+            banEl.className = "text-lg font-bold text-slate-500";
         }
     }
 
@@ -305,7 +326,7 @@
         document.getElementById('firstOffenseCheck').checked = false;
         const buttons = document.getElementsByClassName('law-item');
         Array.from(buttons).forEach(btn => {
-            btn.className = 'law-item flex justify-between items-center p-3 rounded text-sm font-medium transition-all duration-200 border bg-slate-700 border-transparent hover:bg-slate-600 text-slate-200';
+            btn.className = 'law-item group text-left p-3 rounded-lg border bg-slate-700/50 border-slate-600 hover:bg-slate-600 hover:border-slate-500 transition-all duration-150 flex flex-col justify-between h-full shadow-sm hover:shadow-md';
         });
         calculate();
     }
