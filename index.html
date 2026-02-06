@@ -97,7 +97,7 @@
 
     async function init() {
         try {
-            // On ajoute un paramètre anti-cache pour être sûr d'avoir les dernières données
+
             const response = await fetch(SHEET_URL + "&t=" + Date.now());
             const data = await response.text();
             parseCSV(data);
@@ -139,7 +139,7 @@
                     items: []
                 };
             }
-            // On ajoute la sanction à l'objet
+
             tempCats[catName].items.push({ label, fine, prison, ban, sanction });
         });
         categories = Object.values(tempCats);
