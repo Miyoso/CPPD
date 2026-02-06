@@ -41,7 +41,7 @@
                 <span id="countBadge" class="bg-blue-900 text-blue-200 text-xs px-2 py-1 rounded-full">0 délits</span>
             </div>
 
-            <div id="cartList" class="mb-6 max-h-[30vh] overflow-y-auto space-y-2 pr-2 text-sm">
+            <div id="cartList" class="mb-6 max-h-[40vh] overflow-y-auto space-y-2 pr-2 text-sm custom-scrollbar">
                 <p class="text-slate-500 text-center italic py-4">Sélectionnez des infractions...</p>
             </div>
 
@@ -97,7 +97,8 @@
 
     async function init() {
         try {
-            const response = await fetch(SHEET_URL);
+            // On ajoute un paramètre anti-cache pour être sûr d'avoir les dernières données
+            const response = await fetch(SHEET_URL + "&t=" + Date.now());
             const data = await response.text();
             parseCSV(data);
             renderLaws();
@@ -127,6 +128,8 @@
             const prison = parseInt(cols[3].replace(/\D/g, '')) || 0;
             const ban = parseInt(cols[4].replace(/\D/g, '')) || 0;
 
+            const sanction = cols[5] ? cols[5].replace(/"/g, '').trim() : "";
+
             if (!catName || !label) return;
 
             if (!tempCats[catName]) {
@@ -136,7 +139,8 @@
                     items: []
                 };
             }
-            tempCats[catName].items.push({ label, fine, prison, ban });
+            // On ajoute la sanction à l'objet
+            tempCats[catName].items.push({ label, fine, prison, ban, sanction });
         });
         categories = Object.values(tempCats);
     }
@@ -171,8 +175,11 @@
                 btn.onclick = () => toggleItem(catIndex, itemIndex, uniqueId);
 
                 btn.innerHTML = `
-                        <span class="text-left">${item.label}</span>
-                        <span class="ml-2 font-mono opacity-70">${item.fine.toLocaleString()}$</span>
+                        <div class="flex flex-col items-start">
+                            <span class="text-left">${item.label}</span>
+                            ${item.sanction ? `<span class="text-xs text-orange-400 text-left mt-1 italic opacity-80">⚠️ ${item.sanction}</span>` : ''}
+                        </div>
+                        <span class="ml-2 font-mono opacity-70 whitespace-nowrap">${item.fine.toLocaleString()}$</span>
                     `;
                 grid.appendChild(btn);
             });
@@ -210,8 +217,26 @@
         } else {
             cart.forEach(item => {
                 const row = document.createElement('div');
-                row.className = 'flex justify-between text-sm text-slate-300 bg-slate-700/50 p-2 rounded';
-                row.innerHTML = `<span>${item.label}</span><span>${item.fine}$</span>`;
+                row.className = 'bg-slate-700/50 p-2 rounded flex flex-col gap-1 border border-slate-600';
+
+
+                let content = `
+                        <div class="flex justify-between text-sm text-slate-200 font-semibold">
+                            <span>${item.label}</span>
+                            <span>${item.fine}$</span>
+                        </div>
+                    `;
+
+
+                if (item.sanction) {
+                    content += `
+                            <div class="text-xs text-orange-300 italic border-t border-slate-600 pt-1 mt-1">
+                                ➤ ${item.sanction}
+                            </div>
+                        `;
+                }
+
+                row.innerHTML = content;
                 list.appendChild(row);
             });
         }
