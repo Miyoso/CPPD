@@ -16,12 +16,13 @@
 
 <header class="bg-slate-800 p-4 border-b border-slate-700 sticky top-0 z-20 shadow-lg">
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-        <h1 class="text-2xl font-bold text-blue-400 tracking-wider">CPPD • CALCULATRICE</h1>
+        <h1 class="text-2xl font-bold text-blue-400 tracking-wider">CPPD • BASE DE DONNÉES</h1>
         <input
                 type="text"
                 id="searchBar"
-                placeholder="Rechercher (ex: vol, arme...)"
-                class="w-full md:w-1/3 p-2 rounded bg-slate-700 border border-slate-600 focus:outline-none focus:border-blue-500 text-white placeholder-slate-400"
+                placeholder="Chargement des lois..."
+                disabled
+                class="w-full md:w-1/3 p-2 rounded bg-slate-700 border border-slate-600 focus:outline-none focus:border-blue-500 text-white placeholder-slate-400 transition-opacity opacity-50"
                 onkeyup="filterLaws()"
         >
     </div>
@@ -29,7 +30,9 @@
 
 <main class="max-w-6xl mx-auto p-4 flex flex-col-reverse lg:flex-row gap-6 mt-4">
 
-    <div id="lawsContainer" class="flex-1 space-y-6 pb-20"></div>
+    <div id="lawsContainer" class="flex-1 space-y-6 pb-20">
+        <div class="text-center text-slate-500 mt-10 animate-pulse">Récupération des données depuis le Gouv...</div>
+    </div>
 
     <div class="lg:w-96 relative">
         <div class="bg-slate-800 rounded-xl border border-slate-700 p-5 sticky top-24 shadow-2xl">
@@ -76,58 +79,76 @@
 </main>
 
 <script>
-    const categories = [
-        {
-            name: "Code de la route",
-            colorClass: "bg-green-100 border-green-500 text-green-900",
-            items: [
-                { label: "Conduite dangereuse", fine: 1000, prison: 0, ban: 0 },
-                { label: "Stationnement gênant / interdit", fine: 2000, prison: 0, ban: 0 },
-                { label: "Délit de fuite", fine: 3000, prison: 15, ban: 1 }
-            ]
-        },
-        {
-            name: "Délit mineur",
-            colorClass: "bg-blue-200 border-blue-600 text-blue-900",
-            items: [
-                { label: "Pollution", fine: 1500, prison: 0, ban: 0 },
-                { label: "Non port carte d'identité", fine: 1000, prison: 0, ban: 0 },
-                { label: "Entrave à la CPPD", fine: 4000, prison: 15, ban: 1 }
-            ]
-        },
-        {
-            name: "Délits moyen",
-            colorClass: "bg-yellow-100 border-yellow-500 text-yellow-900",
-            items: [
-                { label: "Braquage de supérette", fine: 1000, prison: 15, ban: 0 },
-                { label: "Outrage/provocation CPPD", fine: 5000, prison: 30, ban: 1 },
-                { label: "Vol de véhicule d'état", fine: 10000, prison: 30, ban: 2 }
-            ]
-        },
-        {
-            name: "Délits majeur",
-            colorClass: "bg-red-200 border-red-600 text-red-900",
-            items: [
-                { label: "Mensonge envers un CPPD", fine: 7500, prison: 45, ban: 3 },
-                { label: "Menace de mort sur Agent", fine: 30000, prison: 45, ban: 7 },
-                { label: "Braquage convoi CPIRS", fine: 15000, prison: 30, ban: 3 }
-            ]
-        },
-        {
-            name: "Crime",
-            colorClass: "bg-purple-200 border-purple-600 text-purple-900",
-            items: [
-                { label: "Kidnapping / Prise d'otage CPPD", fine: 40000, prison: 150, ban: 7 },
-                { label: "Homicide d'un CPPD (Peine de mort)", fine: 1000000, prison: 0, ban: 999 }
-            ]
-        }
-    ];
+    const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQDxMAqXZPZlHBCccPSU1Wq35l7wMeQdUUEJabIJkdsEjVKnF3gginHkCo6PC5nTfeVtDupnI8ad8su/pub?gid=0&single=true&output=csv";
 
+    let categories = [];
     let cart = [];
 
-    function init() {
+    const categoryColors = {
+        "Code de la route": "bg-green-100 border-green-500 text-green-900",
+        "Délit mineur": "bg-blue-200 border-blue-600 text-blue-900",
+        "Délits moyen": "bg-yellow-100 border-yellow-500 text-yellow-900",
+        "Délits majeur": "bg-red-200 border-red-600 text-red-900",
+        "Crime": "bg-purple-200 border-purple-600 text-purple-900",
+        "Objet illégaux et drogues": "bg-orange-200 border-orange-600 text-orange-900",
+        "Armes": "bg-gray-300 border-gray-600 text-gray-900"
+    };
+    const defaultColor = "bg-gray-200 border-gray-600 text-gray-900";
+
+    async function init() {
+        try {
+            const response = await fetch(SHEET_URL);
+            const data = await response.text();
+            parseCSV(data);
+            renderLaws();
+
+            const searchInput = document.getElementById('searchBar');
+            searchInput.disabled = false;
+            searchInput.placeholder = "Rechercher (ex: vol, arme...)";
+            searchInput.style.opacity = "1";
+
+        } catch (error) {
+            document.getElementById('lawsContainer').innerHTML = `<div class="text-red-500 text-center font-bold p-4 border border-red-500 rounded">Erreur de chargement.<br>Vérifie que le lien est bien en format CSV.<br>Erreur: ${error.message}</div>`;
+        }
+    }
+
+    function parseCSV(csvText) {
+        const rows = csvText.split('\n').slice(1);
+        const tempCats = {};
+
+        rows.forEach(row => {
+            const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+
+            if (cols.length < 5) return;
+
+            const catName = cols[0].replace(/"/g, '').trim();
+            const label = cols[1].replace(/"/g, '').trim();
+            const fine = parseInt(cols[2].replace(/\D/g, '')) || 0;
+            const prison = parseInt(cols[3].replace(/\D/g, '')) || 0;
+            const ban = parseInt(cols[4].replace(/\D/g, '')) || 0;
+
+            if (!catName || !label) return;
+
+            if (!tempCats[catName]) {
+                tempCats[catName] = {
+                    name: catName,
+                    colorClass: categoryColors[catName] || defaultColor,
+                    items: []
+                };
+            }
+            tempCats[catName].items.push({ label, fine, prison, ban });
+        });
+        categories = Object.values(tempCats);
+    }
+
+    function renderLaws() {
         const container = document.getElementById('lawsContainer');
         container.innerHTML = '';
+
+        if(categories.length === 0) {
+            container.innerHTML = '<div class="text-center text-slate-400">Aucune donnée trouvée. Vérifie ton Google Sheet.</div>';
+            return;
+        }
 
         categories.forEach((cat, catIndex) => {
             const section = document.createElement('div');
@@ -143,10 +164,11 @@
 
             cat.items.forEach((item, itemIndex) => {
                 const btn = document.createElement('button');
-                const btnId = `btn-${catIndex}-${itemIndex}`;
-                btn.id = btnId;
+                const uniqueId = `btn-${catIndex}-${itemIndex}`;
+                btn.id = uniqueId;
+
                 btn.className = 'law-item flex justify-between items-center p-3 rounded text-sm font-medium transition-all duration-200 border bg-slate-700 border-transparent hover:bg-slate-600 text-slate-200';
-                btn.onclick = () => toggleItem(catIndex, itemIndex);
+                btn.onclick = () => toggleItem(catIndex, itemIndex, uniqueId);
 
                 btn.innerHTML = `
                         <span class="text-left">${item.label}</span>
@@ -160,9 +182,10 @@
         });
     }
 
-    function toggleItem(catIndex, itemIndex) {
+    function toggleItem(catIndex, itemIndex, btnId) {
         const item = categories[catIndex].items[itemIndex];
-        const btn = document.getElementById(`btn-${catIndex}-${itemIndex}`);
+        const btn = document.getElementById(btnId);
+
         const existingIndex = cart.findIndex(i => i.label === item.label);
 
         if (existingIndex > -1) {
