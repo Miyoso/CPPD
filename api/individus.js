@@ -16,8 +16,8 @@ export default async function handler(req, res) {
         try {
             const data = JSON.parse(req.body);
             await sql`
-                INSERT INTO individus (nom, telephone, statut, derniere_intervention, casiers)
-                VALUES (${data.nom}, ${data.telephone}, ${data.statut}, ${data.derniere_intervention}, ${data.casiers})
+                INSERT INTO individus (nom, telephone, statut, derniere_intervention, casiers, motif)
+                VALUES (${data.nom}, ${data.telephone}, ${data.statut}, ${data.derniere_intervention}, ${data.casiers}, ${data.motif})
             `;
             return res.status(200).json({ message: 'Success' });
         } catch (error) {
