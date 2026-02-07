@@ -2,88 +2,65 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MDT - Base de Données</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #0f172a; color: white; }
-        .card-recherche { border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.05); }
-        .card-regle { border-left: 4px solid #10b981; background: rgba(16, 185, 129, 0.05); }
+        body { background-color: #0f172a; color: white; font-family: sans-serif; }
+        .card-recherche { border-left: 4px solid #ef4444; background: rgba(30, 41, 59, 0.7); }
+        .card-regle { border-left: 4px solid #10b981; background: rgba(30, 41, 59, 0.7); }
     </style>
 </head>
 <body class="p-8">
 
-    <h1 class="text-2xl font-bold mb-6 uppercase tracking-widest text-gray-400">Base de Données Police</h1>
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-bold tracking-tighter text-gray-300">MDT DATABASE</h1>
+        <button onclick="fetchData()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-sm font-bold transition">ACTUALISER</button>
+    </div>
 
-    <div id="dossiers-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        </div>
+    <div id="dossiers-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
     <script>
-        // Simulation des données reçues par ta nouvelle requête SQL
-        const dataFromSQL = [
-            {
-                nom: "Jean-Michel Test",
-                telephone: "55462",
-                est_recherche_global: 1,
-                historique_total: [
-                    { date: "07/02/2026", motif: "Homicide sur civil, Espionnage", amende: "875 000 $", statut: "Recherché" },
-                    { date: "07/02/2026", motif: "Port d'armes, Délit de fuite", amende: "11 250 $", statut: "En règle" }
-                ]
-            },
-            {
-                nom: "Test",
-                telephone: "TEST",
-                est_recherche_global: 0,
-                historique_total: [
-                    { date: "07/02/2026", motif: "Test de connexion", amende: "0 $", statut: "En règle" }
-                ]
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/individus'); 
+                const data = await response.json();
+                render(data);
+            } catch (err) {
+                console.error("Erreur de synchro", err);
             }
-        ];
-
-        function renderDossiers(dossiers) {
-            const container = document.getElementById('dossiers-container');
-            container.innerHTML = '';
-
-            dossiers.forEach(dossier => {
-                const statusClass = dossier.est_recherche_global ? 'card-recherche' : 'card-regle';
-                const statusLabel = dossier.est_recherche_global ? 'RECHERCHÉ' : 'EN RÈGLE';
-                const labelColor = dossier.est_recherche_global ? 'bg-red-600' : 'bg-green-600';
-
-                let cardHtml = `
-                    <div class="p-5 rounded-lg shadow-xl ${statusClass} bg-slate-800 border border-gray-700">
-                        <div class="flex justify-between items-start mb-4">
-                            <div>
-                                <h2 class="text-xl font-bold">${dossier.nom}</h2>
-                                <p class="text-gray-400 text-sm italic">Tél: ${dossier.telephone}</p>
-                            </div>
-                            <span class="${labelColor} text-[10px] px-2 py-1 rounded font-bold uppercase">
-                                ${statusLabel}
-                            </span>
-                        </div>
-                        
-                        <div class="space-y-3 mt-4 border-t border-gray-700 pt-4">
-                            <p class="text-xs font-semibold text-gray-500 uppercase">Historique des infractions</p>
-                            ${dossier.historique_total.map(infraction => `
-                                <div class="bg-black/20 p-3 rounded text-sm">
-                                    <div class="flex justify-between text-[10px] mb-1">
-                                        <span class="text-blue-400 font-mono">${infraction.date}</span>
-                                        <span class="${infraction.statut === 'Recherché' ? 'text-red-400' : 'text-green-400'} font-bold">
-                                            ${infraction.statut.toUpperCase()}
-                                        </span>
-                                    </div>
-                                    <p class="text-gray-200">${infraction.motif}</p>
-                                    <p class="text-gray-500 text-[11px] mt-1 italic font-bold">Amende: ${infraction.amende}</p>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-                container.innerHTML += cardHtml;
-            });
         }
 
-        // Lancement au chargement
-        renderDossiers(dataFromSQL);
+        function render(dossiers) {
+            const container = document.getElementById('dossiers-container');
+            container.innerHTML = dossiers.map(d => `
+                <div class="p-5 rounded-lg border border-gray-700 ${d.est_recherche_global ? 'card-recherche' : 'card-regle'}">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h2 class="text-xl font-bold">${d.nom}</h2>
+                            <p class="text-gray-500 text-xs">TEL: ${d.telephone}</p>
+                        </div>
+                        <span class="px-2 py-1 rounded text-[10px] font-black ${d.est_recherche_global ? 'bg-red-600' : 'bg-green-600'}">
+                            ${d.est_recherche_global ? 'RECHERCHÉ' : 'EN RÈGLE'}
+                        </span>
+                    </div>
+                    
+                    <div class="mt-4 space-y-2">
+                        ${d.historique_total.map(h => `
+                            <div class="bg-black/30 p-2 rounded border border-gray-800">
+                                <div class="flex justify-between text-[10px] mb-1 font-mono">
+                                    <span class="text-blue-400">${h.date}</span>
+                                    <span class="${h.statut === 'Recherché' ? 'text-red-500' : 'text-green-500'}">${h.statut}</span>
+                                </div>
+                                <p class="text-xs text-gray-300 leading-relaxed">${h.motif}</p>
+                                ${h.casiers ? `<p class="text-[10px] text-gray-500 mt-1 italic">${h.casiers}</p>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        fetchData();
+        setInterval(fetchData, 10000);
     </script>
 </body>
 </html>
