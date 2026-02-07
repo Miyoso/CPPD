@@ -96,8 +96,11 @@
                     <div class="flex-1">
                         <div class="flex items-center justify-between">
                             <span class="font-bold text-sm text-slate-200 group-hover:text-white transition-colors">1ère Interpellation</span>
-                            <div class="w-6 h-6 rounded border-2 border-slate-500 bg-slate-900 peer-checked:bg-emerald-500 peer-checked:border-emerald-500 flex items-center justify-center transition-all shadow-inner">
-                                <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity transform peer-checked:scale-100 scale-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+
+                            <div id="checkboxSquare" class="w-6 h-6 rounded border-2 border-slate-500 bg-slate-900 flex items-center justify-center transition-all shadow-inner">
+                                <svg id="checkboxIcon" class="w-4 h-4 text-white opacity-0 transition-all duration-200 transform scale-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
                             </div>
                         </div>
                         <div class="text-[11px] text-slate-400 mt-1 flex gap-2">
@@ -307,17 +310,26 @@
 
         const isFirstOffense = document.getElementById('firstOffenseCheck').checked;
         const offenseLabel = document.getElementById('firstOffenseLabel');
+        const checkboxSquare = document.getElementById('checkboxSquare');
+        const checkboxIcon = document.getElementById('checkboxIcon');
 
         if (isFirstOffense) {
             totalFine = Math.floor(totalFine / 2);
             if (maxBan < 999) {
                 maxBan = 0;
             }
-            // Style ACTIF : Bordure verte + Fond vert léger + Ombre
+
+            // Style Active
             offenseLabel.className = "group relative flex items-center p-4 rounded-xl border-2 border-emerald-500 bg-emerald-950/40 cursor-pointer transition-all duration-200 shadow-[0_0_15px_rgba(16,185,129,0.2)]";
+            checkboxSquare.className = "w-6 h-6 rounded border-2 border-emerald-500 bg-emerald-600 flex items-center justify-center transition-all shadow-inner";
+            checkboxIcon.classList.remove('opacity-0', 'scale-50');
+            checkboxIcon.classList.add('opacity-100', 'scale-100');
         } else {
-            // Style INACTIF : Bordure grise + Fond gris foncé
+            // Style Inactive
             offenseLabel.className = "group relative flex items-center p-4 rounded-xl border border-slate-700 bg-slate-850 cursor-pointer transition-all duration-200 hover:border-slate-500 hover:bg-slate-800";
+            checkboxSquare.className = "w-6 h-6 rounded border-2 border-slate-500 bg-slate-900 flex items-center justify-center transition-all shadow-inner";
+            checkboxIcon.classList.remove('opacity-100', 'scale-100');
+            checkboxIcon.classList.add('opacity-0', 'scale-50');
         }
 
         document.getElementById('totalFine').innerText = totalFine.toLocaleString() + " $";
