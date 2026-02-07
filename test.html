@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPPD • Gestion du Code Pénal</title>
+    <title>CPPD • Gestion des Lois</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -19,14 +19,21 @@
     <style>
         body { background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%); }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
     </style>
 </head>
 <body class="text-slate-300 font-sans min-h-screen flex flex-col antialiased">
 
     <header class="sticky top-4 z-50 px-4 mb-8">
-        <div class="max-w-7xl mx-auto bg-slate-800/80 backdrop-blur-md border border-slate-700/50 rounded-2xl p-4 flex justify-between items-center shadow-2xl">
-            <h1 class="text-xl font-bold text-white tracking-tight">GESTION DES LOIS</h1>
+        <div class="max-w-7xl mx-auto bg-slate-800/80 backdrop-blur-md border border-slate-700/50 rounded-2xl shadow-2xl p-4 flex justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div class="bg-blue-600/20 p-2 rounded-lg border border-blue-500/30">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                </div>
+                <h1 class="text-xl font-bold text-white tracking-tight">BASE DE DONNÉES LOIS</h1>
+            </div>
             <div class="flex gap-2">
                 <a href="index.html" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl font-bold text-xs uppercase transition-all">Calculateur</a>
                 <a href="Individus.html" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl font-bold text-xs uppercase transition-all">Individus</a>
@@ -34,60 +41,109 @@
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto w-full p-4 space-y-8 pb-20">
+    <main class="max-w-7xl mx-auto w-full p-4 space-y-12 pb-20">
         
-        <section class="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 shadow-xl">
-            <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Ajouter une nouvelle loi</h3>
-            <form id="addLawForm" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <select id="cat" required class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
-                    <option value="Code de la route">Code de la route</option>
-                    <option value="Délit mineur">Délit mineur</option>
-                    <option value="Délits moyen">Délits moyen</option>
-                    <option value="Délits majeur">Délits majeur</option>
-                    <option value="Crime">Crime</option>
-                    <option value="Objet illégaux et drogues">Drogues</option>
-                    <option value="Armes">Armes</option>
-                </select>
-                <input type="text" id="label" placeholder="Nom de la loi" required class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
-                <input type="number" id="fine" placeholder="Amende ($)" required class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
-                <input type="number" id="prison" placeholder="Prison (min)" required class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
-                <input type="number" id="ban" placeholder="Ban (jours)" required class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
-                <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all uppercase text-[10px]">Ajouter</button>
-                <input type="text" id="sanction" placeholder="Sanction additionnelle (ex: Saisie...)" class="lg:col-span-6 bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
+        <section class="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 shadow-xl animate-fade-in">
+            <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                Ajouter une nouvelle infraction
+            </h3>
+            <form id="addLawForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-slate-500 uppercase font-bold ml-1">Catégorie</label>
+                        <select id="cat" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="Code de la route">Code de la route</option>
+                            <option value="Délit mineur">Délit mineur</option>
+                            <option value="Délits moyen">Délits moyen</option>
+                            <option value="Délits majeur">Délits majeur</option>
+                            <option value="Crime">Crime</option>
+                            <option value="Objet illégaux et drogues">Drogues</option>
+                            <option value="Armes">Armes</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1 md:col-span-2">
+                        <label class="text-[10px] text-slate-500 uppercase font-bold ml-1">Intitulé de la loi</label>
+                        <input type="text" id="label" placeholder="Ex: Excès de vitesse..." required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-slate-500 uppercase font-bold ml-1">Amende ($)</label>
+                        <input type="number" id="fine" value="0" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-emerald-400 font-mono focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-slate-500 uppercase font-bold ml-1">Prison (min)</label>
+                        <input type="number" id="prison" value="0" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-blue-400 font-mono focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-slate-500 uppercase font-bold ml-1">Ban (jours)</label>
+                        <input type="number" id="ban" value="0" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-red-400 font-mono focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] text-slate-500 uppercase font-bold ml-1">Sanction additionnelle / Note</label>
+                    <input type="text" id="sanction" placeholder="Ex: Saisie du permis et mise en fourrière..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl transition-all uppercase text-xs tracking-widest shadow-lg shadow-blue-900/20">
+                    Ajouter au Code Pénal
+                </button>
             </form>
         </section>
 
-        <div id="lawsList" class="space-y-8">
+        <div id="lawsContainer" class="space-y-12">
             </div>
     </main>
 
     <script>
+        const categoryStyles = {
+            "Code de la route": "from-emerald-900/50 to-emerald-900/10 border-emerald-500/50 text-emerald-100",
+            "Délit mineur": "from-blue-900/50 to-blue-900/10 border-blue-500/50 text-blue-100",
+            "Délits moyen": "from-yellow-900/50 to-yellow-900/10 border-yellow-500/50 text-yellow-100",
+            "Délits majeur": "from-red-900/50 to-red-900/10 border-red-500/50 text-red-100",
+            "Crime": "from-purple-900/50 to-purple-900/10 border-purple-500/50 text-purple-100",
+            "Objet illégaux et drogues": "from-orange-900/50 to-orange-900/10 border-orange-500/50 text-orange-100",
+            "Armes": "from-slate-700 to-slate-800 border-slate-500/50 text-slate-200"
+        };
+
         async function loadLois() {
             const res = await fetch('/api/individus?type=lois');
             const data = await res.json();
-            const container = document.getElementById('lawsList');
+            const container = document.getElementById('lawsContainer');
             container.innerHTML = '';
 
-            const categories = {};
-            data.forEach(law => {
-                if (!categories[law.categorie]) categories[law.categorie] = [];
-                categories[law.categorie].push(law);
+            const grouped = {};
+            data.forEach(l => {
+                if (!grouped[l.categorie]) grouped[l.categorie] = [];
+                grouped[l.categorie].push(l);
             });
 
-            for (const [cat, laws] of Object.entries(categories)) {
+            for (const [cat, laws] of Object.entries(grouped)) {
                 const section = document.createElement('div');
+                section.className = "animate-fade-in";
                 section.innerHTML = `
-                    <h2 class="text-emerald-400 font-black text-sm uppercase mb-4 tracking-widest border-l-4 border-emerald-500 pl-3">${cat}</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="flex items-center px-4 py-3 rounded-t-xl border-t border-x bg-gradient-to-r ${categoryStyles[cat] || 'from-slate-800 to-slate-900'}">
+                        <h2 class="text-sm font-bold uppercase tracking-widest">${cat}</h2>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-800/50 p-4 rounded-b-xl border-x border-b border-slate-700/50 shadow-lg">
                         ${laws.map(l => `
-                            <div class="bg-slate-800/40 border border-slate-700/50 p-4 rounded-xl flex justify-between items-start">
-                                <div>
-                                    <h4 class="text-white font-bold text-sm">${l.label}</h4>
-                                    <p class="text-[10px] text-slate-500 italic">${l.sanction || 'Aucune sanction spéciale'}</p>
+                            <div class="group relative bg-slate-800 border border-slate-700 p-4 rounded-xl flex flex-col justify-between hover:border-slate-500 transition-all">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="text-white font-bold text-sm leading-snug pr-2">${l.label}</h4>
+                                    <button onclick="deleteLaw(${l.id})" class="text-slate-600 hover:text-red-500 transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
                                 </div>
-                                <div class="text-right">
-                                    <div class="text-emerald-400 font-mono font-bold text-xs">${l.amende}$</div>
-                                    <div class="text-blue-400 font-bold text-[10px]">${l.prison}m | ${l.ban}j</div>
+                                <div class="flex justify-between items-center mt-2 border-t border-slate-700/50 pt-2">
+                                    <span class="text-emerald-400 font-mono font-bold text-xs">${l.amende.toLocaleString()}$</span>
+                                    <div class="flex gap-2 text-[10px] font-bold text-slate-500">
+                                        <span class="text-blue-400">${l.prison}m</span>
+                                        <span>|</span>
+                                        <span class="${l.ban > 0 ? 'text-red-400' : ''}">${l.ban}j</span>
+                                    </div>
                                 </div>
                             </div>
                         `).join('')}
@@ -95,6 +151,12 @@
                 `;
                 container.appendChild(section);
             }
+        }
+
+        async function deleteLaw(id) {
+            if (!confirm("Supprimer définitivement cette loi ?")) return;
+            await fetch(`/api/individus?type=lois&id=${id}`, { method: 'DELETE' });
+            loadLois();
         }
 
         document.getElementById('addLawForm').onsubmit = async (e) => {
@@ -107,12 +169,7 @@
                 ban: parseInt(document.getElementById('ban').value),
                 sanction: document.getElementById('sanction').value
             };
-
-            await fetch('/api/individus?type=lois', { 
-                method: 'POST', 
-                body: JSON.stringify(body) 
-            });
-            
+            await fetch('/api/individus?type=lois', { method: 'POST', body: JSON.stringify(body) });
             e.target.reset();
             loadLois();
         };
