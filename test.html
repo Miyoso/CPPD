@@ -2,93 +2,122 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>TEST NEON DB</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPPD • Gestion du Code Pénal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { slate: { 750: '#2d3748', 850: '#1a202c', 950: '#0f172a' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%); }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    </style>
 </head>
-<body class="bg-slate-900 text-white p-10">
+<body class="text-slate-300 font-sans min-h-screen flex flex-col antialiased">
 
-    <div class="max-w-2xl mx-auto space-y-10">
-        <h1 class="text-2xl font-bold border-b pb-2">Diagnostic de Connexion Neon</h1>
-
-        <section class="bg-slate-800 p-6 rounded-xl border border-slate-700">
-            <h2 class="text-lg mb-4 font-semibold text-blue-400">1. Envoyer une donnée</h2>
-            <form id="testForm" class="flex gap-2">
-                <input type="text" id="testNom" placeholder="Nom de test" required class="bg-slate-900 p-2 rounded flex-grow border border-slate-700">
-                <button type="submit" class="bg-blue-600 px-4 py-2 rounded font-bold hover:bg-blue-500">Envoyer</button>
-            </form>
-            <p id="sendStatut" class="mt-2 text-sm"></p>
-        </section>
-
-        <section class="bg-slate-800 p-6 rounded-xl border border-slate-700">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-semibold text-emerald-400">2. Données en Base</h2>
-                <button onclick="fetchTest()" class="text-xs bg-slate-700 px-2 py-1 rounded">Actualiser</button>
+    <header class="sticky top-4 z-50 px-4 mb-8">
+        <div class="max-w-7xl mx-auto bg-slate-800/80 backdrop-blur-md border border-slate-700/50 rounded-2xl p-4 flex justify-between items-center shadow-2xl">
+            <h1 class="text-xl font-bold text-white tracking-tight">GESTION DES LOIS</h1>
+            <div class="flex gap-2">
+                <a href="index.html" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl font-bold text-xs uppercase transition-all">Calculateur</a>
+                <a href="Individus.html" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl font-bold text-xs uppercase transition-all">Individus</a>
             </div>
-            <ul id="testList" class="space-y-2 text-sm font-mono text-slate-400">
-                <li>Chargement...</li>
-            </ul>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto w-full p-4 space-y-8 pb-20">
+        
+        <section class="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 shadow-xl">
+            <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Ajouter une nouvelle loi</h3>
+            <form id="addLawForm" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <select id="cat" required class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
+                    <option value="Code de la route">Code de la route</option>
+                    <option value="Délit mineur">Délit mineur</option>
+                    <option value="Délits moyen">Délits moyen</option>
+                    <option value="Délits majeur">Délits majeur</option>
+                    <option value="Crime">Crime</option>
+                    <option value="Objet illégaux et drogues">Drogues</option>
+                    <option value="Armes">Armes</option>
+                </select>
+                <input type="text" id="label" placeholder="Nom de la loi" required class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
+                <input type="number" id="fine" placeholder="Amende ($)" required class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
+                <input type="number" id="prison" placeholder="Prison (min)" required class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
+                <input type="number" id="ban" placeholder="Ban (jours)" required class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all uppercase text-[10px]">Ajouter</button>
+                <input type="text" id="sanction" placeholder="Sanction additionnelle (ex: Saisie...)" class="lg:col-span-6 bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
+            </form>
         </section>
-    </div>
+
+        <div id="lawsList" class="space-y-8">
+            </div>
+    </main>
 
     <script>
-        // Fonction pour lire
-        async function fetchTest() {
-            const list = document.getElementById('testList');
-            try {
-                const res = await fetch('/api/individus');
-                if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`);
-                const data = await res.json();
-                
-                if (data.length === 0) {
-                    list.innerHTML = "<li>La base est vide (aucune ligne dans la table).</li>";
-                } else {
-                    list.innerHTML = data.map(i => `
-                        <li class="bg-slate-900 p-2 rounded border border-slate-800">
-                            ID: ${i.id} | NOM: ${i.nom || 'N/A'} | MOTIF: ${i.motif || 'N/A'}
-                        </li>
-                    `).join('');
-                }
-            } catch (err) {
-                list.innerHTML = `<li class="text-red-500 italic">Erreur: ${err.message}</li>`;
+        async function loadLois() {
+            const res = await fetch('/api/individus?type=lois');
+            const data = await res.json();
+            const container = document.getElementById('lawsList');
+            container.innerHTML = '';
+
+            const categories = {};
+            data.forEach(law => {
+                if (!categories[law.categorie]) categories[law.categorie] = [];
+                categories[law.categorie].push(law);
+            });
+
+            for (const [cat, laws] of Object.entries(categories)) {
+                const section = document.createElement('div');
+                section.innerHTML = `
+                    <h2 class="text-emerald-400 font-black text-sm uppercase mb-4 tracking-widest border-l-4 border-emerald-500 pl-3">${cat}</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        ${laws.map(l => `
+                            <div class="bg-slate-800/40 border border-slate-700/50 p-4 rounded-xl flex justify-between items-start">
+                                <div>
+                                    <h4 class="text-white font-bold text-sm">${l.label}</h4>
+                                    <p class="text-[10px] text-slate-500 italic">${l.sanction || 'Aucune sanction spéciale'}</p>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-emerald-400 font-mono font-bold text-xs">${l.amende}$</div>
+                                    <div class="text-blue-400 font-bold text-[10px]">${l.prison}m | ${l.ban}j</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(section);
             }
         }
 
-        // Fonction pour écrire
-        document.getElementById('testForm').onsubmit = async (e) => {
+        document.getElementById('addLawForm').onsubmit = async (e) => {
             e.preventDefault();
-            const status = document.getElementById('sendStatut');
-            status.innerText = "Envoi...";
-            
             const body = {
-                nom: document.getElementById('testNom').value,
-                telephone: "TEST",
-                statut: "En règle",
-                motif: "Test de connexion",
-                derniere_intervention: new Date().toLocaleDateString('fr-FR'),
-                casiers: "Donnée de test"
+                categorie: document.getElementById('cat').value,
+                label: document.getElementById('label').value,
+                amende: parseInt(document.getElementById('fine').value),
+                prison: parseInt(document.getElementById('prison').value),
+                ban: parseInt(document.getElementById('ban').value),
+                sanction: document.getElementById('sanction').value
             };
 
-            try {
-                const res = await fetch('/api/individus', {
-                    method: 'POST',
-                    body: JSON.stringify(body)
-                });
-                
-                if (res.ok) {
-                    status.className = "mt-2 text-sm text-emerald-400";
-                    status.innerText = "Succès ! Donnée enregistrée.";
-                    e.target.reset();
-                    fetchTest();
-                } else {
-                    throw new Error("L'API a répondu avec une erreur.");
-                }
-            } catch (err) {
-                status.className = "mt-2 text-sm text-red-400";
-                status.innerText = "Erreur: " + err.message;
-            }
+            await fetch('/api/individus?type=lois', { 
+                method: 'POST', 
+                body: JSON.stringify(body) 
+            });
+            
+            e.target.reset();
+            loadLois();
         };
 
-        fetchTest();
+        loadLois();
     </script>
 </body>
 </html>
