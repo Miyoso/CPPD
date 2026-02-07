@@ -146,14 +146,33 @@
         }
 
         function toggleItem(id) {
-            const item = categories.flatMap(c => c.items).find(i => i.id === id);
-            const btn = document.getElementById(`btn-${id}`);
-            const ring = btn.querySelector('.selection-ring');
-            const idx = cart.findIndex(i => i.id === id);
-            if(idx > -1) { cart.splice(idx, 1); ring.classList.replace('opacity-100', 'opacity-0'); ring.classList.replace('scale-100', 'scale-95'); }
-            else { cart.push(item); ring.classList.replace('opacity-0', 'opacity-100'); ring.classList.replace('scale-95', 'scale-100'); }
-            calculate();
+    const item = categories.flatMap(c => c.items).find(i => i.id === id);
+    const btn = document.getElementById(`btn-${id}`);
+    const ring = btn.querySelector('.selection-ring');
+    const idx = cart.findIndex(i => i.id === id);
+
+    if(idx > -1) { 
+        
+        cart.splice(idx, 1); 
+        ring.classList.replace('opacity-100', 'opacity-0'); 
+        ring.classList.replace('scale-100', 'scale-95'); 
+        
+        
+        if (cart.length === 0) {
+            document.getElementById('firstOffenseCheck').checked = false;
         }
+    }
+    else { 
+        
+        cart.push(item); 
+        ring.classList.replace('opacity-0', 'opacity-100'); 
+        ring.classList.replace('scale-95', 'scale-100'); 
+        
+        
+        document.getElementById('firstOffenseCheck').checked = true;
+    }
+    calculate();
+}
 
         function calculate() {
             const badge = document.getElementById('countBadge');
