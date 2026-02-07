@@ -18,7 +18,7 @@ export default async function handler(req, res) {
                     telephone, 
                     MAX(statut) as statut, 
                     json_agg(json_build_object(
-                        'date', derniere_intervention,
+                        'derniere_intervention', derniere_intervention,
                         'motif', motif,
                         'casiers', casiers
                     ) ORDER BY id DESC) as historique
@@ -35,26 +35,9 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
         try {
             const data = JSON.parse(req.body);
-            if (type === 'lois') {
-                await sql`INSERT INTO lois (categorie, label, amende, prison, ban, sanction)
-                          VALUES (${data.categorie}, ${data.label}, ${data.amende}, ${data.prison}, ${data.ban}, ${data.sanction})`;
-            } else {
-                await sql`INSERT INTO individus (nom, telephone, statut, derniere_intervention, casiers, motif)
-                          VALUES (${data.nom}, ${data.telephone}, ${data.statut}, ${data.derniere_intervention}, ${data.casiers}, ${data.motif})`;
-            }
+            await sql`INSERT INTO individus (nom, telephone, statut, derniere_intervention, casiers, motif)
+                      VALUES (${data.nom}, ${data.telephone}, ${data.statut}, ${data.derniere_intervention}, ${data.casiers}, ${data.motif})`;
             return res.status(200).json({ message: 'Success' });
-        } catch (error) {
-            return res.status(500).json({ error: error.message });
-        }
-    }
-
-    if (req.method === 'DELETE') {
-        try {
-            if (type === 'lois' && id) {
-                await sql`DELETE FROM lois WHERE id = ${id}`;
-                return res.status(200).json({ message: 'Deleted' });
-            }
-            return res.status(400).json({ error: 'Missing ID' });
         } catch (error) {
             return res.status(500).json({ error: error.message });
         }
