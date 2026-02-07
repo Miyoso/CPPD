@@ -1,167 +1,35 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPPD • Base de Données Individus</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: { slate: { 750: '#2d3748', 850: '#1a202c', 950: '#0f172a' } }
-                }
+import { neon } from '@neondatabase/serverless';
+
+const sql = neon(process.env.DATABASE_URL);
+
+export default async function handler(req, res) {
+    // GET : Récupère soit les individus, soit les lois
+    if (req.method === 'GET') {
+        const { type } = req.query;
+        try {
+            if (type === 'lois') {
+                const result = await sql`SELECT * FROM lois ORDER BY categorie, label`;
+                return res.status(200).json(result);
+            } else {
+                const result = await sql`SELECT * FROM individus ORDER BY id DESC`;
+                return res.status(200).json(result);
             }
+        } catch (error) {
+            return res.status(500).json({ error: error.message });
         }
-    </script>
-    <style>
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
-        body { background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%); }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-    </style>
-</head>
-<body class="text-slate-300 font-sans min-h-screen flex flex-col antialiased selection:bg-blue-500 selection:text-white">
+    }
 
-    <header class="sticky top-4 z-50 px-4 mb-8">
-        <div class="max-w-7xl mx-auto bg-slate-800/80 backdrop-blur-md border border-slate-700/50 rounded-2xl shadow-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-4">
-                <div class="bg-blue-600/20 p-2 rounded-lg border border-blue-500/30">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold text-white tracking-tight">• CPPD</h1>
-                    <p class="text-xs text-slate-400 font-medium tracking-wide uppercase">Gestion des Individus</p>
-                </div>
-            </div>
-            <a href="index.html" class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-lg">Calculateur</a>
-        </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto w-full p-4 space-y-8 pb-20">
-        
-        <section class="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 shadow-xl animate-fade-in">
-            <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Nouvel Enregistrement</h3>
-            <form id="addForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <input type="text" id="nom" placeholder="Nom Prénom" required class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-                <input type="text" id="tel" placeholder="N° de téléphone" required class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-                <select id="statut" class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all cursor-pointer">
-                    <option value="En règle">En règle</option>
-                    <option value="Recherché">Recherché</option>
-                </select>
-                <button type="submit" id="submitBtn" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all uppercase text-[10px] tracking-widest shadow-lg shadow-blue-900/20">
-                    Enregistrer l'individu
-                </button>
-            </form>
-        </section>
-
-        <div class="relative group max-w-2xl mx-auto w-full">
-            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <svg class="h-5 w-5 text-slate-500 group-focus-within:text-blue-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-            </div>
-            <input type="text" id="search" placeholder="Rechercher par nom..." onkeyup="filter()" class="w-full bg-slate-900/50 border border-slate-700 rounded-2xl p-4 pl-12 text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all shadow-inner">
-        </div>
-
-        <div id="container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            </div>
-    </main>
-
-    <script>
-        // Chargement des données
-        async function load() {
-            try {
-                const res = await fetch('/api/individus');
-                const data = await res.json();
-                const container = document.getElementById('container');
-                container.innerHTML = '';
-
-                data.forEach(indiv => {
-                    const isRech = indiv.statut === "Recherché";
-                    const card = document.createElement('div');
-                    card.className = 'bg-slate-800/90 border border-slate-700/50 rounded-2xl overflow-hidden shadow-xl animate-fade-in group hover:border-blue-500/50 transition-all';
-                    card.innerHTML = `
-                        <div class="p-5 border-b border-slate-700 ${isRech ? 'bg-red-950/30' : 'bg-slate-850'}">
-                            <div class="flex justify-between items-start mb-2">
-                                <h2 class="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">${indiv.nom}</h2>
-                                <span class="px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider ${isRech ? 'bg-red-500 text-white shadow-lg shadow-red-900/40' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}">
-                                    ${indiv.statut}
-                                </span>
-                            </div>
-                            <p class="text-xs text-slate-500">Tél: <span class="text-slate-300 font-mono">${indiv.telephone}</span></p>
-                        </div>
-                        <div class="p-5 space-y-4">
-                            <div class="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
-                                <span>Dernière Intervention</span>
-                                <span class="text-slate-400 font-mono">${indiv.derniere_intervention}</span>
-                            </div>
-                            <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700/30 text-[11px] text-slate-400 italic leading-relaxed custom-scrollbar max-h-24 overflow-y-auto">
-                                ${indiv.casiers || "Aucun antécédent enregistré dans la base de données."}
-                            </div>
-                        </div>`;
-                    container.appendChild(card);
-                });
-            } catch (err) {
-                console.error("Erreur de chargement:", err);
-            }
+    // POST : Enregistre un individu avec son motif (ou ses infractions liées)
+    if (req.method === 'POST') {
+        try {
+            const data = JSON.parse(req.body);
+            await sql`
+                INSERT INTO individus (nom, telephone, statut, derniere_intervention, casiers, motif, historique_infractions)
+                VALUES (${data.nom}, ${data.telephone}, ${data.statut}, ${data.derniere_intervention}, ${data.casiers}, ${data.motif}, ${JSON.stringify(data.infractions || [])})
+            `;
+            return res.status(200).json({ message: 'Success' });
+        } catch (error) {
+            return res.status(500).json({ error: error.message });
         }
-
-        // Formulaire d'envoi
-        document.getElementById('addForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.innerText = "Traitement...";
-
-            const body = {
-                nom: document.getElementById('nom').value,
-                telephone: document.getElementById('tel').value,
-                statut: document.getElementById('statut').value,
-                derniere_intervention: new Date().toLocaleDateString('fr-FR'),
-                casiers: "" 
-            };
-
-            try {
-                const response = await fetch('/api/individus', { 
-                    method: 'POST', 
-                    body: JSON.stringify(body) 
-                });
-                
-                if (response.ok) {
-                    e.target.reset();
-                    await load(); 
-                }
-            } catch (err) {
-                alert("Erreur lors de l'enregistrement");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Enregistrer l'individu";
-            }
-        };
-
-        // Filtrage en direct
-        function filter() {
-            const val = document.getElementById('search').value.toLowerCase();
-            const cards = document.querySelectorAll('#container > div');
-            cards.forEach(card => {
-                const nom = card.querySelector('h2').innerText.toLowerCase();
-                card.style.display = nom.includes(val) ? '' : 'none';
-            });
-        }
-
-        // Initialisation
-        load();
-    </script>
-</body>
-</html>
+    }
+}
