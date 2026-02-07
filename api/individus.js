@@ -27,17 +27,3 @@ export default async function handler(req, res) {
 }
 
 
-if (req.method === 'GET') {
-    const { type } = req.query; 
-    try {
-        if (type === 'lois') {
-            const result = await sql`SELECT * FROM lois ORDER BY categorie, label`;
-            return res.status(200).json(result);
-        } else {
-            const result = await sql`SELECT * FROM individus ORDER BY id DESC`;
-            return res.status(200).json(result);
-        }
-    } catch (error) {
-        return res.status(500).json({ error: error.message });
-    }
-}
