@@ -26,6 +26,8 @@
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
         body { background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
     </style>
 </head>
 <body class="text-slate-300 font-sans min-h-screen flex flex-col antialiased selection:bg-blue-500 selection:text-white">
@@ -67,11 +69,11 @@
                 <div class="bg-slate-800/90 backdrop-blur-md rounded-2xl border border-slate-700 shadow-2xl overflow-hidden">
                     <div class="bg-slate-700/50 px-6 py-4 border-b border-slate-600 flex justify-between items-center">
                         <h2 class="text-white font-extrabold text-sm uppercase tracking-wider">Récapitulatif</h2>
-                        <button onclick="resetCalculator()" class="text-[10px] font-bold text-slate-400 hover:text-white uppercase transition-colors">Réinitialiser</button>
+                        <button onclick="resetCalculator()" class="text-[10px] font-bold text-slate-400 hover:text-white uppercase transition-colors">Vider</button>
                     </div>
                     
                     <div id="selectedLaws" class="p-4 space-y-2 max-h-[30vh] overflow-y-auto border-b border-slate-700/50 bg-slate-900/30">
-                        <div class="text-center py-4 text-slate-500 text-sm italic">Aucune infraction sélectionnée</div>
+                        <div class="text-center py-4 text-slate-500 text-sm italic">Dossier vide</div>
                     </div>
 
                     <div class="p-6 space-y-6 bg-slate-800/50">
@@ -81,18 +83,17 @@
                                 <div id="totalFine" class="text-2xl font-black text-emerald-400 font-mono">0$</div>
                             </div>
                             <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-700 shadow-inner">
-                                <span class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Peine (Min)</span>
+                                <span class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Prison (Min)</span>
                                 <div id="totalPrison" class="text-2xl font-black text-blue-400 font-mono">0</div>
                             </div>
                         </div>
 
                         <div id="banDisplay" class="hidden animate-pulse bg-red-500/10 border border-red-500/50 p-4 rounded-xl text-center">
-                            <span class="text-[10px] font-bold text-red-400 uppercase block">Risque de Bannissement</span>
+                            <span class="text-[10px] font-bold text-red-400 uppercase block">Sanction Ban</span>
                             <div id="totalBan" class="text-xl font-black text-red-500">0 Jours</div>
                         </div>
 
                         <button onclick="copyToClipboard()" class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-extrabold py-4 rounded-xl transition-all shadow-lg shadow-blue-900/20 uppercase text-xs tracking-widest flex items-center justify-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
                             Copier le rapport
                         </button>
                     </div>
@@ -117,7 +118,6 @@
 
         async function init() {
             try {
-                
                 const response = await fetch('/api/individus?type=lois');
                 const data = await response.json();
                 
@@ -134,11 +134,12 @@
                 });
                 categories = Object.values(tempCats);
                 
-                document.getElementById('loader').remove();
+                const loader = document.getElementById('loader');
+                if(loader) loader.remove();
                 renderLaws();
             } catch (error) {
-                console.error("Erreur chargement Neon:", error);
-                document.getElementById('lawCategories').innerHTML = `<div class="text-red-400 p-8 text-center bg-red-900/20 rounded-xl border border-red-500/50">Erreur de connexion à la base de données Neon.</div>`;
+                console.error("Erreur Neon:", error);
+                document.getElementById('lawCategories').innerHTML = `<div class="text-red-400 p-8 text-center bg-red-900/20 rounded-xl border border-red-500/50">Erreur de connexion base de données.</div>`;
             }
         }
 
@@ -149,14 +150,13 @@
                     <div class="flex items-center gap-3 mb-4">
                         <div class="w-1 h-6 ${cat.style} rounded-full"></div>
                         <h2 class="text-lg font-extrabold text-white uppercase tracking-wider">${cat.name}</h2>
-                        <span class="text-[10px] text-slate-500 font-bold bg-slate-800 px-2 py-0.5 rounded border border-slate-700">${cat.items.length}</span>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                         ${cat.items.map(law => {
                             const isSelected = selectedItems.find(i => i.id === law.id);
                             return `
                                 <div onclick="toggleLaw(${law.id})" 
-                                     class="cursor-pointer group relative bg-slate-800/40 hover:bg-slate-700/60 border ${isSelected ? 'border-blue-500 bg-blue-500/10' : 'border-slate-700/50'} p-4 rounded-xl transition-all duration-200">
+                                     class="cursor-pointer group bg-slate-800/40 hover:bg-slate-700/60 border ${isSelected ? 'border-blue-500 bg-blue-500/10' : 'border-slate-700/50'} p-4 rounded-xl transition-all duration-200">
                                     <div class="flex justify-between items-start gap-4">
                                         <div class="flex-grow">
                                             <h3 class="text-sm font-bold ${isSelected ? 'text-blue-400' : 'text-slate-200'} group-hover:text-white transition-colors">${law.label}</h3>
@@ -192,25 +192,25 @@
         function updateCalculator() {
             const totalFine = selectedItems.reduce((sum, i) => sum + i.amende, 0);
             const totalPrison = selectedItems.reduce((sum, i) => sum + i.prison, 0);
-            const totalBan = selectedItems.reduce((sum, i) => sum + i.ban, 0);
+            const maxBan = selectedItems.reduce((max, i) => (i.ban > max ? i.ban : max), 0);
 
             document.getElementById('totalFine').innerText = totalFine.toLocaleString() + '$';
             document.getElementById('totalPrison').innerText = totalPrison;
             
             const banDisplay = document.getElementById('banDisplay');
-            if (totalBan > 0) {
+            if (maxBan > 0) {
                 banDisplay.classList.remove('hidden');
-                document.getElementById('totalBan').innerText = totalBan >= 999 ? 'DÉFINITIF' : totalBan + ' Jours';
+                document.getElementById('totalBan').innerText = maxBan >= 999 ? 'DÉFINITIF' : maxBan + ' Jours';
             } else {
                 banDisplay.classList.add('hidden');
             }
 
             const selectedList = document.getElementById('selectedLaws');
             if (selectedItems.length === 0) {
-                selectedList.innerHTML = '<div class="text-center py-4 text-slate-500 text-sm italic">Aucune infraction sélectionnée</div>';
+                selectedList.innerHTML = '<div class="text-center py-4 text-slate-500 text-sm italic">Dossier vide</div>';
             } else {
                 selectedList.innerHTML = selectedItems.map(i => `
-                    <div class="flex justify-between items-center bg-slate-800 p-2 rounded-lg border border-slate-700 animate-fade-in">
+                    <div class="flex justify-between items-center bg-slate-800 p-2 rounded-lg border border-slate-700">
                         <span class="text-[11px] font-bold text-slate-200 truncate pr-2">${i.label}</span>
                         <button onclick="toggleLaw(${i.id})" class="text-slate-500 hover:text-red-400 text-xs">✕</button>
                     </div>
@@ -227,10 +227,10 @@
         function copyToClipboard() {
             if (selectedItems.length === 0) return;
             const text = `--- RAPPORT CPPD ---\n` +
-                `Motifs: ${selectedItems.map(i => i.label).join(', ')}\n` +
-                `Total Amende: ${document.getElementById('totalFine').innerText}\n` +
-                `Peine Prison: ${document.getElementById('totalPrison').innerText} minutes\n` +
-                (selectedItems.some(i => i.ban > 0) ? `Sanction Ban: ${document.getElementById('totalBan').innerText}\n` : '') +
+                `Infractions: ${selectedItems.map(i => i.label).join(', ')}\n` +
+                `Amende: ${document.getElementById('totalFine').innerText}\n` +
+                `Prison: ${document.getElementById('totalPrison').innerText} min\n` +
+                (selectedItems.some(i => i.ban > 0) ? `Bannissement: ${document.getElementById('totalBan').innerText}\n` : '') +
                 `--------------------`;
             navigator.clipboard.writeText(text);
             alert("Rapport copié !");
@@ -238,17 +238,10 @@
 
         function filterLaws() {
             const query = document.getElementById('searchBar').value.toLowerCase();
-            const sections = document.querySelectorAll('.law-section');
-            sections.forEach(section => {
-                const cards = section.querySelectorAll('.cursor-pointer');
-                let hasVisible = false;
-                cards.forEach(card => {
-                    const label = card.querySelector('h3').innerText.toLowerCase();
-                    const visible = label.includes(query);
-                    card.style.display = visible ? '' : 'none';
-                    if (visible) hasVisible = true;
-                });
-                section.style.display = hasVisible ? '' : 'none';
+            const cards = document.querySelectorAll('.cursor-pointer');
+            cards.forEach(card => {
+                const label = card.querySelector('h3').innerText.toLowerCase();
+                card.style.display = label.includes(query) ? '' : 'none';
             });
         }
 
