@@ -6,7 +6,7 @@
     <title>CPPD • Individus</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%); background-color: #0f172a; color: #cbd5e1; min-height: 100-vh; }
+        body { background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%); background-color: #0f172a; color: #cbd5e1; min-height: 100vh; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
     </style>
@@ -14,12 +14,13 @@
 <body class="p-4 md:p-8">
     <header class="max-w-7xl mx-auto mb-8 flex justify-between items-center bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 shadow-2xl">
         <h1 class="text-xl font-bold text-white tracking-tight">BASE DE DONNÉES</h1>
-        <a href="index.html" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl font-bold text-xs uppercase transition-all">Calculateur</a>
+        <div class="flex gap-2">
+            <a href="index.html" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl font-bold text-xs uppercase transition-all">Calculateur</a>
+        </div>
     </header>
 
     <main class="max-w-7xl mx-auto space-y-6">
         <input type="text" id="search" placeholder="Rechercher suspect..." onkeyup="filter()" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-white focus:ring-2 focus:ring-blue-500/50 outline-none">
-        
         <div id="container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </main>
 
@@ -45,7 +46,7 @@
                     `).join('');
 
                     return `
-                        <div class="bg-slate-800/80 border border-slate-700/50 rounded-2xl overflow-hidden shadow-xl flex flex-col">
+                        <div class="bg-slate-800/80 border border-slate-700/50 rounded-2xl shadow-xl flex flex-col">
                             <div class="p-5 border-b border-slate-700 ${isR ? 'bg-red-950/20' : 'bg-slate-900/40'}">
                                 <div class="flex justify-between items-start mb-1">
                                     <h2 class="text-lg font-bold text-white">${i.nom}</h2>
@@ -56,7 +57,7 @@
                                 <p class="text-xs text-slate-500 font-mono">Tél: ${i.telephone}</p>
                             </div>
                             <div class="p-5">
-                                <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Historique</h3>
+                                <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Historique des méfaits</h3>
                                 <div class="space-y-2 max-h-60 overflow-y-auto pr-2">
                                     ${rows}
                                 </div>
@@ -64,7 +65,8 @@
                         </div>`;
                 }).join('');
             } catch (err) {
-                document.getElementById('container').innerHTML = '<p class="text-red-400 text-center col-span-full">Erreur de chargement des suspects.</p>';
+                console.error(err);
+                document.getElementById('container').innerHTML = '<p class="text-red-400 text-center col-span-full">Erreur réseau.</p>';
             }
         }
 
