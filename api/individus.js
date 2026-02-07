@@ -11,7 +11,21 @@ export default async function handler(req, res) {
                 const result = await sql`SELECT * FROM lois ORDER BY categorie ASC, label ASC`;
                 return res.status(200).json(result);
             }
-            const result = await sql`SELECT * FROM individus ORDER BY id DESC`;
+            
+            const result = await sql`
+                SELECT 
+                    nom, 
+                    telephone, 
+                    MAX(statut) as statut, 
+                    json_agg(json_build_object(
+                        'date', derniere_intervention,
+                        'motif', motif,
+                        'casiers', casiers
+                    ) ORDER BY id DESC) as historique
+                FROM individus 
+                GROUP BY nom, telephone 
+                ORDER BY nom ASC`;
+                
             return res.status(200).json(result);
         } catch (error) {
             return res.status(500).json({ error: error.message });
