@@ -3,199 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPPD • Terminal</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>MDT - Base de Données</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: { slate: { 750: '#2d3748', 850: '#1a202c', 950: '#0f172a' } }
-                }
-            }
-        }
-    </script>
     <style>
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
-        body { background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%); }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        body { background-color: #0f172a; color: white; }
+        .card-recherche { border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.05); }
+        .card-regle { border-left: 4px solid #10b981; background: rgba(16, 185, 129, 0.05); }
     </style>
 </head>
-<body class="text-slate-300 font-sans min-h-screen flex flex-col antialiased">
+<body class="p-8">
 
-    <header class="sticky top-4 z-50 px-4 mb-4">
-        <div class="max-w-7xl mx-auto bg-slate-800/80 backdrop-blur-md border border-slate-700/50 rounded-2xl shadow-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-4">
-                <div class="bg-blue-600/20 p-2 rounded-lg border border-blue-500/30">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold text-white tracking-tight">• CPPD</h1>
-                    <p class="text-xs text-slate-400 font-medium tracking-wide uppercase">Calculateur Pénal</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-4 w-full md:w-auto">
-                <input type="text" id="searchBar" placeholder="Rechercher..." disabled class="block w-full pl-4 pr-3 py-2.5 border border-slate-700 rounded-xl bg-slate-900/50 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all opacity-50 text-sm" onkeyup="filterLaws()">
-                <div class="flex gap-2">
-                    <a href="Individus.html" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl font-bold text-xs uppercase transition-all">Les méchants</a>
-                    <a href="Lois.html" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl font-bold text-xs uppercase transition-all text-center">Lois</a>
-                </div>
-            </div>
+    <h1 class="text-2xl font-bold mb-6 uppercase tracking-widest text-gray-400">Base de Données Police</h1>
+
+    <div id="dossiers-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         </div>
-    </header>
-
-    <main class="flex-grow max-w-7xl mx-auto w-full p-4 flex flex-col-reverse lg:flex-row gap-8 items-start">
-        <div id="lawsContainer" class="flex-1 w-full space-y-8 pb-20">
-            <div class="flex flex-col items-center justify-center h-64 space-y-4">
-                <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        </div>
-
-        <div class="lg:w-[380px] shrink-0 lg:sticky lg:top-32 w-full max-h-[calc(100vh-160px)] overflow-y-auto pr-1 space-y-4">
-            <div class="bg-slate-800/90 rounded-2xl border border-slate-700/50 shadow-2xl overflow-hidden">
-                <div class="bg-slate-850 p-4 border-b border-slate-700 flex justify-between items-center">
-                    <h2 class="text-sm font-bold text-slate-100 uppercase">Sanctions</h2>
-                    <span id="countBadge" class="bg-slate-700 text-slate-200 text-xs font-bold px-2.5 py-0.5 rounded-md">0</span>
-                </div>
-                <div id="cartList" class="max-h-[30vh] overflow-y-auto p-2 space-y-2 min-h-[100px] bg-slate-900/30 text-xs"></div>
-                <div class="p-4 bg-slate-800 border-t border-slate-700 space-y-4">
-                    <label class="group flex items-center p-4 rounded-xl border border-slate-700 bg-slate-850 cursor-pointer transition-all" id="firstOffenseLabel">
-                        <input type="checkbox" id="firstOffenseCheck" class="peer sr-only" onchange="calculate()">
-                        <div class="flex-1">
-                            <div class="flex items-center justify-between">
-                                <span class="font-bold text-sm text-slate-200">1ère Interpellation</span>
-                                <div id="checkboxSquare" class="w-5 h-5 rounded border-2 border-slate-500 bg-slate-900 flex items-center justify-center">
-                                    <svg id="checkboxIcon" class="w-3 h-3 text-white opacity-0 transition-all scale-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                </div>
-                            </div>
-                        </div>
-                    </label>
-                    <div class="bg-slate-900 rounded-xl p-4 border border-slate-700">
-                        <div class="flex justify-between items-end mb-2">
-                            <span class="text-[10px] uppercase font-bold text-slate-500">Total</span>
-                            <span id="totalFine" class="text-2xl font-bold text-emerald-400">0 $</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4 border-t border-slate-800 pt-3">
-                            <div class="text-center"><span class="text-[10px] uppercase text-slate-500 block">Prison</span><span id="totalPrison" class="text-sm font-bold text-blue-400">0 Min</span></div>
-                            <div class="text-center border-l border-slate-800"><span class="text-[10px] uppercase text-slate-500 block">Ban</span><span id="maxBan" class="text-sm font-bold text-slate-500">-</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-slate-800/90 rounded-2xl border border-slate-700 shadow-2xl p-6 space-y-4">
-                <h3 class="text-xs font-bold text-white uppercase tracking-widest">Enregistrer Suspect (Pas obligé C'est pour moi Nyx parceque tkt)</h3>
-                <input type="text" id="suspectNom" placeholder="Nom Prénom" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="text" id="suspectTel" placeholder="Téléphone" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500">
-                <select id="suspectStatut" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none">
-                    <option value="En règle">En règle</option>
-                    <option value="Recherché">Recherché</option>
-                </select>
-                <button onclick="saveSuspect()" id="saveBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all uppercase text-[10px] tracking-widest">Valider & Archiver</button>
-                <button onclick="resetAll()" class="w-full py-2 rounded-xl font-bold text-[10px] uppercase text-slate-500 hover:text-white transition-all">Effacer Tout</button>
-            </div>
-        </div>
-    </main>
 
     <script>
-        let categories = [];
-        let cart = [];
-        const styles = { "Code de la route": "from-emerald-900/50 to-emerald-900/10 border-emerald-500/50", "Délit mineur": "from-blue-900/50 to-blue-900/10 border-blue-500/50", "Délits moyen": "from-yellow-900/50 to-yellow-900/10 border-yellow-500/50", "Délits majeur": "from-red-900/50 to-red-900/10 border-red-500/50", "Crime": "from-purple-900/50 to-purple-900/10 border-purple-500/50", "Objet illégaux et drogues": "from-orange-900/50 to-orange-900/10 border-orange-500/50", "Armes": "from-slate-700 to-slate-800 border-slate-500/50" };
+        // Simulation des données reçues par ta nouvelle requête SQL
+        const dataFromSQL = [
+            {
+                nom: "Jean-Michel Test",
+                telephone: "55462",
+                est_recherche_global: 1,
+                historique_total: [
+                    { date: "07/02/2026", motif: "Homicide sur civil, Espionnage", amende: "875 000 $", statut: "Recherché" },
+                    { date: "07/02/2026", motif: "Port d'armes, Délit de fuite", amende: "11 250 $", statut: "En règle" }
+                ]
+            },
+            {
+                nom: "Test",
+                telephone: "TEST",
+                est_recherche_global: 0,
+                historique_total: [
+                    { date: "07/02/2026", motif: "Test de connexion", amende: "0 $", statut: "En règle" }
+                ]
+            }
+        ];
 
-        async function init() {
-            try {
-                const res = await fetch('/api/individus?type=lois');
-                const data = await res.json();
-                const temp = {};
-                data.forEach(i => {
-                    if(!temp[i.categorie]) temp[i.categorie] = { name: i.categorie, style: styles[i.categorie] || "from-slate-800 to-slate-900 border-slate-700", items: [] };
-                    temp[i.categorie].items.push(i);
-                });
-                categories = Object.values(temp);
-                document.getElementById('searchBar').disabled = false;
-                document.getElementById('searchBar').style.opacity = "1";
-                renderLaws();
-            } catch (e) { document.getElementById('lawsContainer').innerText = "Erreur de connexion."; }
-        }
+        function renderDossiers(dossiers) {
+            const container = document.getElementById('dossiers-container');
+            container.innerHTML = '';
 
-        function renderLaws() {
-            const container = document.getElementById('lawsContainer');
-            container.innerHTML = categories.map(cat => `
-                <div class="law-category animate-fade-in">
-                    <div class="px-4 py-2 rounded-t-xl border-t border-x bg-gradient-to-r ${cat.style}"><h2 class="text-xs font-bold uppercase text-white">${cat.name}</h2></div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-800/50 p-4 rounded-b-xl border-x border-b border-slate-700/50">
-                        ${cat.items.map(i => `
-                            <button id="btn-${i.id}" onclick="toggleItem(${i.id})" class="relative text-left p-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-750 transition-all flex flex-col justify-between h-full">
-                                <div class="flex justify-between items-start gap-2 mb-1">
-                                    <span class="font-medium text-slate-200 text-xs leading-tight">${i.label}</span>
-                                    <span class="shrink-0 font-mono text-[10px] font-bold text-emerald-400">${i.amende}$</span>
+            dossiers.forEach(dossier => {
+                const statusClass = dossier.est_recherche_global ? 'card-recherche' : 'card-regle';
+                const statusLabel = dossier.est_recherche_global ? 'RECHERCHÉ' : 'EN RÈGLE';
+                const labelColor = dossier.est_recherche_global ? 'bg-red-600' : 'bg-green-600';
+
+                let cardHtml = `
+                    <div class="p-5 rounded-lg shadow-xl ${statusClass} bg-slate-800 border border-gray-700">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h2 class="text-xl font-bold">${dossier.nom}</h2>
+                                <p class="text-gray-400 text-sm italic">Tél: ${dossier.telephone}</p>
+                            </div>
+                            <span class="${labelColor} text-[10px] px-2 py-1 rounded font-bold uppercase">
+                                ${statusLabel}
+                            </span>
+                        </div>
+                        
+                        <div class="space-y-3 mt-4 border-t border-gray-700 pt-4">
+                            <p class="text-xs font-semibold text-gray-500 uppercase">Historique des infractions</p>
+                            ${dossier.historique_total.map(infraction => `
+                                <div class="bg-black/20 p-3 rounded text-sm">
+                                    <div class="flex justify-between text-[10px] mb-1">
+                                        <span class="text-blue-400 font-mono">${infraction.date}</span>
+                                        <span class="${infraction.statut === 'Recherché' ? 'text-red-400' : 'text-green-400'} font-bold">
+                                            ${infraction.statut.toUpperCase()}
+                                        </span>
+                                    </div>
+                                    <p class="text-gray-200">${infraction.motif}</p>
+                                    <p class="text-gray-500 text-[11px] mt-1 italic font-bold">Amende: ${infraction.amende}</p>
                                 </div>
-                                ${i.sanction ? `<div class="text-[9px] text-orange-300 italic opacity-80 mt-1 line-clamp-2">${i.sanction}</div>` : ''}
-                                <div class="selection-ring absolute inset-0 border-2 border-blue-500 rounded-xl opacity-0 scale-95 transition-all pointer-events-none"></div>
-                            </button>
-                        `).join('')}
+                            `).join('')}
+                        </div>
                     </div>
-                </div>
-            `).join('');
-        }
-
-        function toggleItem(id) {
-            const item = categories.flatMap(c => c.items).find(i => i.id === id);
-            const btn = document.getElementById(`btn-${id}`);
-            const ring = btn.querySelector('.selection-ring');
-            const idx = cart.findIndex(i => i.id === id);
-            if(idx > -1) { cart.splice(idx, 1); ring.classList.replace('opacity-100', 'opacity-0'); ring.classList.replace('scale-100', 'scale-95'); }
-            else { cart.push(item); ring.classList.replace('opacity-0', 'opacity-100'); ring.classList.replace('scale-95', 'scale-100'); }
-            calculate();
-        }
-
-        function calculate() {
-            const badge = document.getElementById('countBadge');
-            const list = document.getElementById('cartList');
-            badge.innerText = cart.length;
-            list.innerHTML = cart.length ? cart.map(i => `<div class="bg-slate-800 p-2 rounded border border-slate-700/50 flex justify-between"><span>${i.label}</span><span class="text-emerald-400">${i.amende}$</span></div>`).join('') : '<div class="h-20 flex items-center justify-center text-slate-600 italic">Vide</div>';
-            
-            let f = cart.reduce((a, i) => a + i.amende, 0), p = cart.reduce((a, i) => a + i.prison, 0), b = cart.reduce((a, i) => i.ban > a ? i.ban : a, 0);
-            if(document.getElementById('firstOffenseCheck').checked) { f = Math.floor(f/2); if(b < 999) b = 0; }
-            
-            document.getElementById('totalFine').innerText = f.toLocaleString() + " $";
-            document.getElementById('totalPrison').innerText = p + " Min";
-            const banEl = document.getElementById('maxBan');
-            banEl.innerText = b >= 999 ? "DEF" : b > 0 ? b + " J" : "-";
-            banEl.className = b >= 999 ? "text-sm font-bold text-red-500 animate-pulse" : "text-sm font-bold text-slate-500";
-        }
-
-        async function saveSuspect() {
-            const nom = document.getElementById('suspectNom').value;
-            if(!nom || !cart.length) return alert("Nom et infractions requis.");
-            const btn = document.getElementById('saveBtn');
-            btn.disabled = true; btn.innerText = "Archivage...";
-            const body = { nom, telephone: document.getElementById('suspectTel').value || "Inconnu", statut: document.getElementById('suspectStatut').value, motif: cart.map(i => i.label).join(', '), casiers: `Amende: ${document.getElementById('totalFine').innerText} | Prison: ${document.getElementById('totalPrison').innerText}`, derniere_intervention: new Date().toLocaleDateString('fr-FR') };
-            try { 
-                const res = await fetch('/api/individus', { method: 'POST', body: JSON.stringify(body) }); 
-                if(res.ok) {
-                    btn.innerText = "Succès !";
-                    setTimeout(() => window.location.href = "Individus.html", 800);
-                } 
-            } catch(e) { alert("Erreur."); btn.disabled = false; btn.innerText = "Valider"; }
-        }
-
-        function filterLaws() {
-            const t = document.getElementById('searchBar').value.toLowerCase();
-            document.querySelectorAll('.law-category').forEach(c => {
-                let h = false;
-                c.querySelectorAll('button').forEach(b => { const v = b.innerText.toLowerCase().includes(t); b.style.display = v ? "" : "none"; if(v) h = true; });
-                c.style.display = h ? "" : "none";
+                `;
+                container.innerHTML += cardHtml;
             });
         }
-        function resetAll() { cart = []; document.getElementById('firstOffenseCheck').checked = false; document.querySelectorAll('.selection-ring').forEach(r => { r.classList.replace('opacity-100', 'opacity-0'); r.classList.replace('scale-100', 'scale-95'); }); calculate(); }
-        init();
+
+        // Lancement au chargement
+        renderDossiers(dataFromSQL);
     </script>
 </body>
 </html>
