@@ -92,6 +92,7 @@
                 <h3 class="text-xs font-bold text-white uppercase tracking-widest">Enregistrer Suspect</h3>
                 <input type="text" id="suspectNom" placeholder="Nom Prénom" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500">
                 <input type="text" id="suspectTel" placeholder="Téléphone" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="text" id="suspectPhoto" placeholder="Lien Photo (Goopics)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500">
                 <select id="suspectStatut" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none">
                     <option value="En règle">En règle</option>
                     <option value="Recherché">Recherché</option>
@@ -178,7 +179,7 @@
                 cart.push(item); 
                 ring.classList.replace('opacity-0', 'opacity-100'); 
                 ring.classList.replace('scale-95', 'scale-100');
-                
+                document.getElementById('firstOffenseCheck').checked = true;
                 updateCheckboxVisual();
             }
             calculate();
@@ -203,7 +204,15 @@
             if(!nom || !cart.length) return alert("Nom et infractions requis.");
             const btn = document.getElementById('saveBtn');
             btn.disabled = true; btn.innerText = "Archivage...";
-            const body = { nom, telephone: document.getElementById('suspectTel').value || "Inconnu", statut: document.getElementById('suspectStatut').value, motif: cart.map(i => i.label).join(', '), casiers: `Amende: ${document.getElementById('totalFine').innerText} | Prison: ${document.getElementById('totalPrison').innerText}`, derniere_intervention: new Date().toLocaleDateString('fr-FR') };
+            const body = { 
+                nom, 
+                telephone: document.getElementById('suspectTel').value || "Inconnu", 
+                statut: document.getElementById('suspectStatut').value, 
+                photo_url: document.getElementById('suspectPhoto').value || "",
+                motif: cart.map(i => i.label).join(', '), 
+                casiers: `Amende: ${document.getElementById('totalFine').innerText} | Prison: ${document.getElementById('totalPrison').innerText}`, 
+                derniere_intervention: new Date().toLocaleDateString('fr-FR') 
+            };
             try { 
                 const res = await fetch('/api/individus', { method: 'POST', body: JSON.stringify(body) }); 
                 if(res.ok) {
