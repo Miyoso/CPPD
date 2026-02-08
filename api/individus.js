@@ -15,7 +15,8 @@ export default async function handler(req, res) {
                 SELECT 
                     nom, 
                     telephone, 
-                    MAX(statut) as statut, 
+                    MAX(statut) as statut,
+                    MAX(photo_url) as photo_url,
                     json_agg(json_build_object(
                         'derniere_intervention', derniere_intervention,
                         'motif', motif,
@@ -33,8 +34,8 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
         try {
             const data = JSON.parse(req.body);
-            await sql`INSERT INTO individus (nom, telephone, statut, derniere_intervention, casiers, motif)
-                      VALUES (${data.nom}, ${data.telephone}, ${data.statut}, ${data.derniere_intervention}, ${data.casiers}, ${data.motif})`;
+            await sql`INSERT INTO individus (nom, telephone, statut, derniere_intervention, casiers, motif, photo_url)
+                      VALUES (${data.nom}, ${data.telephone}, ${data.statut}, ${data.derniere_intervention}, ${data.casiers}, ${data.motif}, ${data.photo_url})`;
             return res.status(200).json({ message: 'Success' });
         } catch (error) {
             return res.status(500).json({ error: error.message });
