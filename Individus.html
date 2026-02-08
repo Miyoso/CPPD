@@ -28,6 +28,18 @@
     </main>
 
     <script>
+        async function updateStatus(nom, newStatus) {
+            try {
+                const res = await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ statut: newStatus })
+                });
+                if (res.ok) load();
+            } catch (err) {
+                alert("Erreur lors de la mise à jour");
+            }
+        }
+
         async function load() {
             try {
                 const res = await fetch('/api/individus');
@@ -60,9 +72,10 @@
                                         <h2 class="text-lg font-bold text-white">${i.nom}</h2>
                                         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${nbInfractions} Infraction${nbInfractions > 1 ? 's' : ''}</p>
                                     </div>
-                                    <span class="px-2 py-1 rounded text-[10px] font-black ${isR ? 'bg-red-600 text-white' : 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/50'}">
-                                        ${i.statut.toUpperCase()}
-                                    </span>
+                                    <select onchange="updateStatus('${i.nom}', this.value)" class="text-[10px] font-black rounded px-2 py-1 outline-none transition-all ${isR ? 'bg-red-600 text-white border-red-500' : 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/50'}">
+                                        <option value="En règle" ${i.statut === 'En règle' ? 'selected' : ''}>EN RÈGLE</option>
+                                        <option value="Recherché" ${i.statut === 'Recherché' ? 'selected' : ''}>RECHERCHÉ</option>
+                                    </select>
                                 </div>
                                 <p class="text-xs text-slate-500 font-mono mt-2">Tél: ${i.telephone}</p>
                             </div>
@@ -75,7 +88,6 @@
                         </div>`;
                 }).join('');
             } catch (err) {
-                console.error(err);
                 document.getElementById('container').innerHTML = '<p class="text-red-400 text-center col-span-full">Erreur réseau.</p>';
             }
         }
