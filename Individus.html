@@ -27,20 +27,23 @@
 
     <script>
         async function updateStatus(nom, newStatus) {
-            try {
-                await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ statut: newStatus }) });
-                load();
-            } catch (e) { alert("Erreur"); }
+            await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ statut: newStatus }) });
+            load();
         }
 
         async function updatePhoto(nom) {
-            const newPhoto = prompt("Collez le lien de la nouvelle photo (Goopics) :");
+            const newPhoto = prompt("Lien de la photo :");
             if (newPhoto !== null) {
-                try {
-                    await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ photo_url: newPhoto }) });
-                    load();
-                } catch (e) { alert("Erreur"); }
+                await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ photo_url: newPhoto }) });
+                load();
             }
+        }
+
+        async function saveNote(nom, noteText) {
+            await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { 
+                method: 'PATCH', 
+                body: JSON.stringify({ notes: noteText }) 
+            });
         }
 
         async function load() {
@@ -87,13 +90,23 @@
                                 </div>
                                 <p class="text-xs text-slate-500 font-mono mt-2 opacity-50">Tél: ${i.telephone}</p>
                             </div>
+                            
+                            <div class="px-5 py-3 bg-slate-900/20 border-b border-slate-700/50">
+                                <h3 class="text-[9px] font-bold text-slate-500 uppercase mb-2">Notes Officiers</h3>
+                                <textarea 
+                                    onblur="saveNote('${i.nom}', this.value)"
+                                    placeholder="Ajouter une note..."
+                                    class="w-full bg-transparent text-[11px] text-slate-300 outline-none resize-none h-12 placeholder:text-slate-700 focus:text-white transition-colors"
+                                >${i.notes || ''}</textarea>
+                            </div>
+
                             <div class="p-5 flex-grow">
                                 <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Dossier Judiciaire</h3>
                                 <div class="space-y-2 max-h-48 overflow-y-auto pr-2">${rows}</div>
                             </div>
                         </div>`;
                 }).join('');
-            } catch (e) { document.getElementById('container').innerHTML = '<p class="text-red-400 text-center col-span-full">Erreur réseau.</p>'; }
+            } catch (e) { console.error(e); }
         }
 
         function filter() {
