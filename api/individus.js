@@ -11,7 +11,6 @@ export default async function handler(req, res) {
                 const result = await sql`SELECT * FROM lois ORDER BY categorie ASC, label ASC`;
                 return res.status(200).json(result);
             }
-            
             const result = await sql`
                 SELECT 
                     nom, 
@@ -26,7 +25,6 @@ export default async function handler(req, res) {
                 FROM individus 
                 GROUP BY nom, telephone 
                 ORDER BY nom ASC`;
-                
             return res.status(200).json(result);
         } catch (error) {
             return res.status(500).json({ error: error.message });
@@ -36,13 +34,8 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
         try {
             const data = JSON.parse(req.body);
-            if (type === 'lois') {
-                await sql`INSERT INTO lois (categorie, label, amende, prison, ban, sanction)
-                          VALUES (${data.categorie}, ${data.label}, ${data.amende}, ${data.prison}, ${data.ban}, ${data.sanction})`;
-            } else {
-                await sql`INSERT INTO individus (nom, telephone, statut, derniere_intervention, casiers, motif, photo_url)
-                          VALUES (${data.nom}, ${data.telephone}, ${data.statut}, ${data.derniere_intervention}, ${data.casiers}, ${data.motif}, ${data.photo_url})`;
-            }
+            await sql`INSERT INTO individus (nom, telephone, statut, derniere_intervention, casiers, motif, photo_url)
+                      VALUES (${data.nom}, ${data.telephone}, ${data.statut}, ${data.derniere_intervention}, ${data.casiers}, ${data.motif}, ${data.photo_url})`;
             return res.status(200).json({ message: 'Success' });
         } catch (error) {
             return res.status(500).json({ error: error.message });
@@ -53,7 +46,11 @@ export default async function handler(req, res) {
         try {
             const data = JSON.parse(req.body);
             if (nom) {
-                await sql`UPDATE individus SET statut = ${data.statut} WHERE nom = ${nom}`;
+                if (data.photo_url !== undefined) {
+                    await sql`UPDATE individus SET photo_url = ${data.photo_url} WHERE nom = ${nom}`;
+                } else {
+                    await sql`UPDATE individus SET statut = ${data.statut} WHERE nom = ${nom}`;
+                }
                 return res.status(200).json({ message: 'Updated' });
             }
             return res.status(400).json({ error: 'Missing Name' });
