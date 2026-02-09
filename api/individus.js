@@ -3,7 +3,7 @@ import { neon } from '@neondatabase/serverless';
 const sql = neon(process.env.DATABASE_URL);
 
 export default async function handler(req, res) {
-    const { type, id, nom } = req.query;
+    const { type, id, nom, infraction_id } = req.query;
 
     if (req.method === 'GET') {
         try {
@@ -19,9 +19,11 @@ export default async function handler(req, res) {
                     MAX(photo_url) as photo_url,
                     MAX(notes) as notes,
                     json_agg(json_build_object(
+                        'id', id,
                         'derniere_intervention', derniere_intervention,
                         'motif', motif,
-                        'casiers', casiers
+                        'casiers', casiers,
+                        'paiement', paiement
                     ) ORDER BY id DESC) as historique
                 FROM individus 
                 GROUP BY nom, telephone 
@@ -35,8 +37,8 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
         try {
             const data = JSON.parse(req.body);
-            await sql`INSERT INTO individus (nom, telephone, statut, derniere_intervention, casiers, motif, photo_url, notes)
-                      VALUES (${data.nom}, ${data.telephone}, ${data.statut}, ${data.derniere_intervention}, ${data.casiers}, ${data.motif}, ${data.photo_url}, ${data.notes || ''})`;
+            await sql`INSERT INTO individus (nom, telephone, statut, derniere_intervention, casiers, motif, photo_url, notes, paiement)
+                      VALUES (${data.nom}, ${data.telephone}, ${data.statut}, ${data.derniere_intervention}, ${data.casiers}, ${data.motif}, ${data.photo_url}, ${data.notes || ''}, 'Réglé')`;
             return res.status(200).json({ message: 'Success' });
         } catch (error) {
             return res.status(500).json({ error: error.message });
@@ -46,17 +48,17 @@ export default async function handler(req, res) {
     if (req.method === 'PATCH') {
         try {
             const data = JSON.parse(req.body);
+            if (infraction_id) {
+                await sql`UPDATE individus SET paiement = ${data.paiement} WHERE id = ${infraction_id}`;
+                return res.status(200).json({ message: 'Payment Updated' });
+            }
             if (nom) {
-                if (data.photo_url !== undefined) {
-                    await sql`UPDATE individus SET photo_url = ${data.photo_url} WHERE nom = ${nom}`;
-                } else if (data.notes !== undefined) {
-                    await sql`UPDATE individus SET notes = ${data.notes} WHERE nom = ${nom}`;
-                } else {
-                    await sql`UPDATE individus SET statut = ${data.statut} WHERE nom = ${nom}`;
-                }
+                if (data.photo_url !== undefined) await sql`UPDATE individus SET photo_url = ${data.photo_url} WHERE nom = ${nom}`;
+                else if (data.notes !== undefined) await sql`UPDATE individus SET notes = ${data.notes} WHERE nom = ${nom}`;
+                else await sql`UPDATE individus SET statut = ${data.statut} WHERE nom = ${nom}`;
                 return res.status(200).json({ message: 'Updated' });
             }
-            return res.status(400).json({ error: 'Missing Name' });
+            return res.status(400).json({ error: 'Missing Params' });
         } catch (error) {
             return res.status(500).json({ error: error.message });
         }
