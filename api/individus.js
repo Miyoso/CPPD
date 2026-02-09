@@ -17,6 +17,7 @@ export default async function handler(req, res) {
                     telephone, 
                     MAX(statut) as statut,
                     MAX(photo_url) as photo_url,
+                    MAX(notes) as notes,
                     json_agg(json_build_object(
                         'derniere_intervention', derniere_intervention,
                         'motif', motif,
@@ -34,8 +35,8 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
         try {
             const data = JSON.parse(req.body);
-            await sql`INSERT INTO individus (nom, telephone, statut, derniere_intervention, casiers, motif, photo_url)
-                      VALUES (${data.nom}, ${data.telephone}, ${data.statut}, ${data.derniere_intervention}, ${data.casiers}, ${data.motif}, ${data.photo_url})`;
+            await sql`INSERT INTO individus (nom, telephone, statut, derniere_intervention, casiers, motif, photo_url, notes)
+                      VALUES (${data.nom}, ${data.telephone}, ${data.statut}, ${data.derniere_intervention}, ${data.casiers}, ${data.motif}, ${data.photo_url}, ${data.notes || ''})`;
             return res.status(200).json({ message: 'Success' });
         } catch (error) {
             return res.status(500).json({ error: error.message });
@@ -48,24 +49,14 @@ export default async function handler(req, res) {
             if (nom) {
                 if (data.photo_url !== undefined) {
                     await sql`UPDATE individus SET photo_url = ${data.photo_url} WHERE nom = ${nom}`;
+                } else if (data.notes !== undefined) {
+                    await sql`UPDATE individus SET notes = ${data.notes} WHERE nom = ${nom}`;
                 } else {
                     await sql`UPDATE individus SET statut = ${data.statut} WHERE nom = ${nom}`;
                 }
                 return res.status(200).json({ message: 'Updated' });
             }
             return res.status(400).json({ error: 'Missing Name' });
-        } catch (error) {
-            return res.status(500).json({ error: error.message });
-        }
-    }
-
-    if (req.method === 'DELETE') {
-        try {
-            if (type === 'lois' && id) {
-                await sql`DELETE FROM lois WHERE id = ${id}`;
-                return res.status(200).json({ message: 'Deleted' });
-            }
-            return res.status(400).json({ error: 'Missing ID' });
         } catch (error) {
             return res.status(500).json({ error: error.message });
         }

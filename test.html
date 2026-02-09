@@ -21,7 +21,7 @@
     </header>
 
     <main class="max-w-7xl mx-auto w-full space-y-6">
-        <input type="text" id="search" placeholder="Rechercher suspect..." onkeyup="filter()" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all">
+        <input type="text" id="search" placeholder="Rechercher suspect..." onkeyup="filter()" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-white outline-none focus:ring-2 focus:ring-blue-500/50">
         <div id="container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </main>
 
@@ -29,6 +29,21 @@
         async function updateStatus(nom, newStatus) {
             await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ statut: newStatus }) });
             load();
+        }
+
+        async function updatePhoto(nom) {
+            const newPhoto = prompt("Lien de la photo :");
+            if (newPhoto !== null) {
+                await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ photo_url: newPhoto }) });
+                load();
+            }
+        }
+
+        async function saveNote(nom, noteText) {
+            await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { 
+                method: 'PATCH', 
+                body: JSON.stringify({ notes: noteText }) 
+            });
         }
 
         async function load() {
@@ -39,39 +54,59 @@
                 
                 document.getElementById('container').innerHTML = data.map(i => {
                     const isR = i.statut === "Recherché";
-                    const photo = i.photo_url ? `<img src="${i.photo_url}" class="w-full h-48 object-cover border-b border-slate-700">` : `<div class="w-full h-48 bg-slate-900/50 flex items-center justify-center border-b border-slate-700 text-slate-700 uppercase font-black text-xs">Pas de photo</div>`;
+                    const photoHtml = i.photo_url 
+                        ? `<div class="relative group cursor-pointer" onclick="updatePhoto('${i.nom}')">
+                            <img src="${i.photo_url}" class="w-full h-48 object-cover border-b border-slate-700 transition-opacity group-hover:opacity-50">
+                            <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span class="bg-black/60 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">Changer Photo</span>
+                            </div>
+                           </div>` 
+                        : `<div onclick="updatePhoto('${i.nom}')" class="w-full h-48 bg-slate-900/50 flex flex-col items-center justify-center border-b border-slate-700 text-slate-700 font-black text-xs cursor-pointer hover:bg-slate-800 transition-all">
+                            <span>SANS PHOTO</span>
+                            <span class="text-[9px] text-blue-500 mt-2 underline">Ajouter +</span>
+                           </div>`;
                     
                     const rows = (i.historique || []).map(h => `
                         <div class="border-t border-slate-700/50 py-3 first:border-t-0">
-                            <p class="text-[9px] text-slate-500 font-bold mb-1 font-mono uppercase">LE ${h.derniere_intervention}</p>
-                            <p class="text-xs text-blue-400 font-semibold mb-1 leading-tight">${h.motif}</p>
-                            <p class="text-[10px] text-slate-400 italic bg-slate-950/40 p-2 rounded border border-slate-700/30">${h.casiers}</p>
+                            <p class="text-[9px] text-slate-500 font-bold mb-1 uppercase">LE ${h.derniere_intervention || 'DATE INCONNUE'}</p>
+                            <p class="text-xs text-blue-400 font-semibold mb-1">${h.motif || 'AUCUN MOTIF'}</p>
+                            <p class="text-[10px] text-slate-400 italic bg-slate-950/40 p-2 rounded border border-slate-700/30">${h.casiers || 'PAS DE DÉTAILS'}</p>
                         </div>
                     `).join('');
 
                     return `
                         <div class="bg-slate-800/80 border border-slate-700/50 rounded-2xl shadow-xl overflow-hidden flex flex-col transition-all">
-                            ${photo}
+                            ${photoHtml}
                             <div class="p-5 border-b border-slate-700 ${isR ? 'bg-red-950/20' : 'bg-slate-900/40'}">
                                 <div class="flex justify-between items-start mb-1">
                                     <div>
                                         <h2 class="text-lg font-bold text-white">${i.nom}</h2>
                                         <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">${i.historique.length} Infraction(s)</p>
                                     </div>
-                                    <select onchange="updateStatus('${i.nom}', this.value)" class="text-[10px] font-black rounded px-2 py-1 outline-none transition-all ${isR ? 'bg-red-600 text-white' : 'bg-emerald-600/20 text-emerald-400'}">
+                                    <select onchange="updateStatus('${i.nom}', this.value)" class="text-[10px] font-black rounded px-2 py-1 outline-none transition-all ${isR ? 'bg-red-600 text-white border-red-500' : 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/50'}">
                                         <option value="En règle" ${i.statut === 'En règle' ? 'selected' : ''}>EN RÈGLE</option>
                                         <option value="Recherché" ${i.statut === 'Recherché' ? 'selected' : ''}>RECHERCHÉ</option>
                                     </select>
                                 </div>
                                 <p class="text-xs text-slate-500 font-mono mt-2 opacity-50">Tél: ${i.telephone}</p>
                             </div>
+                            
+                            <div class="px-5 py-3 bg-slate-900/20 border-b border-slate-700/50">
+                                <h3 class="text-[9px] font-bold text-slate-500 uppercase mb-2">Notes Officiers</h3>
+                                <textarea 
+                                    onblur="saveNote('${i.nom}', this.value)"
+                                    placeholder="Ajouter une note..."
+                                    class="w-full bg-transparent text-[11px] text-slate-300 outline-none resize-none h-12 placeholder:text-slate-700 focus:text-white transition-colors"
+                                >${i.notes || ''}</textarea>
+                            </div>
+
                             <div class="p-5 flex-grow">
                                 <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Dossier Judiciaire</h3>
                                 <div class="space-y-2 max-h-48 overflow-y-auto pr-2">${rows}</div>
                             </div>
                         </div>`;
                 }).join('');
-            } catch (err) { document.getElementById('container').innerHTML = '<p class="text-red-400 text-center col-span-full">Erreur réseau.</p>'; }
+            } catch (e) { console.error(e); }
         }
 
         function filter() {
