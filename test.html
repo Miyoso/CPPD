@@ -31,17 +31,36 @@
             load();
         }
 
+        async function editName(ancienNom) {
+            const nouveauNom = prompt("Entrez le nouveau Nom Prénom :", ancienNom);
+            if (nouveauNom && nouveauNom !== ancienNom) {
+                await fetch(`/api/individus?nom=${encodeURIComponent(ancienNom)}`, { 
+                    method: 'PATCH', 
+                    body: JSON.stringify({ nouveau_nom: nouveauNom }) 
+                });
+                load();
+            }
+        }
+
+        async function editPhone(nom, ancienTel) {
+            const nouveauTel = prompt("Entrez le nouveau numéro :", ancienTel);
+            if (nouveauTel && nouveauTel !== ancienTel) {
+                await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { 
+                    method: 'PATCH', 
+                    body: JSON.stringify({ nouveau_telephone: nouveauTel }) 
+                });
+                load();
+            }
+        }
+
         async function updatePayment(id, status) {
-            await fetch(`/api/individus?infraction_id=${id}`, { 
-                method: 'PATCH', 
-                body: JSON.stringify({ paiement: status }) 
-            });
+            await fetch(`/api/individus?infraction_id=${id}`, { method: 'PATCH', body: JSON.stringify({ paiement: status }) });
             load();
         }
 
         async function updatePhoto(nom) {
             const newPhoto = prompt("Lien de la photo :");
-            if (newPhoto) {
+            if (newPhoto !== null) {
                 await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ photo_url: newPhoto }) });
                 load();
             }
@@ -63,7 +82,7 @@
                         ? `<div class="relative group cursor-pointer" onclick="updatePhoto('${i.nom}')">
                             <img src="${i.photo_url}" class="w-full h-48 object-cover border-b border-slate-700 transition-opacity group-hover:opacity-50">
                             <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span class="bg-black/60 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">Modifier</span>
+                                <span class="bg-black/60 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">Modifier Image</span>
                             </div>
                            </div>` 
                         : `<div onclick="updatePhoto('${i.nom}')" class="w-full h-48 bg-slate-900/50 flex flex-col items-center justify-center border-b border-slate-700 text-slate-700 font-black text-xs cursor-pointer hover:bg-slate-800">
@@ -92,7 +111,7 @@
                             <div class="p-5 border-b border-slate-700 ${isR ? 'bg-red-950/20' : 'bg-slate-900/40'}">
                                 <div class="flex justify-between items-start mb-1">
                                     <div>
-                                        <h2 class="text-lg font-bold text-white">${i.nom}</h2>
+                                        <h2 onclick="editName('${i.nom}')" class="text-lg font-bold text-white cursor-pointer hover:text-blue-400 transition-colors" title="Cliquer pour modifier le nom">${i.nom}</h2>
                                         <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">${i.historique.length} Infraction(s)</p>
                                     </div>
                                     <select onchange="updateStatus('${i.nom}', this.value)" class="text-[10px] font-black rounded px-2 py-1 outline-none ${isR ? 'bg-red-600 text-white' : 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/50'}">
@@ -100,7 +119,7 @@
                                         <option value="Recherché" ${i.statut === 'Recherché' ? 'selected' : ''}>RECHERCHÉ</option>
                                     </select>
                                 </div>
-                                <p class="text-xs text-slate-500 font-mono mt-2 opacity-50">Tél: ${i.telephone}</p>
+                                <p onclick="editPhone('${i.nom}', '${i.telephone}')" class="text-xs text-slate-500 font-mono mt-2 cursor-pointer hover:text-white" title="Cliquer pour modifier le téléphone">Tél: ${i.telephone}</p>
                             </div>
                             
                             <div class="px-5 py-3 bg-slate-900/20 border-b border-slate-700/50">
@@ -120,7 +139,8 @@
         function filter() {
             const v = document.getElementById('search').value.toLowerCase();
             document.querySelectorAll('#container > div').forEach(c => {
-                c.style.display = c.querySelector('h2').innerText.toLowerCase().includes(v) ? '' : 'none';
+                const name = c.querySelector('h2').innerText.toLowerCase();
+                c.style.display = name.includes(v) ? '' : 'none';
             });
         }
         load();

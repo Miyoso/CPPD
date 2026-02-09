@@ -53,9 +53,17 @@ export default async function handler(req, res) {
                 return res.status(200).json({ message: 'Payment Updated' });
             }
             if (nom) {
-                if (data.photo_url !== undefined) await sql`UPDATE individus SET photo_url = ${data.photo_url} WHERE nom = ${nom}`;
-                else if (data.notes !== undefined) await sql`UPDATE individus SET notes = ${data.notes} WHERE nom = ${nom}`;
-                else await sql`UPDATE individus SET statut = ${data.statut} WHERE nom = ${nom}`;
+                if (data.nouveau_nom) {
+                    await sql`UPDATE individus SET nom = ${data.nouveau_nom} WHERE nom = ${nom}`;
+                } else if (data.nouveau_telephone) {
+                    await sql`UPDATE individus SET telephone = ${data.nouveau_telephone} WHERE nom = ${nom}`;
+                } else if (data.photo_url !== undefined) {
+                    await sql`UPDATE individus SET photo_url = ${data.photo_url} WHERE nom = ${nom}`;
+                } else if (data.notes !== undefined) {
+                    await sql`UPDATE individus SET notes = ${data.notes} WHERE nom = ${nom}`;
+                } else {
+                    await sql`UPDATE individus SET statut = ${data.statut} WHERE nom = ${nom}`;
+                }
                 return res.status(200).json({ message: 'Updated' });
             }
             return res.status(400).json({ error: 'Missing Params' });
