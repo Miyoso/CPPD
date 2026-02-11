@@ -8,13 +8,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%); background-color: #0f172a; }
-        .document-print { background: white; color: black; font-family: 'Inter', serif; line-height: 1.6; width: 100%; max-width: 800px; margin: 0 auto; }
+        .document-print { background: white; color: black; font-family: 'Inter', serif; line-height: 1.6; width: 100%; max-width: 850px; margin: 0 auto; }
         .hidden-section { display: none; }
         #preview-faits, #preview-menaces, #preview-demandes { white-space: pre-wrap; word-break: break-word; width: 100%; }
+        section { page-break-inside: avoid; }
         @media print { 
             .no-print { display: none; } 
             body { background: white !important; }
-            .document-print { margin: 0; padding: 1.5cm; width: 100%; max-width: none; height: auto; border: none; shadow: none; } 
+            .document-print { margin: 0; padding: 1.5cm; width: 100%; max-width: none; border: none; } 
         }
     </style>
 </head>
@@ -39,42 +40,42 @@
                     <input type="text" id="plaignant" placeholder="Nom Prénom" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div class="space-y-2">
-                    <label class="text-[10px] uppercase font-bold text-slate-500">Mis en cause (Accusé)</label>
+                    <label class="text-[10px] uppercase font-bold text-slate-500">Mis en cause</label>
                     <input type="text" id="accuse" placeholder="Nom ou X" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
             </div>
 
             <div class="space-y-2">
                 <label class="text-[10px] uppercase font-bold text-slate-500">Objet de la plainte</label>
-                <input type="text" id="objet" placeholder="ex: Menaces de mort, Vol..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="text" id="objet" placeholder="Objet" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
 
             <div class="space-y-2">
                 <label class="text-[10px] uppercase font-bold text-slate-500">II. Exposé des faits (**mot** pour gras)</label>
-                <textarea id="faits" rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Description des faits..."></textarea>
+                <textarea id="faits" rows="5" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
             </div>
 
             <div class="flex items-center space-x-3 p-3 bg-slate-900/50 rounded-xl border border-slate-700">
-                <input type="checkbox" id="checkMenaces" class="w-4 h-4 text-blue-600 bg-slate-900 border-slate-700 rounded focus:ring-blue-500">
-                <label for="checkMenaces" class="text-xs font-bold uppercase text-slate-300">Inclure : Nature des menaces et intimidation</label>
+                <input type="checkbox" id="checkMenaces" class="w-4 h-4 text-blue-600 bg-slate-900 border-slate-700 rounded">
+                <label for="checkMenaces" class="text-xs font-bold uppercase text-slate-300">Inclure : Menaces et intimidation</label>
             </div>
 
             <div id="formMenaces" class="hidden-section space-y-2">
                 <label class="text-[10px] uppercase font-bold text-slate-500">Détail des menaces</label>
-                <textarea id="valMenaces" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Détaillez les propos..."></textarea>
+                <textarea id="valMenaces" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
             </div>
 
             <div class="space-y-2">
-                <label class="text-[10px] uppercase font-bold text-slate-500">Qualifications et Demandes (1 par ligne)</label>
-                <textarea id="qualifications" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Infractions constatées..."></textarea>
+                <label class="text-[10px] uppercase font-bold text-slate-500">Qualifications (1 par ligne)</label>
+                <textarea id="qualifications" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
             </div>
 
             <div class="space-y-2">
                 <label class="text-[10px] uppercase font-bold text-slate-500">Demandes Particulières</label>
-                <textarea id="demandes" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Précisez vos demandes..."></textarea>
+                <textarea id="demandes" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
             </div>
 
-            <button id="download-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl transition-all uppercase text-xs tracking-widest shadow-lg shadow-emerald-900/20">Télécharger PDF</button>
+            <button id="download-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl transition-all uppercase text-xs tracking-widest shadow-lg">Télécharger PDF</button>
         </div>
 
         <div id="document-preview" class="document-print rounded-sm p-16 min-h-[29.7cm] flex flex-col text-black shadow-2xl">
@@ -108,12 +109,12 @@
 
                 <section class="w-full">
                     <h3 class="font-bold uppercase border-b border-black mb-3">II. Exposé chronologique des faits</h3>
-                    <div id="preview-faits" class="leading-relaxed">Description des faits...</div>
+                    <div id="preview-faits" class="leading-relaxed whitespace-pre-wrap">Description des faits...</div>
                 </section>
 
                 <section id="sectionMenaces" class="hidden-section w-full">
                     <h3 class="font-bold uppercase border-b border-black mb-3">III. Nature des menaces et intimidation</h3>
-                    <div id="preview-menaces" class="leading-relaxed">Détails des menaces...</div>
+                    <div id="preview-menaces" class="leading-relaxed whitespace-pre-wrap">Détails des menaces...</div>
                 </section>
 
                 <section class="w-full">
@@ -125,7 +126,7 @@
                 <section class="w-full">
                     <h3 id="labelIV" class="font-bold uppercase border-b border-black mb-3">IV. Demandes Particulières</h3>
                     <p id="header-demandes" class="mb-3 font-bold">En conséquence, [Nom du plaignant] sollicite :</p>
-                    <div id="preview-demandes" class="leading-relaxed">Précisez vos demandes...</div>
+                    <div id="preview-demandes" class="leading-relaxed whitespace-pre-wrap">Précisez vos demandes...</div>
                 </section>
             </div>
 
@@ -176,11 +177,9 @@
                         document.getElementById('preview-sign').innerText = val;
                         document.getElementById('header-demandes').innerText = `En conséquence, ${val} sollicite :`;
                     }
-                } else {
-                    if (previewElement) {
-                        previewElement.classList.add('text-slate-400');
-                        previewElement.innerText = '[' + id + ']';
-                    }
+                } else if (previewElement) {
+                    previewElement.classList.add('text-slate-400');
+                    previewElement.innerText = '[' + id + ']';
                 }
             });
         });
@@ -196,8 +195,9 @@
                 margin: 0,
                 filename: `Plainte_${plaignant}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
             };
             html2pdf().set(opt).from(element).save();
         });
