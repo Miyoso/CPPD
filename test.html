@@ -24,6 +24,41 @@
             height: calc(100vh - 80px);
             overflow-y: auto;
         }
+
+        /* --- CORRECTION DES BOXS --- */
+        .input-field {
+            width: 100%;
+            /* Fond sombre semi-transparent */
+            background-color: rgba(15, 23, 42, 0.6) !important; 
+            /* Bordure fine gris-bleu */
+            border: 1px solid #334155 !important;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            font-size: 0.875rem;
+            color: #e2e8f0 !important;
+            outline: none;
+            transition: all 0.2s ease;
+            appearance: none;
+        }
+
+        .input-field:hover {
+            border-color: #475569 !important;
+        }
+
+        .input-field:focus {
+            border-color: #3b82f6 !important;
+            background-color: rgba(30, 41, 59, 0.8) !important;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Couleur du texte d'exemple (placeholder) */
+        .input-field::placeholder {
+            color: #64748b !important;
+            font-style: italic;
+            opacity: 0.7;
+        }
+
+        /* --- APERÇU DOCUMENT (Lui reste blanc car c'est un papier) --- */
         .document-print { 
             background: white; 
             color: black; 
@@ -36,18 +71,10 @@
             transform: scale(0.85);
             transform-origin: top center;
         }
-        .input-field {
-            @apply w-full bg-slate-900/50 border border-slate-700 rounded-lg p-3 text-sm text-slate-200 outline-none transition-all duration-200;
-            backdrop-filter: blur(4px);
-        }
-        .input-field:hover { @apply border-slate-500; }
-        .input-field:focus {
-            @apply border-blue-500 ring-2 ring-blue-500/10 bg-slate-900/80;
-        }
-        .input-field::placeholder { @apply text-slate-500 italic opacity-70; }
         
         .label-style { @apply text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block; }
         .hidden-section { display: none; }
+        
         #preview-faits, #preview-menaces, #preview-demandes { 
             white-space: pre-wrap; 
             text-align: justify; 
@@ -100,15 +127,15 @@
                     <h2 class="text-blue-400 text-xs font-bold uppercase tracking-widest border-b border-slate-800 pb-2">2. Détails de l'affaire</h2>
                     <div>
                         <label class="label-style">Exposé des faits</label>
-                        <textarea id="faits" class="input-field" placeholder="Décrivez les événements..."></textarea>
+                        <textarea id="faits" rows="5" class="input-field" placeholder="Décrivez les événements..."></textarea>
                     </div>
                     <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
                         <label for="checkMenaces" class="text-xs font-bold text-slate-400 uppercase">Inclure section Menaces</label>
-                        <input type="checkbox" id="checkMenaces" class="w-5 h-5 rounded border-slate-700 bg-slate-900 text-blue-600">
+                        <input type="checkbox" id="checkMenaces" class="w-5 h-5 rounded border-slate-700 bg-slate-900 text-blue-600 cursor-pointer">
                     </div>
                     <div id="formMenaces" class="hidden-section">
                         <label class="label-style">Détail des menaces</label>
-                        <textarea id="valMenaces" class="input-field"></textarea>
+                        <textarea id="valMenaces" rows="3" class="input-field" placeholder="Nature des menaces..."></textarea>
                     </div>
                 </section>
 
@@ -116,11 +143,11 @@
                     <h2 class="text-blue-400 text-xs font-bold uppercase tracking-widest border-b border-slate-800 pb-2">3. Qualifications & Demandes</h2>
                     <div>
                         <label class="label-style">Infractions (1 par ligne)</label>
-                        <textarea id="qualifications" class="input-field" placeholder="ex: Menaces de mort"></textarea>
+                        <textarea id="qualifications" rows="3" class="input-field" placeholder="ex: Menaces de mort"></textarea>
                     </div>
                     <div>
                         <label class="label-style">Demandes particulières</label>
-                        <textarea id="demandes" class="input-field"></textarea>
+                        <textarea id="demandes" rows="3" class="input-field" placeholder="ex: Demande de saisie..."></textarea>
                     </div>
                 </section>
                 <div class="h-20"></div>
@@ -192,7 +219,10 @@
         });
 
         inputs.forEach(id => {
-            document.getElementById(id).addEventListener('input', (e) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+
+            el.addEventListener('input', (e) => {
                 const val = e.target.value;
                 if (id === 'qualifications') {
                     document.getElementById('list-qualifications').innerHTML = val.split('\n').filter(l => l.trim()).map(l => `<li class="uppercase">${l}</li>`).join('');
@@ -211,14 +241,18 @@
 
         document.getElementById('download-btn').addEventListener('click', () => {
             const el = document.getElementById('document-preview');
+            const originalTransform = el.style.transform;
             el.style.transform = "scale(1)";
+            
             html2pdf().set({
-                margin: 0,
+                margin: 10,
                 filename: 'Plainte_CPPD.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(el).save().then(() => el.style.transform = "scale(0.85)");
+            }).from(el).save().then(() => {
+                el.style.transform = originalTransform;
+            });
         });
     </script>
 </body>
