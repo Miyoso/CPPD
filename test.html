@@ -28,17 +28,11 @@
 
     <main class="max-w-6xl mx-auto w-full p-4 grid grid-cols-1 lg:grid-cols-2 gap-8 mb-20">
         <div class="no-print space-y-6 bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 shadow-xl self-start">
-            <h2 class="text-lg font-bold text-blue-400 uppercase tracking-widest">Rédaction</h2>
+            <h2 class="text-lg font-bold text-blue-400 uppercase tracking-widest uppercase">Rédaction</h2>
             
-            <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-2">
-                    <label class="text-[10px] uppercase font-bold text-slate-500">Plaignant</label>
-                    <input type="text" id="plaignant" placeholder="Nom Prénom" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none">
-                </div>
-                <div class="space-y-2">
-                    <label class="text-[10px] uppercase font-bold text-slate-500">Structure</label>
-                    <input type="text" id="etablissement" placeholder="Facultatif" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none">
-                </div>
+            <div class="space-y-2">
+                <label class="text-[10px] uppercase font-bold text-slate-500">Plaignant</label>
+                <input type="text" id="plaignant" placeholder="Nom Prénom" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
 
             <div class="space-y-2">
@@ -57,25 +51,24 @@
             </div>
 
             <div class="space-y-2">
-                <label class="text-[10px] uppercase font-bold text-slate-500">III. Qualifications et Demandes (Texte Libre)</label>
-                <textarea id="qualifications" rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Ajoutez vos demandes ici..."></textarea>
+                <label class="text-[10px] uppercase font-bold text-slate-500">III. Qualifications et Demandes (1 point par ligne)</label>
+                <textarea id="qualifications" rows="5" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Tapez vos demandes. Chaque retour à la ligne créera un nouveau point..."></textarea>
             </div>
 
             <div class="space-y-2">
                 <label class="text-[10px] uppercase font-bold text-slate-500">IV. Demandes Particulières</label>
-                <textarea id="demandes" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Demandes de protection, dommages..."></textarea>
+                <textarea id="demandes" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Précisez vos demandes supplémentaires..."></textarea>
             </div>
 
-            <button onclick="window.print()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl transition-all uppercase text-xs tracking-widest shadow-lg shadow-emerald-900/20">Imprimer / PDF</button>
+            <button onclick="window.print()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl transition-all uppercase text-xs tracking-widest shadow-lg shadow-emerald-900/20 uppercase">Imprimer / PDF</button>
         </div>
 
         <div id="document-preview" class="document-print rounded-sm p-12 min-h-[29.7cm] flex flex-col text-black shadow-2xl overflow-hidden">
             <div class="flex justify-between items-start mb-12">
                 <div class="text-[11px] leading-relaxed">
-                    <p class="font-bold uppercase mb-1">PLAIGNANT :</p>
+                    <p class="font-bold uppercase mb-1 underline">Plaignant :</p>
                     <p id="preview-plaignant" class="italic text-slate-400">[Nom du plaignant]</p>
-                    <p id="preview-etab" class="text-slate-400">[Structure facultative]</p>
-                    <div class="mt-8 font-bold uppercase">
+                    <div class="mt-8 font-bold uppercase underline">
                         <p>À l'attention du :</p>
                         <p>Cayo Perico Police Department</p>
                         <p>Bureau des plaintes et enquêtes</p>
@@ -107,15 +100,14 @@
                 <section>
                     <h3 class="font-bold uppercase border-b border-black mb-2">III. Qualifications et Demandes</h3>
                     <p class="mb-2">En conséquence, le plaignant sollicite :</p>
-                    <ul class="list-disc ml-8 space-y-1">
+                    <ul id="list-qualifications" class="list-disc ml-8 space-y-1">
                         <li>L'enregistrement immédiat de cette plainte et l'ouverture d'une enquête officielle.</li>
-                        <li id="preview-qualifications" class="italic text-slate-400">[Texte supplémentaire à remplir...]</li>
-                    </ul>
+                        </ul>
                 </section>
 
                 <section>
                     <h3 class="font-bold uppercase border-b border-black mb-2">IV. Demandes Particulières</h3>
-                    <p id="preview-demandes" class="mt-2 whitespace-pre-wrap italic text-slate-400">Précisez vos demandes supplémentaires...</p>
+                    <p id="preview-demandes" class="mt-2 whitespace-pre-wrap italic text-slate-400">Description des demandes...</p>
                 </section>
             </div>
 
@@ -127,19 +119,33 @@
     </main>
 
     <script>
-        const inputs = ['plaignant', 'etablissement', 'objet', 'accuse', 'faits', 'demandes', 'qualifications'];
+        const inputs = ['plaignant', 'objet', 'accuse', 'faits', 'demandes', 'qualifications'];
         inputs.forEach(id => {
             document.getElementById(id).addEventListener('input', (e) => {
                 const val = e.target.value;
+
+                if (id === 'qualifications') {
+                    const list = document.getElementById('list-qualifications');
+                    // On garde toujours le premier point par défaut
+                    let html = '<li>L\'enregistrement immédiat de cette plainte et l\'ouverture d\'une enquête officielle.</li>';
+                    
+                    // On sépare le texte par les retours à la ligne
+                    const lines = val.split('\n');
+                    lines.forEach(line => {
+                        if (line.trim() !== "") {
+                            html += `<li class="italic font-medium">${line}</li>`;
+                        }
+                    });
+                    list.innerHTML = html;
+                    return;
+                }
+
                 const previewElement = document.getElementById('preview-' + id);
-                
                 if(val.trim() !== "") {
                     previewElement.classList.remove('text-slate-400');
                     if(id === 'plaignant') {
                         previewElement.innerText = val;
                         document.getElementById('preview-sign').innerText = val;
-                    } else if(id === 'etablissement') {
-                        previewElement.innerText = 'Structure : ' + val;
                     } else {
                         previewElement.innerText = val;
                     }
