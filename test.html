@@ -47,7 +47,7 @@
             </div>
 
             <div class="space-y-2">
-                <label class="text-[10px] uppercase font-bold text-slate-500">II. Exposé des faits</label>
+                <label class="text-[10px] uppercase font-bold text-slate-500">II. Exposé des faits (**mot** pour gras)</label>
                 <textarea id="faits" rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Description des faits..."></textarea>
             </div>
 
@@ -57,18 +57,18 @@
             </div>
 
             <div id="formMenaces" class="hidden-section space-y-2">
-                <label class="text-[10px] uppercase font-bold text-slate-500">Détail des menaces / intimidations</label>
-                <textarea id="valMenaces" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Détaillez les propos ou actes..."></textarea>
+                <label class="text-[10px] uppercase font-bold text-slate-500">Détail des menaces (**mot** pour gras)</label>
+                <textarea id="valMenaces" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Détaillez les propos..."></textarea>
             </div>
 
             <div class="space-y-2">
-                <label class="text-[10px] uppercase font-bold text-slate-500">III. Qualifications et Demandes (1 point par ligne)</label>
+                <label class="text-[10px] uppercase font-bold text-slate-500">Qualifications et Demandes (1 point par ligne)</label>
                 <textarea id="qualifications" rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Demandes..."></textarea>
             </div>
 
             <div class="space-y-2">
-                <label class="text-[10px] uppercase font-bold text-slate-500">IV. Demandes Particulières</label>
-                <textarea id="demandes" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Précisez vos demandes supplémentaires..."></textarea>
+                <label class="text-[10px] uppercase font-bold text-slate-500">Demandes Particulières</label>
+                <textarea id="demandes" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Précisez vos demandes..."></textarea>
             </div>
 
             <button onclick="window.print()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl transition-all uppercase text-xs tracking-widest shadow-lg shadow-emerald-900/20">Imprimer / PDF</button>
@@ -139,12 +139,14 @@
         const inputs = ['plaignant', 'objet', 'accuse', 'faits', 'demandes', 'qualifications', 'valMenaces'];
         const checkMenaces = document.getElementById('checkMenaces');
 
+        function formatText(text) {
+            return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        }
+
         checkMenaces.addEventListener('change', (e) => {
             const isChecked = e.target.checked;
             document.getElementById('formMenaces').style.display = isChecked ? 'block' : 'none';
             document.getElementById('sectionMenaces').style.display = isChecked ? 'block' : 'none';
-            
-            // Ajustement des numéros de section
             document.getElementById('labelIII').innerText = isChecked ? "IV. Qualifications et Demandes" : "III. Qualifications et Demandes";
             document.getElementById('labelIV').innerText = isChecked ? "V. Demandes Particulières" : "IV. Demandes Particulières";
         });
@@ -156,15 +158,15 @@
                 if (id === 'qualifications') {
                     const list = document.getElementById('list-qualifications');
                     let html = '<li>L\'enregistrement immédiat de cette plainte et l\'ouverture d\'une enquête officielle.</li>';
-                    const lines = val.split('\n');
-                    lines.forEach(line => {
-                        if (line.trim() !== "") html += `<li class="italic font-medium">${line}</li>`;
+                    val.split('\n').forEach(line => {
+                        if (line.trim() !== "") html += `<li class="italic font-medium">${formatText(line)}</li>`;
                     });
                     list.innerHTML = html;
                     return;
                 }
 
-                const previewElement = document.getElementById('preview-' + (id === 'valMenaces' ? 'menaces' : id));
+                const previewId = id === 'valMenaces' ? 'preview-menaces' : 'preview-' + id;
+                const previewElement = document.getElementById(previewId);
                 
                 if(val.trim() !== "") {
                     if (previewElement) previewElement.classList.remove('text-slate-400');
@@ -173,7 +175,7 @@
                         document.getElementById('preview-sign').innerText = val;
                         document.getElementById('header-demandes').innerText = `En conséquence, ${val} sollicite :`;
                     } else if (previewElement) {
-                        previewElement.innerText = val;
+                        previewElement.innerHTML = formatText(val);
                     }
                 } else {
                     if (previewElement) {
