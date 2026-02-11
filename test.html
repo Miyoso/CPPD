@@ -8,93 +8,153 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%); background-color: #0f172a; }
-        .document-print { background: white; color: black; font-family: 'Inter', serif; line-height: 1.4; width: 100%; max-width: 850px; margin: 0 auto; }
+        
+        /* Styles spécifiques pour le document PDF */
+        .document-print { 
+            background: white; 
+            color: black; 
+            font-family: 'Inter', 'Helvetica', serif; 
+            line-height: 1.4; 
+            width: 210mm; /* Largeur A4 fixe pour la cohérence */
+            min-height: 297mm;
+            padding: 20mm;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+        }
+
         .hidden-section { display: none; }
-        #preview-faits, #preview-menaces, #preview-demandes { white-space: pre-wrap; word-break: break-word; width: 100%; text-align: justify; }
-        section { margin-bottom: 1rem; width: 100%; }
+        #preview-faits, #preview-menaces, #preview-demandes { white-space: pre-wrap; word-break: break-word; text-align: justify; }
+        
+        /* Éviter les grands espaces vides entre les sections */
+        section { 
+            page-break-inside: avoid; 
+            margin-bottom: 1rem; 
+            orphans: 3;
+            widows: 3;
+        }
+
         @media print { 
             .no-print { display: none; } 
             body { background: white !important; }
-            .document-print { margin: 0; padding: 1cm; width: 100%; max-width: none; border: none; } 
+            .document-print { margin: 0; border: none; box-shadow: none; } 
         }
     </style>
 </head>
 <body class="text-slate-300 font-sans min-h-screen flex flex-col antialiased">
     
-    <header class="no-print sticky top-4 z-50 px-4 mb-4">
+    <header class="no-print sticky top-4 z-50 px-4 mb-8">
         <div class="max-w-5xl mx-auto bg-slate-800/80 backdrop-blur-md border border-slate-700/50 rounded-2xl p-4 flex justify-between items-center shadow-2xl">
-            <h1 class="text-xl font-bold text-white tracking-tight uppercase">C.P.P.D • GÉNÉRATEUR</h1>
-            <button id="download-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-2 rounded-xl transition-all uppercase text-xs tracking-widest">Télécharger PDF</button>
+            <h1 class="text-xl font-bold text-white tracking-tight uppercase">C.P.P.D • GÉNÉRATEUR DE PLAINTE</h1>
+            <div class="flex gap-2">
+                <a href="index.html" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl font-bold text-xs uppercase transition-all">Retour</a>
+            </div>
         </div>
     </header>
 
-    <main class="max-w-5xl mx-auto w-full p-4 flex flex-col gap-4 mb-10">
-        <div class="no-print space-y-4 bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 shadow-xl">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="text" id="plaignant" placeholder="Plaignant" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none">
-                <input type="text" id="accuse" placeholder="Mis en cause" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none">
-            </div>
-            <input type="text" id="objet" placeholder="Objet" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none">
-            <textarea id="faits" rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none resize-none" placeholder="Faits..."></textarea>
+    <main class="max-w-5xl mx-auto w-full p-4 flex flex-col gap-8 mb-20">
+        <div class="no-print space-y-6 bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 shadow-xl">
+            <h2 class="text-lg font-bold text-blue-400 uppercase tracking-widest">Rédaction de la plainte</h2>
             
-            <div class="flex items-center space-x-3">
-                <input type="checkbox" id="checkMenaces" class="w-4 h-4 text-blue-600 bg-slate-900 border-slate-700 rounded">
-                <label for="checkMenaces" class="text-xs font-bold uppercase text-slate-300">Section Menaces</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label class="text-[10px] uppercase font-bold text-slate-500">Plaignant</label>
+                    <input type="text" id="plaignant" placeholder="Nom Prénom" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] uppercase font-bold text-slate-500">Mis en cause</label>
+                    <input type="text" id="accuse" placeholder="Nom ou X" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
             </div>
 
-            <textarea id="valMenaces" rows="2" class="hidden-section w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none resize-none" placeholder="Détail menaces..."></textarea>
-            <textarea id="qualifications" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none resize-none" placeholder="Qualifications..."></textarea>
-            <textarea id="demandes" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none resize-none" placeholder="Demandes..."></textarea>
+            <div class="space-y-2">
+                <label class="text-[10px] uppercase font-bold text-slate-500">Objet de la plainte</label>
+                <input type="text" id="objet" placeholder="ex: Menaces de mort" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-[10px] uppercase font-bold text-slate-500">Exposé des faits</label>
+                <textarea id="faits" rows="5" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Décrivez les événements chronologiquement..."></textarea>
+            </div>
+
+            <div class="flex items-center space-x-3 p-3 bg-slate-900/50 rounded-xl border border-slate-700">
+                <input type="checkbox" id="checkMenaces" class="w-4 h-4 text-blue-600 bg-slate-900 border-slate-700 rounded focus:ring-blue-500">
+                <label for="checkMenaces" class="text-xs font-bold uppercase text-slate-300">Inclure la section Menaces</label>
+            </div>
+
+            <div id="formMenaces" class="hidden-section space-y-2">
+                <label class="text-[10px] uppercase font-bold text-slate-500">Détail des menaces</label>
+                <textarea id="valMenaces" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-[10px] uppercase font-bold text-slate-500">Qualifications (1 par ligne)</label>
+                <textarea id="qualifications" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="ex: Menaces de mort"></textarea>
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-[10px] uppercase font-bold text-slate-500">Demandes Particulières</label>
+                <textarea id="demandes" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="ex: Ouverture d'une enquête"></textarea>
+            </div>
+
+            <button id="download-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl transition-all uppercase text-xs tracking-widest shadow-lg shadow-emerald-900/20">Télécharger le PDF officiel</button>
         </div>
 
-        <div id="document-preview" class="document-print rounded-sm p-8 min-h-[29.7cm] flex flex-col text-black shadow-2xl">
-            <div class="flex justify-between items-start mb-6">
-                <div class="text-[10px] leading-tight">
-                    <p class="font-bold uppercase underline">Plaignant :</p>
-                    <p id="preview-plaignant" class="italic text-slate-400">[Nom]</p>
-                    <div class="mt-4 font-bold uppercase underline">À l'attention du :</div>
+        <div id="document-preview" class="document-print rounded-sm shadow-2xl overflow-hidden">
+            <div class="flex justify-between items-start mb-8">
+                <div class="text-[11px] leading-tight">
+                    <p class="font-bold uppercase mb-1 underline">Plaignant :</p>
+                    <p id="preview-plaignant" class="italic text-slate-400 mb-6">[Nom Prénom]</p>
+                    <div class="font-bold uppercase underline">
+                        <p>À l'attention du :</p>
+                    </div>
                     <p>Cayo Perico Police Department</p>
+                    <p>Bureau des plaintes et enquêtes</p>
                 </div>
                 <img src="CPPD.png" class="w-24 h-24 object-contain">
             </div>
 
-            <div class="text-right text-[10px] mb-4 italic">Fait le <span id="current-date"></span></div>
-
-            <div class="text-center mb-6">
-                <h1 class="text-lg font-bold border-y border-black py-2 uppercase">Dépôt de plainte formelle</h1>
-                <p class="mt-2 text-sm">Objet : <span id="preview-objet" class="underline"></span></p>
+            <div class="text-right text-[11px] mb-8 italic">
+                Fait à Cayo Perico, le <span id="current-date"></span>
             </div>
 
-            <div class="space-y-4 text-[12px] w-full">
+            <div class="text-center mb-8">
+                <h1 class="text-lg font-bold border-y-2 border-black py-2 uppercase tracking-tighter">Dépôt de plainte formelle</h1>
+                <p class="mt-2 font-bold text-sm">Objet : <span id="preview-objet" class="underline">[Objet]</span></p>
+            </div>
+
+            <div class="flex-grow space-y-6 text-[12px]">
                 <section>
-                    <h3 class="font-bold uppercase border-b border-black mb-1">I. Mis en cause</h3>
-                    <p>Contre : <span id="preview-accuse" class="font-bold italic text-slate-400"></span></p>
+                    <h3 class="font-bold uppercase border-b border-black mb-2">I. Désignation du mis en cause</h3>
+                    <p>La présente plainte est déposée à l'encontre de : <span id="preview-accuse" class="font-bold italic">[Nom de l'accusé]</span>.</p>
                 </section>
 
                 <section>
-                    <h3 class="font-bold uppercase border-b border-black mb-1">II. Faits</h3>
-                    <div id="preview-faits" class="leading-snug"></div>
+                    <h3 class="font-bold uppercase border-b border-black mb-2">II. Exposé chronologique des faits</h3>
+                    <div id="preview-faits" class="leading-relaxed">...</div>
                 </section>
 
                 <section id="sectionMenaces" class="hidden-section">
-                    <h3 class="font-bold uppercase border-b border-black mb-1">III. Menaces</h3>
-                    <div id="preview-menaces" class="leading-snug"></div>
+                    <h3 class="font-bold uppercase border-b border-black mb-2">III. Nature des menaces et intimidation</h3>
+                    <div id="preview-menaces" class="leading-relaxed">...</div>
                 </section>
 
                 <section>
-                    <h3 id="labelIII" class="font-bold uppercase border-b border-black mb-1">III. Qualifications</h3>
-                    <ul id="list-qualifications" class="list-disc ml-6 space-y-1"></ul>
+                    <h3 id="labelIII" class="font-bold uppercase border-b border-black mb-2">III. Qualifications</h3>
+                    <p class="mb-2">Les faits ainsi rapportés sont susceptibles de constituer les infractions suivantes :</p>
+                    <ul id="list-qualifications" class="list-disc ml-8 space-y-1"></ul>
                 </section>
 
                 <section>
-                    <h3 id="labelIV" class="font-bold uppercase border-b border-black mb-1">IV. Demandes</h3>
-                    <div id="preview-demandes" class="leading-snug"></div>
+                    <h3 id="labelIV" class="font-bold uppercase border-b border-black mb-2">IV. Demandes Particulières</h3>
+                    <p id="header-demandes" class="mb-2 font-bold italic text-[11px]">En conséquence, le plaignant sollicite :</p>
+                    <div id="preview-demandes" class="leading-relaxed">...</div>
                 </section>
             </div>
 
-            <div class="mt-auto text-right text-[11px]">
-                <p class="font-bold mb-8">Signature,</p>
-                <p id="preview-sign" class="font-bold underline italic"></p>
+            <div class="mt-8 pt-6 border-t border-slate-100 text-right text-[11px]">
+                <p class="font-bold mb-12">Le Plaignant,</p>
+                <p id="preview-sign" class="font-bold underline tracking-tight italic text-lg">[Signature]</p>
             </div>
         </div>
     </main>
@@ -103,12 +163,16 @@
         const inputs = ['plaignant', 'objet', 'accuse', 'faits', 'demandes', 'qualifications', 'valMenaces'];
         const checkMenaces = document.getElementById('checkMenaces');
 
+        function formatText(text) {
+            return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        }
+
         checkMenaces.addEventListener('change', (e) => {
             const isChecked = e.target.checked;
-            document.getElementById('valMenaces').style.display = isChecked ? 'block' : 'none';
+            document.getElementById('formMenaces').style.display = isChecked ? 'block' : 'none';
             document.getElementById('sectionMenaces').style.display = isChecked ? 'block' : 'none';
             document.getElementById('labelIII').innerText = isChecked ? "IV. Qualifications" : "III. Qualifications";
-            document.getElementById('labelIV').innerText = isChecked ? "V. Demandes" : "IV. Demandes";
+            document.getElementById('labelIV').innerText = isChecked ? "V. Demandes Particulières" : "IV. Demandes Particulières";
         });
 
         inputs.forEach(id => {
@@ -116,25 +180,53 @@
                 const val = e.target.value;
                 if (id === 'qualifications') {
                     const list = document.getElementById('list-qualifications');
-                    list.innerHTML = val.split('\n').filter(l => l.trim()).map(l => `<li class="italic">${l}</li>`).join('');
+                    let html = '';
+                    val.split('\n').forEach(line => {
+                        if (line.trim() !== "") html += `<li class="italic font-medium">${formatText(line)}</li>`;
+                    });
+                    list.innerHTML = html;
                     return;
                 }
                 const previewId = id === 'valMenaces' ? 'preview-menaces' : 'preview-' + id;
-                const el = document.getElementById(previewId);
-                if (el) el.innerText = val;
-                if (id === 'plaignant') document.getElementById('preview-sign').innerText = val;
+                const previewElement = document.getElementById(previewId);
+                
+                if(val.trim() !== "") {
+                    if (previewElement) {
+                        previewElement.classList.remove('text-slate-400');
+                        previewElement.innerHTML = formatText(val);
+                    }
+                    if(id === 'plaignant') {
+                        document.getElementById('preview-plaignant').innerText = val;
+                        document.getElementById('preview-sign').innerText = val;
+                        document.getElementById('header-demandes').innerText = `En conséquence, ${val} sollicite :`;
+                    }
+                } else if (previewElement) {
+                    previewElement.classList.add('text-slate-400');
+                    previewElement.innerText = '[' + id + ']';
+                }
             });
         });
 
-        document.getElementById('current-date').innerText = new Date().toLocaleDateString('fr-FR');
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('fr-FR', { 
+            day: 'numeric', month: 'long', year: 'numeric' 
+        });
 
         document.getElementById('download-btn').addEventListener('click', () => {
             const element = document.getElementById('document-preview');
+            const plaignant = document.getElementById('plaignant').value || 'Plainte';
+            
             const opt = {
-                margin: 5,
-                filename: 'Plainte.pdf',
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                margin: 0,
+                filename: `Plainte_${plaignant.replace(/\s+/g, '_')}.pdf`,
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true, 
+                    letterRendering: true,
+                    scrollY: 0 // Crucial pour éviter les espaces blancs en haut
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
             };
             html2pdf().set(opt).from(element).save();
         });
