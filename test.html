@@ -7,12 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%); background-color: #0f172a; }
-        .document-print { background: white; color: black; font-family: 'Inter', serif; line-height: 1.5; shadow: 0 25px 50px -12px rgb(0 0 0 / 0.5); }
+        .document-print { background: white; color: black; font-family: 'Inter', serif; line-height: 1.5; }
         .hidden-section { display: none; }
+        #preview-faits, #preview-menaces, #preview-demandes { white-space: pre-wrap; word-break: break-word; }
         @media print { 
             .no-print { display: none; } 
             body { background: white !important; }
-            .document-print { margin: 0; padding: 1.5cm; shadow: none; width: 100%; height: auto; border: none; } 
+            .document-print { margin: 0; padding: 1.5cm; width: 100%; height: auto; border: none; } 
         }
     </style>
 </head>
@@ -84,7 +85,6 @@
                     </div>
                         <p>Cayo Perico Police Department</p>
                         <p>Bureau des plaintes et enquêtes</p>
-                    
                 </div>
                 <img src="https://i.goopics.net/ylr6s8.png" class="w-32 h-32 object-contain">
             </div>
@@ -106,26 +106,24 @@
 
                 <section>
                     <h3 class="font-bold uppercase border-b border-black mb-2">II. Exposé chronologique des faits</h3>
-                    <p id="preview-faits" >Description des faits...</p>
+                    <p id="preview-faits">Description des faits...</p>
                 </section>
 
                 <section id="sectionMenaces" class="hidden-section">
                     <h3 class="font-bold uppercase border-b border-black mb-2">III. Nature des menaces et intimidation</h3>
-                    <p id="preview-menaces" >Détails des menaces...</p>
+                    <p id="preview-menaces">Détails des menaces...</p>
                 </section>
 
                 <section>
                     <h3 id="labelIII" class="font-bold uppercase border-b border-black mb-2">III. Qualifications et Demandes</h3>
                     <p class="mb-2">Les faits ainsi rapportés sont susceptibles de constituer les infractions suivantes :</p>
-                    <ul id="list-qualifications" class="list-disc ml-8 space-y-1">
-                        
-                    </ul>
+                    <ul id="list-qualifications" class="list-disc ml-8 space-y-1"></ul>
                 </section>
 
                 <section>
                     <h3 id="labelIV" class="font-bold uppercase border-b border-black mb-2">IV. Demandes Particulières</h3>
                     <p id="header-demandes" class="mb-2 font-bold">En conséquence, [Nom du plaignant] sollicite :</p>
-                    <p id="preview-demandes" >Précisez vos demandes...</p>
+                    <p id="preview-demandes">Précisez vos demandes...</p>
                 </section>
             </div>
 
@@ -155,7 +153,6 @@
         inputs.forEach(id => {
             document.getElementById(id).addEventListener('input', (e) => {
                 const val = e.target.value;
-
                 if (id === 'qualifications') {
                     const list = document.getElementById('list-qualifications');
                     let html = '';
@@ -165,10 +162,8 @@
                     list.innerHTML = html;
                     return;
                 }
-
                 const previewId = id === 'valMenaces' ? 'preview-menaces' : 'preview-' + id;
                 const previewElement = document.getElementById(previewId);
-                
                 if(val.trim() !== "") {
                     if (previewElement) previewElement.classList.remove('text-slate-400');
                     if(id === 'plaignant') {
