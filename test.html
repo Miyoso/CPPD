@@ -158,7 +158,7 @@
 
                 if (id === 'qualifications') {
                     const list = document.getElementById('list-qualifications');
-                    
+                    let html = '<li></li>';
                     val.split('\n').forEach(line => {
                         if (line.trim() !== "") html += `<li class="italic font-medium">${formatText(line)}</li>`;
                     });
