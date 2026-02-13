@@ -173,9 +173,7 @@
         });
     }
 
-    // FONCTION MODIFIÉE POUR FIXER LE PROBLÈME DE NAVIGATION
     function filterByCategory(name, element) {
-        // Mise à jour visuelle des boutons
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         if (element) {
             element.classList.add('active');
@@ -183,16 +181,12 @@
             document.querySelector('button[onclick*="all"]').classList.add('active');
         }
 
-        // Réinitialiser la barre de recherche textuelle pour éviter les conflits
         document.getElementById('searchBar').value = "";
 
-        // Application du filtre sur les conteneurs de catégories
         document.querySelectorAll('.law-category').forEach(c => {
             const catTitle = c.getAttribute('data-category');
-            
             if (name === 'all' || catTitle === name) {
                 c.style.display = "";
-                // S'assurer que tous les boutons à l'intérieur sont visibles
                 c.querySelectorAll('button').forEach(b => b.style.display = "");
             } else {
                 c.style.display = "none";
@@ -207,11 +201,14 @@
                 <div class="px-4 py-2 rounded-t-xl border-t border-x bg-gradient-to-r ${cat.style}"><h2 class="text-xs font-bold uppercase text-white">${cat.name}</h2></div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-800/50 p-4 rounded-b-xl border-x border-b border-slate-700/50">
                     ${cat.items.map(i => {
-                        const isDrug = cat.name === "Objet illégaux et drogues";
+                        const isDrugCategory = cat.name === "Objet illégaux et drogues";
+                        const isStateMaterial = i.label.toLowerCase().includes("matériel d'état") || i.label.toLowerCase().includes("materiel d'etat");
+                        const useQtyLogic = isDrugCategory && !isStateMaterial;
+
                         return `
-                        <button id="btn-${i.id}" onclick="toggleItem(${i.id}, ${isDrug})" class="relative text-left p-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-750 transition-all flex flex-col justify-between h-full">
+                        <button id="btn-${i.id}" onclick="toggleItem(${i.id}, ${useQtyLogic})" class="relative text-left p-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-750 transition-all flex flex-col justify-between h-full">
                             <div class="flex justify-between items-start gap-2 mb-1">
-                                <span class="font-medium text-slate-200 text-xs leading-tight">${i.label} ${isDrug ? '<span class="text-orange-400 font-bold">(Unité)</span>' : ''}</span>
+                                <span class="font-medium text-slate-200 text-xs leading-tight">${i.label} ${useQtyLogic ? '<span class="text-orange-400 font-bold">(Unité)</span>' : ''}</span>
                                 <span class="shrink-0 font-mono text-[10px] font-bold text-emerald-400">${i.amende}$</span>
                             </div>
                             ${i.sanction ? `<div class="text-[9px] text-orange-300 italic opacity-80 mt-1 line-clamp-2">${i.sanction}</div>` : ''}
@@ -222,23 +219,6 @@
                 </div>
             </div>
         `).join('');
-    }
-
-    function updateCheckboxVisual() {
-        const isChecked = document.getElementById('firstOffenseCheck').checked;
-        const icon = document.getElementById('checkboxIcon');
-        const square = document.getElementById('checkboxSquare');
-        if(isChecked) {
-            icon.classList.replace('opacity-0', 'opacity-100');
-            icon.classList.replace('scale-50', 'scale-100');
-            square.classList.replace('border-slate-500', 'border-blue-500');
-            square.classList.add('bg-blue-600');
-        } else {
-            icon.classList.replace('opacity-100', 'opacity-0');
-            icon.classList.replace('scale-100', 'scale-50');
-            square.classList.replace('border-blue-500', 'border-slate-500');
-            square.classList.remove('bg-blue-600');
-        }
     }
 
     function toggleItem(id, askQty = false) {
@@ -265,7 +245,7 @@
             ring.classList.replace('opacity-0', 'opacity-100'); 
             ring.classList.replace('scale-95', 'scale-100');
             
-            if(qty > 1 || askQty) {
+            if(qty > 1) {
                 badge.innerText = `x${qty}`;
                 badge.classList.remove('hidden');
             }
@@ -287,12 +267,13 @@
                     <span>${i.label}</span>
                     ${i.qty > 1 ? `<span class="text-[9px] text-slate-500 font-bold uppercase">Quantité: ${i.qty}</span>` : ''}
                 </div>
-                <span class="text-emerald-400">${(i.amende * (i.qty || 1)).toLocaleString()}$</span>
+                <span class="text-emerald-400">${(i.amende * i.qty).toLocaleString()}$</span>
             </div>
         `).join('') : '<div class="h-20 flex items-center justify-center text-slate-600 italic">Vide</div>';
 
-        let f = cart.reduce((a, i) => a + (i.amende * (i.qty || 1)), 0);
-        let p = cart.reduce((a, i) => a + (i.prison * (i.qty || 1)), 0);
+        // Multiplication uniquement de l'amende par la quantité, le temps de prison reste fixe
+        let f = cart.reduce((a, i) => a + (i.amende * i.qty), 0);
+        let p = cart.reduce((a, i) => a + i.prison, 0);
         let b = cart.reduce((a, i) => i.ban > a ? i.ban : a, 0);
 
         if(document.getElementById('firstOffenseCheck').checked) { 
@@ -335,7 +316,6 @@
 
     function filterLaws() {
         const t = document.getElementById('searchBar').value.toLowerCase();
-        // On repasse en mode "Tous" visuellement quand on cherche au clavier
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         document.querySelector('button[onclick*="all"]').classList.add('active');
 
