@@ -190,16 +190,19 @@
                 <div class="law-category animate-fade-in" data-category="${cat.name}">
                     <div class="px-4 py-2 rounded-t-xl border-t border-x bg-gradient-to-r ${cat.style}"><h2 class="text-xs font-bold uppercase text-white">${cat.name}</h2></div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-800/50 p-4 rounded-b-xl border-x border-b border-slate-700/50">
-                        ${cat.items.map(i => `
-                            <button id="btn-${i.id}" onclick="toggleItem(${i.id})" class="relative text-left p-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-750 transition-all flex flex-col justify-between h-full">
+                        ${cat.items.map(i => {
+                            const isDrug = cat.name === "Objet illégaux et drogues";
+                            return `
+                            <button id="btn-${i.id}" onclick="toggleItem(${i.id}, ${isDrug})" class="relative text-left p-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-750 transition-all flex flex-col justify-between h-full">
                                 <div class="flex justify-between items-start gap-2 mb-1">
-                                    <span class="font-medium text-slate-200 text-xs leading-tight">${i.label}</span>
+                                    <span class="font-medium text-slate-200 text-xs leading-tight">${i.label} ${isDrug ? '<span class="text-orange-400 font-bold">(Unité)</span>' : ''}</span>
                                     <span class="shrink-0 font-mono text-[10px] font-bold text-emerald-400">${i.amende}$</span>
                                 </div>
                                 ${i.sanction ? `<div class="text-[9px] text-orange-300 italic opacity-80 mt-1 line-clamp-2">${i.sanction}</div>` : ''}
+                                <div id="badge-qty-${i.id}" class="hidden absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg z-10">x1</div>
                                 <div class="selection-ring absolute inset-0 border-2 border-blue-500 rounded-xl opacity-0 scale-95 transition-all pointer-events-none"></div>
                             </button>
-                        `).join('')}
+                        `}).join('')}
                     </div>
                 </div>
             `).join('');
@@ -222,23 +225,35 @@
             }
         }
 
-        function toggleItem(id) {
+        function toggleItem(id, askQty = false) {
             const item = categories.flatMap(c => c.items).find(i => i.id === id);
             const btn = document.getElementById(`btn-${id}`);
             const ring = btn.querySelector('.selection-ring');
+            const badge = document.getElementById(`badge-qty-${id}`);
             const idx = cart.findIndex(i => i.id === id);
+
             if(idx > -1) { 
                 cart.splice(idx, 1); 
                 ring.classList.replace('opacity-100', 'opacity-0'); 
                 ring.classList.replace('scale-100', 'scale-95');
-                if (cart.length === 0) {
-                    document.getElementById('firstOffenseCheck').checked = false;
-                    updateCheckboxVisual();
-                }
+                badge.classList.add('hidden');
             } else { 
-                cart.push(item); 
+                let qty = 1;
+                if(askQty) {
+                    const input = prompt(`Combien de "${item.label}" ont été trouvés ?`, "1");
+                    qty = parseInt(input);
+                    if(isNaN(qty) || qty <= 0) return;
+                }
+                
+                cart.push({ ...item, qty: qty }); 
                 ring.classList.replace('opacity-0', 'opacity-100'); 
                 ring.classList.replace('scale-95', 'scale-100');
+                
+                if(qty > 1 || askQty) {
+                    badge.innerText = `x${qty}`;
+                    badge.classList.remove('hidden');
+                }
+                
                 document.getElementById('firstOffenseCheck').checked = true;
                 updateCheckboxVisual();
             }
@@ -249,9 +264,26 @@
             const badge = document.getElementById('countBadge');
             const list = document.getElementById('cartList');
             badge.innerText = cart.length;
-            list.innerHTML = cart.length ? cart.map(i => `<div class="bg-slate-800 p-2 rounded border border-slate-700/50 flex justify-between"><span>${i.label}</span><span class="text-emerald-400">${i.amende}$</span></div>`).join('') : '<div class="h-20 flex items-center justify-center text-slate-600 italic">Vide</div>';
-            let f = cart.reduce((a, i) => a + i.amende, 0), p = cart.reduce((a, i) => a + i.prison, 0), b = cart.reduce((a, i) => i.ban > a ? i.ban : a, 0);
-            if(document.getElementById('firstOffenseCheck').checked) { f = Math.floor(f/2); if(b < 999) b = 0; }
+            
+            list.innerHTML = cart.length ? cart.map(i => `
+                <div class="bg-slate-800 p-2 rounded border border-slate-700/50 flex justify-between items-center">
+                    <div class="flex flex-col">
+                        <span>${i.label}</span>
+                        ${i.qty > 1 ? `<span class="text-[9px] text-slate-500 font-bold uppercase">Quantité: ${i.qty}</span>` : ''}
+                    </div>
+                    <span class="text-emerald-400">${(i.amende * (i.qty || 1)).toLocaleString()}$</span>
+                </div>
+            `).join('') : '<div class="h-20 flex items-center justify-center text-slate-600 italic">Vide</div>';
+
+            let f = cart.reduce((a, i) => a + (i.amende * (i.qty || 1)), 0);
+            let p = cart.reduce((a, i) => a + (i.prison * (i.qty || 1)), 0);
+            let b = cart.reduce((a, i) => i.ban > a ? i.ban : a, 0);
+
+            if(document.getElementById('firstOffenseCheck').checked) { 
+                f = Math.floor(f/2); 
+                if(b < 999) b = 0; 
+            }
+
             document.getElementById('totalFine').innerText = f.toLocaleString() + " $";
             document.getElementById('totalPrison').innerText = p + " Min";
             const banEl = document.getElementById('maxBan');
@@ -264,12 +296,15 @@
             if(!nom || !cart.length) return alert("Nom et infractions requis.");
             const btn = document.getElementById('saveBtn');
             btn.disabled = true; btn.innerText = "Archivage...";
+            
+            const motifDetail = cart.map(i => `${i.label}${i.qty > 1 ? ' (x'+i.qty+')' : ''}`).join(', ');
+            
             const body = { 
                 nom, 
                 telephone: document.getElementById('suspectTel').value || "Inconnu", 
                 statut: document.getElementById('suspectStatut').value, 
                 photo_url: document.getElementById('suspectPhoto').value || "",
-                motif: cart.map(i => i.label).join(', '), 
+                motif: motifDetail, 
                 casiers: `Amende: ${document.getElementById('totalFine').innerText} | Prison: ${document.getElementById('totalPrison').innerText}`, 
                 derniere_intervention: new Date().toLocaleDateString('fr-FR') 
             };
@@ -296,6 +331,7 @@
             document.getElementById('firstOffenseCheck').checked = false; 
             updateCheckboxVisual();
             document.querySelectorAll('.selection-ring').forEach(r => { r.classList.replace('opacity-100', 'opacity-0'); r.classList.replace('scale-100', 'scale-95'); }); 
+            document.querySelectorAll('[id^="badge-qty-"]').forEach(b => b.classList.add('hidden'));
             calculate(); 
         }
         init();
