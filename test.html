@@ -112,229 +112,253 @@
     </main>
 
     <script>
-        let categories = [];
-        let cart = [];
-        const styles = { 
-            "Code de la route": "from-emerald-900/50 to-emerald-900/10 border-emerald-500/50", 
-            "Délit mineur": "from-blue-900/50 to-blue-900/10 border-blue-500/50", 
-            "Délits moyen": "from-yellow-900/50 to-yellow-900/10 border-yellow-500/50", 
-            "Délits majeur": "from-red-900/50 to-red-900/10 border-red-500/50", 
-            "Objet illégaux et drogues": "from-orange-900/50 to-orange-900/10 border-orange-500/50",
-            "Armes": "from-slate-700 to-slate-800 border-slate-500/50",
-            "Crime": "from-purple-900/50 to-purple-900/10 border-purple-500/50"
-        };
+    let categories = [];
+    let cart = [];
+    const styles = { 
+        "Code de la route": "from-emerald-900/50 to-emerald-900/10 border-emerald-500/50", 
+        "Délit mineur": "from-blue-900/50 to-blue-900/10 border-blue-500/50", 
+        "Délits moyen": "from-yellow-900/50 to-yellow-900/10 border-yellow-500/50", 
+        "Délits majeur": "from-red-900/50 to-red-900/10 border-red-500/50", 
+        "Objet illégaux et drogues": "from-orange-900/50 to-orange-900/10 border-orange-500/50",
+        "Armes": "from-slate-700 to-slate-800 border-slate-500/50",
+        "Crime": "from-purple-900/50 to-purple-900/10 border-purple-500/50"
+    };
 
-        const logicalOrder = [
-            "Code de la route",
-            "Délit mineur",
-            "Délits moyen",
-            "Délits majeur",
-            "Objet illégaux et drogues",
-            "Armes",
-            "Crime"
-        ];
+    const logicalOrder = [
+        "Code de la route",
+        "Délit mineur",
+        "Délits moyen",
+        "Délits majeur",
+        "Objet illégaux et drogues",
+        "Armes",
+        "Crime"
+    ];
 
-        async function init() {
-            try {
-                const res = await fetch('/api/individus?type=lois');
-                const data = await res.json();
-                const temp = {};
-                
-                data.forEach(i => {
-                    if(!temp[i.categorie]) temp[i.categorie] = { name: i.categorie, style: styles[i.categorie] || "from-slate-800 to-slate-900 border-slate-700", items: [] };
-                    temp[i.categorie].items.push(i);
-                });
-
-                categories = logicalOrder
-                    .filter(catName => temp[catName])
-                    .map(catName => temp[catName]);
-
-                Object.keys(temp).forEach(catName => {
-                    if (!logicalOrder.includes(catName)) {
-                        categories.push(temp[catName]);
-                    }
-                });
-
-                renderFilters();
-                document.getElementById('searchBar').disabled = false;
-                document.getElementById('searchBar').style.opacity = "1";
-                renderLaws();
-            } catch (e) { document.getElementById('lawsContainer').innerText = "Erreur de connexion."; }
-        }
-
-        function renderFilters() {
-            const container = document.getElementById('filterContainer');
-            categories.forEach(cat => {
-                const btn = document.createElement('button');
-                btn.className = 'filter-btn px-4 py-2 rounded-full border border-slate-700 text-[10px] font-black uppercase transition-all hover:bg-slate-700';
-                btn.innerText = cat.name;
-                btn.onclick = () => filterByCategory(cat.name, btn);
-                container.appendChild(btn);
+    async function init() {
+        try {
+            const res = await fetch('/api/individus?type=lois');
+            const data = await res.json();
+            const temp = {};
+            
+            data.forEach(i => {
+                if(!temp[i.categorie]) temp[i.categorie] = { name: i.categorie, style: styles[i.categorie] || "from-slate-800 to-slate-900 border-slate-700", items: [] };
+                temp[i.categorie].items.push(i);
             });
-        }
 
-        function filterByCategory(name, element) {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            if (element) element.classList.add('active');
-            else document.querySelector('button[onclick*="all"]').classList.add('active');
+            categories = logicalOrder
+                .filter(catName => temp[catName])
+                .map(catName => temp[catName]);
 
-            document.querySelectorAll('.law-category').forEach(c => {
-                const catTitle = c.querySelector('h2').innerText;
-                c.style.display = (name === 'all' || catTitle === name.toUpperCase()) ? "" : "none";
+            Object.keys(temp).forEach(catName => {
+                if (!logicalOrder.includes(catName)) {
+                    categories.push(temp[catName]);
+                }
             });
+
+            renderFilters();
+            document.getElementById('searchBar').disabled = false;
+            document.getElementById('searchBar').style.opacity = "1";
+            renderLaws();
+        } catch (e) { document.getElementById('lawsContainer').innerText = "Erreur de connexion."; }
+    }
+
+    function renderFilters() {
+        const container = document.getElementById('filterContainer');
+        categories.forEach(cat => {
+            const btn = document.createElement('button');
+            btn.className = 'filter-btn px-4 py-2 rounded-full border border-slate-700 text-[10px] font-black uppercase transition-all hover:bg-slate-700';
+            btn.innerText = cat.name;
+            btn.onclick = () => filterByCategory(cat.name, btn);
+            container.appendChild(btn);
+        });
+    }
+
+    // FONCTION MODIFIÉE POUR FIXER LE PROBLÈME DE NAVIGATION
+    function filterByCategory(name, element) {
+        // Mise à jour visuelle des boutons
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        if (element) {
+            element.classList.add('active');
+        } else {
+            document.querySelector('button[onclick*="all"]').classList.add('active');
         }
 
-        function renderLaws() {
-            const container = document.getElementById('lawsContainer');
-            container.innerHTML = categories.map(cat => `
-                <div class="law-category animate-fade-in" data-category="${cat.name}">
-                    <div class="px-4 py-2 rounded-t-xl border-t border-x bg-gradient-to-r ${cat.style}"><h2 class="text-xs font-bold uppercase text-white">${cat.name}</h2></div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-800/50 p-4 rounded-b-xl border-x border-b border-slate-700/50">
-                        ${cat.items.map(i => {
-                            const isDrug = cat.name === "Objet illégaux et drogues";
-                            return `
-                            <button id="btn-${i.id}" onclick="toggleItem(${i.id}, ${isDrug})" class="relative text-left p-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-750 transition-all flex flex-col justify-between h-full">
-                                <div class="flex justify-between items-start gap-2 mb-1">
-                                    <span class="font-medium text-slate-200 text-xs leading-tight">${i.label} ${isDrug ? '<span class="text-orange-400 font-bold">(Unité)</span>' : ''}</span>
-                                    <span class="shrink-0 font-mono text-[10px] font-bold text-emerald-400">${i.amende}$</span>
-                                </div>
-                                ${i.sanction ? `<div class="text-[9px] text-orange-300 italic opacity-80 mt-1 line-clamp-2">${i.sanction}</div>` : ''}
-                                <div id="badge-qty-${i.id}" class="hidden absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg z-10">x1</div>
-                                <div class="selection-ring absolute inset-0 border-2 border-blue-500 rounded-xl opacity-0 scale-95 transition-all pointer-events-none"></div>
-                            </button>
-                        `}).join('')}
-                    </div>
-                </div>
-            `).join('');
-        }
+        // Réinitialiser la barre de recherche textuelle pour éviter les conflits
+        document.getElementById('searchBar').value = "";
 
-        function updateCheckboxVisual() {
-            const isChecked = document.getElementById('firstOffenseCheck').checked;
-            const icon = document.getElementById('checkboxIcon');
-            const square = document.getElementById('checkboxSquare');
-            if(isChecked) {
-                icon.classList.replace('opacity-0', 'opacity-100');
-                icon.classList.replace('scale-50', 'scale-100');
-                square.classList.replace('border-slate-500', 'border-blue-500');
-                square.classList.add('bg-blue-600');
+        // Application du filtre sur les conteneurs de catégories
+        document.querySelectorAll('.law-category').forEach(c => {
+            const catTitle = c.getAttribute('data-category');
+            
+            if (name === 'all' || catTitle === name) {
+                c.style.display = "";
+                // S'assurer que tous les boutons à l'intérieur sont visibles
+                c.querySelectorAll('button').forEach(b => b.style.display = "");
             } else {
-                icon.classList.replace('opacity-100', 'opacity-0');
-                icon.classList.replace('scale-100', 'scale-50');
-                square.classList.replace('border-blue-500', 'border-slate-500');
-                square.classList.remove('bg-blue-600');
+                c.style.display = "none";
             }
-        }
+        });
+    }
 
-        function toggleItem(id, askQty = false) {
-            const item = categories.flatMap(c => c.items).find(i => i.id === id);
-            const btn = document.getElementById(`btn-${id}`);
-            const ring = btn.querySelector('.selection-ring');
-            const badge = document.getElementById(`badge-qty-${id}`);
-            const idx = cart.findIndex(i => i.id === id);
-
-            if(idx > -1) { 
-                cart.splice(idx, 1); 
-                ring.classList.replace('opacity-100', 'opacity-0'); 
-                ring.classList.replace('scale-100', 'scale-95');
-                badge.classList.add('hidden');
-            } else { 
-                let qty = 1;
-                if(askQty) {
-                    const input = prompt(`Combien de "${item.label}" ont été trouvés ?`, "1");
-                    qty = parseInt(input);
-                    if(isNaN(qty) || qty <= 0) return;
-                }
-                
-                cart.push({ ...item, qty: qty }); 
-                ring.classList.replace('opacity-0', 'opacity-100'); 
-                ring.classList.replace('scale-95', 'scale-100');
-                
-                if(qty > 1 || askQty) {
-                    badge.innerText = `x${qty}`;
-                    badge.classList.remove('hidden');
-                }
-                
-                document.getElementById('firstOffenseCheck').checked = true;
-                updateCheckboxVisual();
-            }
-            calculate();
-        }
-
-        function calculate() {
-            const badge = document.getElementById('countBadge');
-            const list = document.getElementById('cartList');
-            badge.innerText = cart.length;
-            
-            list.innerHTML = cart.length ? cart.map(i => `
-                <div class="bg-slate-800 p-2 rounded border border-slate-700/50 flex justify-between items-center">
-                    <div class="flex flex-col">
-                        <span>${i.label}</span>
-                        ${i.qty > 1 ? `<span class="text-[9px] text-slate-500 font-bold uppercase">Quantité: ${i.qty}</span>` : ''}
-                    </div>
-                    <span class="text-emerald-400">${(i.amende * (i.qty || 1)).toLocaleString()}$</span>
+    function renderLaws() {
+        const container = document.getElementById('lawsContainer');
+        container.innerHTML = categories.map(cat => `
+            <div class="law-category animate-fade-in" data-category="${cat.name}">
+                <div class="px-4 py-2 rounded-t-xl border-t border-x bg-gradient-to-r ${cat.style}"><h2 class="text-xs font-bold uppercase text-white">${cat.name}</h2></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-800/50 p-4 rounded-b-xl border-x border-b border-slate-700/50">
+                    ${cat.items.map(i => {
+                        const isDrug = cat.name === "Objet illégaux et drogues";
+                        return `
+                        <button id="btn-${i.id}" onclick="toggleItem(${i.id}, ${isDrug})" class="relative text-left p-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-750 transition-all flex flex-col justify-between h-full">
+                            <div class="flex justify-between items-start gap-2 mb-1">
+                                <span class="font-medium text-slate-200 text-xs leading-tight">${i.label} ${isDrug ? '<span class="text-orange-400 font-bold">(Unité)</span>' : ''}</span>
+                                <span class="shrink-0 font-mono text-[10px] font-bold text-emerald-400">${i.amende}$</span>
+                            </div>
+                            ${i.sanction ? `<div class="text-[9px] text-orange-300 italic opacity-80 mt-1 line-clamp-2">${i.sanction}</div>` : ''}
+                            <div id="badge-qty-${i.id}" class="hidden absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg z-10">x1</div>
+                            <div class="selection-ring absolute inset-0 border-2 border-blue-500 rounded-xl opacity-0 scale-95 transition-all pointer-events-none"></div>
+                        </button>
+                    `}).join('')}
                 </div>
-            `).join('') : '<div class="h-20 flex items-center justify-center text-slate-600 italic">Vide</div>';
+            </div>
+        `).join('');
+    }
 
-            let f = cart.reduce((a, i) => a + (i.amende * (i.qty || 1)), 0);
-            let p = cart.reduce((a, i) => a + (i.prison * (i.qty || 1)), 0);
-            let b = cart.reduce((a, i) => i.ban > a ? i.ban : a, 0);
+    function updateCheckboxVisual() {
+        const isChecked = document.getElementById('firstOffenseCheck').checked;
+        const icon = document.getElementById('checkboxIcon');
+        const square = document.getElementById('checkboxSquare');
+        if(isChecked) {
+            icon.classList.replace('opacity-0', 'opacity-100');
+            icon.classList.replace('scale-50', 'scale-100');
+            square.classList.replace('border-slate-500', 'border-blue-500');
+            square.classList.add('bg-blue-600');
+        } else {
+            icon.classList.replace('opacity-100', 'opacity-0');
+            icon.classList.replace('scale-100', 'scale-50');
+            square.classList.replace('border-blue-500', 'border-slate-500');
+            square.classList.remove('bg-blue-600');
+        }
+    }
 
-            if(document.getElementById('firstOffenseCheck').checked) { 
-                f = Math.floor(f/2); 
-                if(b < 999) b = 0; 
+    function toggleItem(id, askQty = false) {
+        const item = categories.flatMap(c => c.items).find(i => i.id === id);
+        const btn = document.getElementById(`btn-${id}`);
+        const ring = btn.querySelector('.selection-ring');
+        const badge = document.getElementById(`badge-qty-${id}`);
+        const idx = cart.findIndex(i => i.id === id);
+
+        if(idx > -1) { 
+            cart.splice(idx, 1); 
+            ring.classList.replace('opacity-100', 'opacity-0'); 
+            ring.classList.replace('scale-100', 'scale-95');
+            badge.classList.add('hidden');
+        } else { 
+            let qty = 1;
+            if(askQty) {
+                const input = prompt(`Combien de "${item.label}" ont été trouvés ?`, "1");
+                qty = parseInt(input);
+                if(isNaN(qty) || qty <= 0) return;
             }
-
-            document.getElementById('totalFine').innerText = f.toLocaleString() + " $";
-            document.getElementById('totalPrison').innerText = p + " Min";
-            const banEl = document.getElementById('maxBan');
-            banEl.innerText = b >= 999 ? "DEF" : b > 0 ? b + " J" : "-";
-            banEl.className = b >= 999 ? "text-sm font-bold text-red-500 animate-pulse" : "text-sm font-bold text-slate-500";
-        }
-
-        async function saveSuspect() {
-            const nom = document.getElementById('suspectNom').value;
-            if(!nom || !cart.length) return alert("Nom et infractions requis.");
-            const btn = document.getElementById('saveBtn');
-            btn.disabled = true; btn.innerText = "Archivage...";
             
-            const motifDetail = cart.map(i => `${i.label}${i.qty > 1 ? ' (x'+i.qty+')' : ''}`).join(', ');
+            cart.push({ ...item, qty: qty }); 
+            ring.classList.replace('opacity-0', 'opacity-100'); 
+            ring.classList.replace('scale-95', 'scale-100');
             
-            const body = { 
-                nom, 
-                telephone: document.getElementById('suspectTel').value || "Inconnu", 
-                statut: document.getElementById('suspectStatut').value, 
-                photo_url: document.getElementById('suspectPhoto').value || "",
-                motif: motifDetail, 
-                casiers: `Amende: ${document.getElementById('totalFine').innerText} | Prison: ${document.getElementById('totalPrison').innerText}`, 
-                derniere_intervention: new Date().toLocaleDateString('fr-FR') 
-            };
-            try { 
-                const res = await fetch('/api/individus', { method: 'POST', body: JSON.stringify(body) }); 
-                if(res.ok) {
-                    btn.innerText = "Succès !";
-                    setTimeout(() => window.location.href = "Individus.html", 800);
-                } 
-            } catch(e) { alert("Erreur."); btn.disabled = false; btn.innerText = "Valider"; }
-        }
-
-        function filterLaws() {
-            const t = document.getElementById('searchBar').value.toLowerCase();
-            document.querySelectorAll('.law-category').forEach(c => {
-                let h = false;
-                c.querySelectorAll('button').forEach(b => { const v = b.innerText.toLowerCase().includes(t); b.style.display = v ? "" : "none"; if(v) h = true; });
-                c.style.display = h ? "" : "none";
-            });
-        }
-
-        function resetAll() { 
-            cart = []; 
-            document.getElementById('firstOffenseCheck').checked = false; 
+            if(qty > 1 || askQty) {
+                badge.innerText = `x${qty}`;
+                badge.classList.remove('hidden');
+            }
+            
+            document.getElementById('firstOffenseCheck').checked = true;
             updateCheckboxVisual();
-            document.querySelectorAll('.selection-ring').forEach(r => { r.classList.replace('opacity-100', 'opacity-0'); r.classList.replace('scale-100', 'scale-95'); }); 
-            document.querySelectorAll('[id^="badge-qty-"]').forEach(b => b.classList.add('hidden'));
-            calculate(); 
         }
-        init();
-    </script>
+        calculate();
+    }
+
+    function calculate() {
+        const badge = document.getElementById('countBadge');
+        const list = document.getElementById('cartList');
+        badge.innerText = cart.length;
+        
+        list.innerHTML = cart.length ? cart.map(i => `
+            <div class="bg-slate-800 p-2 rounded border border-slate-700/50 flex justify-between items-center">
+                <div class="flex flex-col">
+                    <span>${i.label}</span>
+                    ${i.qty > 1 ? `<span class="text-[9px] text-slate-500 font-bold uppercase">Quantité: ${i.qty}</span>` : ''}
+                </div>
+                <span class="text-emerald-400">${(i.amende * (i.qty || 1)).toLocaleString()}$</span>
+            </div>
+        `).join('') : '<div class="h-20 flex items-center justify-center text-slate-600 italic">Vide</div>';
+
+        let f = cart.reduce((a, i) => a + (i.amende * (i.qty || 1)), 0);
+        let p = cart.reduce((a, i) => a + (i.prison * (i.qty || 1)), 0);
+        let b = cart.reduce((a, i) => i.ban > a ? i.ban : a, 0);
+
+        if(document.getElementById('firstOffenseCheck').checked) { 
+            f = Math.floor(f/2); 
+            if(b < 999) b = 0; 
+        }
+
+        document.getElementById('totalFine').innerText = f.toLocaleString() + " $";
+        document.getElementById('totalPrison').innerText = p + " Min";
+        const banEl = document.getElementById('maxBan');
+        banEl.innerText = b >= 999 ? "DEF" : b > 0 ? b + " J" : "-";
+        banEl.className = b >= 999 ? "text-sm font-bold text-red-500 animate-pulse" : "text-sm font-bold text-slate-500";
+    }
+
+    async function saveSuspect() {
+        const nom = document.getElementById('suspectNom').value;
+        if(!nom || !cart.length) return alert("Nom et infractions requis.");
+        const btn = document.getElementById('saveBtn');
+        btn.disabled = true; btn.innerText = "Archivage...";
+        
+        const motifDetail = cart.map(i => `${i.label}${i.qty > 1 ? ' (x'+i.qty+')' : ''}`).join(', ');
+        
+        const body = { 
+            nom, 
+            telephone: document.getElementById('suspectTel').value || "Inconnu", 
+            statut: document.getElementById('suspectStatut').value, 
+            photo_url: document.getElementById('suspectPhoto').value || "",
+            motif: motifDetail, 
+            casiers: `Amende: ${document.getElementById('totalFine').innerText} | Prison: ${document.getElementById('totalPrison').innerText}`, 
+            derniere_intervention: new Date().toLocaleDateString('fr-FR') 
+        };
+        try { 
+            const res = await fetch('/api/individus', { method: 'POST', body: JSON.stringify(body) }); 
+            if(res.ok) {
+                btn.innerText = "Succès !";
+                setTimeout(() => window.location.href = "Individus.html", 800);
+            } 
+        } catch(e) { alert("Erreur."); btn.disabled = false; btn.innerText = "Valider"; }
+    }
+
+    function filterLaws() {
+        const t = document.getElementById('searchBar').value.toLowerCase();
+        // On repasse en mode "Tous" visuellement quand on cherche au clavier
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('button[onclick*="all"]').classList.add('active');
+
+        document.querySelectorAll('.law-category').forEach(c => {
+            let h = false;
+            c.querySelectorAll('button').forEach(b => { 
+                const v = b.innerText.toLowerCase().includes(t); 
+                b.style.display = v ? "" : "none"; 
+                if(v) h = true; 
+            });
+            c.style.display = h ? "" : "none";
+        });
+    }
+
+    function resetAll() { 
+        cart = []; 
+        document.getElementById('firstOffenseCheck').checked = false; 
+        updateCheckboxVisual();
+        document.querySelectorAll('.selection-ring').forEach(r => { r.classList.replace('opacity-100', 'opacity-0'); r.classList.replace('scale-100', 'scale-95'); }); 
+        document.querySelectorAll('[id^="badge-qty-"]').forEach(b => b.classList.add('hidden'));
+        calculate(); 
+    }
+    init();
+</script>
 </body>
 </html>
