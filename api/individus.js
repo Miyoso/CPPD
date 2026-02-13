@@ -3,12 +3,16 @@ import { neon } from '@neondatabase/serverless';
 const sql = neon(process.env.DATABASE_URL);
 
 export default async function handler(req, res) {
-    const { type, id, nom, infraction_id } = req.query;
+    const { type, nom, infraction_id, motif_suppression, officier } = req.query;
 
     if (req.method === 'GET') {
         try {
             if (type === 'lois') {
                 const result = await sql`SELECT * FROM lois ORDER BY categorie ASC, label ASC`;
+                return res.status(200).json(result);
+            }
+            if (type === 'logs') {
+                const result = await sql`SELECT * FROM logs ORDER BY date DESC LIMIT 100`;
                 return res.status(200).json(result);
             }
             const result = await sql`
@@ -39,6 +43,7 @@ export default async function handler(req, res) {
             const data = JSON.parse(req.body);
             await sql`INSERT INTO individus (nom, telephone, statut, derniere_intervention, casiers, motif, photo_url, notes, paiement)
                       VALUES (${data.nom}, ${data.telephone}, ${data.statut}, ${data.derniere_intervention}, ${data.casiers}, ${data.motif}, ${data.photo_url}, ${data.notes || ''}, 'Réglé')`;
+            await sql`INSERT INTO logs (action, detail, officier, date) VALUES ('AJOUT', ${'Ajout du suspect : ' + data.nom}, 'Système', NOW())`;
             return res.status(200).json({ message: 'Success' });
         } catch (error) {
             return res.status(500).json({ error: error.message });
@@ -67,6 +72,16 @@ export default async function handler(req, res) {
                 return res.status(200).json({ message: 'Updated' });
             }
             return res.status(400).json({ error: 'Missing Params' });
+        } catch (error) {
+            return res.status(500).json({ error: error.message });
+        }
+    }
+
+    if (req.method === 'DELETE') {
+        try {
+            await sql`INSERT INTO logs (action, detail, officier, date) VALUES ('SUPPRESSION', ${'Suppression de ' + nom + ' : ' + motif_suppression}, ${officier}, NOW())`;
+            await sql`DELETE FROM individus WHERE nom = ${nom}`;
+            return res.status(200).json({ message: 'Deleted' });
         } catch (error) {
             return res.status(500).json({ error: error.message });
         }
