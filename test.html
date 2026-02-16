@@ -9,19 +9,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Libre+Baskerville:italic&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="LogoCPPD.png">
     <style>
-        body { 
-            background-color: #0f172a;
-            height: 100vh;
-            overflow: hidden;
-        }
+        body { background-color: #0f172a; height: 100vh; overflow: hidden; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
 
-        .form-column {
-            height: calc(100vh - 80px);
-            overflow-y: auto;
-        }
+        .form-column { height: calc(100vh - 80px); overflow-y: auto; }
         .preview-column {
             height: calc(100vh - 80px);
             overflow-y: auto;
@@ -39,69 +32,78 @@
             font-size: 0.875rem;
             color: #f1f5f9 !important;
             outline: none;
-            transition: all 0.2s ease;
         }
-        .input-field:focus {
-            border-color: #3b82f6 !important;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-        }
+
         .document-print { 
             background: white; 
             color: #1a1a1a; 
-            font-family: 'Inter', Arial, sans-serif; 
+            font-family: 'Inter', sans-serif; 
             width: 210mm; 
             min-height: 297mm;
-            padding: 25mm 20mm;
+            padding: 20mm;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             display: flex;
             flex-direction: column;
-            transform: scale(0.65);
+            transform: scale(0.62);
             transform-origin: top center;
             position: relative;
+            border: 1px solid #e2e8f0;
         }
-        .document-print::after {
+
+        /* Ornements de cadre */
+        .frame-border {
+            position: absolute;
+            top: 10mm;
+            left: 10mm;
+            right: 10mm;
+            bottom: 10mm;
+            border: 1px solid #cbd5e1;
+            pointer-events: none;
+        }
+        .frame-border::after {
             content: "";
             position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            width: 5px;
-            background: #1e293b;
+            top: 1mm; left: 1mm; right: 1mm; bottom: 1mm;
+            border: 0.5px solid #e2e8f0;
         }
+
+        /* Coins stylisés */
+        .corner { position: absolute; width: 15mm; height: 15mm; border: 2px solid #1e293b; pointer-events: none; }
+        .top-left { top: 8mm; left: 8mm; border-right: 0; border-bottom: 0; }
+        .top-right { top: 8mm; right: 8mm; border-left: 0; border-bottom: 0; }
+        .bottom-left { bottom: 8mm; left: 8mm; border-right: 0; border-top: 0; }
+        .bottom-right { bottom: 8mm; right: 8mm; border-left: 0; border-top: 0; }
+
         #document-preview::before {
             content: "";
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%) rotate(-30deg);
-            width: 450px;
-            height: 450px;
+            width: 500px; height: 500px;
             background-image: url('LogoCPPD.png');
             background-repeat: no-repeat;
             background-position: center;
             background-size: contain;
-            opacity: 0.03;
+            opacity: 0.04;
             pointer-events: none;
-            filter: grayscale(100%);
         }
+
         .hidden-section { display: none; }
         #preview-faits, #preview-menaces, #preview-demandes { 
-            white-space: pre-wrap; 
-            word-break: break-word; 
-            text-align: justify; 
-            font-size: 11px;
-            line-height: 1.6;
-            color: #334155;
+            white-space: pre-wrap; word-break: break-word; text-align: justify; 
+            font-size: 11px; line-height: 1.6; color: #334155;
         }
-        h3.section-title {
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 4px;
-            margin-bottom: 8px;
-            color: #0f172a;
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .section-line { height: 1px; background: #e2e8f0; flex-grow: 1; }
+        .section-title {
+            font-size: 10px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.1em; color: #0f172a; white-space: nowrap;
         }
     </style>
 </head>
@@ -111,122 +113,130 @@
         <div class="flex items-center gap-4">
             <img src="LogoCPPD.png" alt="Logo" class="w-10 h-10 object-contain">
             <div>
-                <h1 class="text-white font-bold tracking-tight uppercase text-sm">CPPD Office</h1>
-                <p class="text-[9px] text-slate-500 uppercase tracking-widest">Générateur Officiel</p>
+                <h1 class="text-white font-bold tracking-tight uppercase text-sm">CPPD Records</h1>
+                <p class="text-[9px] text-slate-500 uppercase tracking-widest">Système de Procédures Judiciaires</p>
             </div>
         </div>
         <div class="flex items-center gap-4">
-            <button onclick="window.location.reload()" class="text-slate-500 hover:text-white text-xs font-bold uppercase transition-all">Vider</button>
-            <button id="download-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-full font-bold text-xs shadow-lg transition-all transform hover:scale-105 uppercase">Télécharger PDF</button>
+            <button onclick="window.location.reload()" class="text-slate-500 hover:text-white text-xs font-bold uppercase">Réinitialiser</button>
+            <button id="download-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-full font-bold text-xs shadow-lg uppercase">Exporter en PDF</button>
         </div>
     </header>
 
     <main class="flex flex-1 overflow-hidden">
         <div class="w-[40%] form-column p-8 border-r border-slate-800 bg-slate-900/30">
-            <div class="max-w-xl mx-auto space-y-8">
+            <div class="max-w-xl mx-auto space-y-6">
                 <section class="space-y-4">
-                    <h2 class="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-slate-800 pb-2">Informations</h2>
+                    <h2 class="text-indigo-400 text-[10px] font-black uppercase tracking-[0.2em]">Identité & Objet</h2>
                     <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[9px] uppercase font-bold text-slate-500 mb-1 block">Plaignant</label>
-                            <input type="text" id="plaignant" placeholder="NOM Prénom" class="input-field">
-                        </div>
-                        <div>
-                            <label class="text-[9px] uppercase font-bold text-slate-500 mb-1 block">Mis en cause</label>
-                            <input type="text" id="accuse" placeholder="Nom ou X" class="input-field">
-                        </div>
+                        <input type="text" id="plaignant" placeholder="Nom du Plaignant" class="input-field">
+                        <input type="text" id="accuse" placeholder="Nom de l'Accusé" class="input-field">
                     </div>
-                    <div>
-                        <label class="text-[9px] uppercase font-bold text-slate-500 mb-1 block">Objet</label>
-                        <input type="text" id="objet" placeholder="ex: Vol avec violence" class="input-field">
-                    </div>
+                    <input type="text" id="objet" placeholder="Objet de la plainte" class="input-field">
                 </section>
 
                 <section class="space-y-4">
-                    <h2 class="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-slate-800 pb-2">Récit</h2>
-                    <textarea id="faits" rows="5" class="input-field resize-none" placeholder="Détaillez les faits..."></textarea>
+                    <h2 class="text-indigo-400 text-[10px] font-black uppercase tracking-[0.2em]">Détails</h2>
+                    <textarea id="faits" rows="5" class="input-field resize-none" placeholder="Récit des faits..."></textarea>
                     
                     <div class="flex items-center justify-between bg-slate-800/40 p-3 rounded-lg border border-slate-700">
-                        <label for="checkMenaces" class="text-[10px] font-bold uppercase text-slate-400">Section Menaces</label>
-                        <input type="checkbox" id="checkMenaces" class="w-4 h-4 rounded border-slate-700 bg-slate-900">
+                        <label for="checkMenaces" class="text-[10px] font-bold uppercase text-slate-400">Ajouter section Menaces</label>
+                        <input type="checkbox" id="checkMenaces" class="w-4 h-4">
                     </div>
 
                     <div id="formMenaces" class="hidden-section">
-                        <label class="text-[9px] uppercase font-bold text-slate-500 mb-1 block">Précision des menaces</label>
-                        <textarea id="valMenaces" rows="2" class="input-field resize-none"></textarea>
+                        <textarea id="valMenaces" rows="2" class="input-field resize-none" placeholder="Détail des menaces..."></textarea>
                     </div>
                 </section>
 
                 <section class="space-y-4">
-                    <h2 class="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-slate-800 pb-2">Qualifications & Demandes</h2>
-                    <textarea id="qualifications" rows="2" class="input-field resize-none" placeholder="Qualifications pénales..."></textarea>
-                    <textarea id="demandes" rows="2" class="input-field resize-none" placeholder="Demandes particulières..."></textarea>
+                    <h2 class="text-indigo-400 text-[10px] font-black uppercase tracking-[0.2em]">Qualifications</h2>
+                    <textarea id="qualifications" rows="2" class="input-field resize-none" placeholder="Articles ou charges..."></textarea>
+                    <textarea id="demandes" rows="2" class="input-field resize-none" placeholder="Réparations demandées..."></textarea>
                 </section>
-                <div class="h-10"></div>
             </div>
         </div>
 
         <div class="w-[60%] preview-column">
             <div id="document-preview" class="document-print">
-                <div class="flex justify-between items-start mb-12">
-                    <div class="space-y-1">
-                        <div class="text-[9px] uppercase tracking-widest text-gray-400 font-bold">République de Cayo Perico</div>
-                        <div class="h-px w-8 bg-gray-300 my-2"></div>
-                        <p class="text-[10px] font-bold text-black uppercase underline decoration-gray-300 underline-offset-4">Plaignant :</p>
-                        <p id="preview-plaignant" class="text-[11px] font-semibold text-slate-700 uppercase">[NOM PRÉNOM]</p>
-                        
-                        <div class="pt-6">
-                            <p class="text-[9px] font-bold uppercase text-gray-400">Destinataire</p>
-                            <p class="text-[11px] font-bold text-black">Cayo Perico Police Department</p>
-                            <p class="text-[10px] text-slate-600 italic">Bureau des plaintes et enquêtes</p>
+                <div class="frame-border"></div>
+                <div class="corner top-left"></div><div class="corner top-right"></div>
+                <div class="corner bottom-left"></div><div class="corner bottom-right"></div>
+
+                <div class="relative z-10">
+                    <div class="flex justify-between items-start mb-12">
+                        <div class="space-y-1">
+                            <div class="text-[9px] uppercase tracking-[0.3em] text-indigo-900 font-black">État de Cayo Perico</div>
+                            <div class="text-[8px] text-gray-500 uppercase font-bold">Département de la Justice</div>
+                            <div class="h-1 w-12 bg-indigo-900 my-3"></div>
+                            <p class="text-[10px] font-bold text-black uppercase">Déclarant : <span id="preview-plaignant" class="text-indigo-800">[...]</span></p>
+                            <p class="text-[9px] text-gray-500 mt-4 font-bold uppercase">À l'attention du CPPD</p>
+                        </div>
+                        <div class="text-center">
+                            <img src="LogoCPPD.png" class="w-24 h-24 object-contain mx-auto">
+                            <div class="text-[7px] font-mono text-gray-400 mt-2 uppercase tracking-tighter">Official Judicial Document</div>
                         </div>
                     </div>
-                    <div class="flex flex-col items-center">
-                        <img src="LogoCPPD.png" class="w-20 h-20 object-contain mb-1">
-                        <span class="text-[7px] font-mono text-gray-400">DOC-ID: CPPD-2026-PL</span>
+
+                    <div class="text-right text-[9px] mb-8 italic text-gray-400 uppercase tracking-widest">
+                        Fait le <span id="current-date" class="font-bold text-black"></span>
                     </div>
-                </div>
 
-                <div class="text-right text-[10px] mb-8 italic text-gray-500">Fait à Cayo Perico, le <span id="current-date" class="font-bold text-black"></span></div>
+                    <div class="border-double border-4 border-gray-100 p-6 mb-10 text-center">
+                        <h1 class="text-xl font-black uppercase tracking-[0.2em] text-slate-900">Plainte Formelle</h1>
+                        <div class="h-px w-20 bg-gray-200 mx-auto my-3"></div>
+                        <p class="text-[10px] font-semibold text-slate-500 uppercase">Dossier relatif à : <span id="preview-objet" class="text-black font-bold">...</span></p>
+                    </div>
 
-                <div class="bg-gray-50 p-4 border-y border-gray-100 mb-10">
-                    <h1 class="text-center text-lg font-bold uppercase tracking-widest text-slate-800">Dépôt de plainte formelle</h1>
-                    <p class="text-center mt-2 text-[10px] font-medium text-slate-600 uppercase">Objet : <span id="preview-objet" class="text-black font-bold">...</span></p>
-                </div>
+                    <div class="space-y-8">
+                        <section>
+                            <div class="section-header">
+                                <span class="section-title">01. Mis en cause</span>
+                                <div class="section-line"></div>
+                            </div>
+                            <p class="text-[11px] text-slate-700 pl-4">L'action est engagée contre : <span id="preview-accuse" class="font-bold uppercase tracking-tight">...</span></p>
+                        </section>
 
-                <div class="flex-grow space-y-6">
-                    <section>
-                        <h3 class="section-title">I. Désignation du mis en cause</h3>
-                        <p class="text-[11px] text-slate-700">La présente plainte est dirigée à l'encontre de : <span id="preview-accuse" class="font-bold italic">...</span></p>
-                    </section>
+                        <section>
+                            <div class="section-header">
+                                <span class="section-title">02. Exposé des faits</span>
+                                <div class="section-line"></div>
+                            </div>
+                            <div id="preview-faits" class="pl-4 italic text-gray-400">En attente de saisie des éléments...</div>
+                        </section>
 
-                    <section>
-                        <h3 class="section-title">II. Exposé chronologique des faits</h3>
-                        <div id="preview-faits" class="italic text-gray-400">En attente de rédaction...</div>
-                    </section>
+                        <section id="sectionMenaces" class="hidden-section">
+                            <div class="section-header">
+                                <span class="section-title">03. Menaces caractérisées</span>
+                                <div class="section-line"></div>
+                            </div>
+                            <div id="preview-menaces" class="pl-4 italic text-gray-400">...</div>
+                        </section>
 
-                    <section id="sectionMenaces" class="hidden-section">
-                        <h3 class="section-title">III. Nature des menaces</h3>
-                        <div id="preview-menaces" class="italic text-gray-400">...</div>
-                    </section>
+                        <section>
+                            <div class="section-header">
+                                <span id="labelIII" class="section-title">03. Qualifications</span>
+                                <div class="section-line"></div>
+                            </div>
+                            <ul id="list-qualifications" class="list-disc ml-10 text-[10px] font-bold uppercase text-indigo-900"></ul>
+                        </section>
 
-                    <section>
-                        <h3 id="labelIII" class="section-title">III. Qualifications Juridiques</h3>
-                        <ul id="list-qualifications" class="list-disc ml-6 text-[11px] font-semibold uppercase text-slate-800"></ul>
-                    </section>
+                        <section>
+                            <div class="section-header">
+                                <span id="labelIV" class="section-title">04. Prétentions</span>
+                                <div class="section-line"></div>
+                            </div>
+                            <div id="preview-demandes" class="pl-4 italic text-gray-400">...</div>
+                        </section>
+                    </div>
 
-                    <section>
-                        <h3 id="labelIV" class="section-title">IV. Demandes du plaignant</h3>
-                        <p id="header-demandes" class="mb-2 font-bold italic text-[9px] text-slate-500">Le plaignant sollicite :</p>
-                        <div id="preview-demandes" class="italic text-gray-400">...</div>
-                    </section>
-                </div>
-
-                <div class="mt-16 flex justify-end">
-                    <div class="text-center w-60">
-                        <p class="text-[9px] font-bold uppercase mb-8 text-gray-400">Signature du déclarant</p>
-                        <p id="preview-sign" class="text-lg italic px-4 pb-1 text-slate-800">[Signature]</p>
-                        <div class="h-px bg-gray-200 w-full"></div>
+                    <div class="mt-20 flex justify-end">
+                        <div class="text-center w-64">
+                            <div class="text-[8px] font-black uppercase text-gray-400 mb-10 tracking-[0.2em]">Signature Certifiée</div>
+                            <p id="preview-sign" class="text-xl font-serif italic text-slate-800">[Signature]</p>
+                            <div class="h-px bg-indigo-900 w-full mt-2"></div>
+                            <p class="text-[7px] text-gray-400 mt-1 italic uppercase">Document soumis à la juridiction de Cayo Perico</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -239,8 +249,8 @@
             const isChecked = e.target.checked;
             document.getElementById('formMenaces').style.display = isChecked ? 'block' : 'none';
             document.getElementById('sectionMenaces').style.display = isChecked ? 'block' : 'none';
-            document.getElementById('labelIII').innerText = isChecked ? "IV. Qualifications Juridiques" : "III. Qualifications Juridiques";
-            document.getElementById('labelIV').innerText = isChecked ? "V. Demandes du plaignant" : "IV. Demandes du plaignant";
+            document.getElementById('labelIII').innerText = isChecked ? "04. Qualifications" : "03. Qualifications";
+            document.getElementById('labelIV').innerText = isChecked ? "05. Prétentions" : "04. Prétentions";
         });
         inputs.forEach(id => {
             const el = document.getElementById(id);
@@ -254,12 +264,9 @@
                 const previewElement = document.getElementById(id === 'valMenaces' ? 'preview-menaces' : 'preview-' + id);
                 if (previewElement) {
                     previewElement.classList.toggle('text-gray-400', !val.trim());
-                    previewElement.innerText = val.trim() || (id === 'faits' ? "En attente de rédaction..." : "...");
+                    previewElement.innerText = val.trim() || (id === 'faits' ? "En attente de saisie des éléments..." : "...");
                 }
-                if (id === 'plaignant') {
-                    document.getElementById('preview-sign').innerText = val || "[Signature]";
-                    document.getElementById('header-demandes').innerText = `En conséquence, ${val || "le plaignant"} sollicite :`;
-                }
+                if (id === 'plaignant') document.getElementById('preview-sign').innerText = val || "[Signature]";
             });
         });
         document.getElementById('current-date').innerText = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -269,7 +276,7 @@
             el.style.transform = "scale(1)";
             html2pdf().set({
                 margin: 0,
-                filename: 'Plainte_CPPD_Officielle.pdf',
+                filename: 'Plainte_Certifiee.pdf',
                 image: { type: 'jpeg', quality: 1 },
                 html2canvas: { scale: 3, useCORS: true, letterRendering: true },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
