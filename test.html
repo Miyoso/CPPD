@@ -3,390 +3,278 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPPD • Terminal</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>CPPD • Générateur de Plainte</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: { slate: { 750: '#2d3748', 850: '#1a202c', 950: '#0f172a' } }
-                }
-            }
-        }
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Libre+Baskerville:italic&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="LogoCPPD.png">
     <style>
+        body { 
+            background-color: #0f172a;
+            height: 100vh;
+            overflow: hidden;
+        }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
-        body { background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%); }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        .filter-btn.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+
+        .form-column {
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+        .preview-column {
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+            background-color: #020617;
+            display: flex;
+            justify-content: center;
+            padding: 3rem 2rem;
+        }
+        .input-field {
+            width: 100%;
+            background-color: rgba(15, 23, 42, 0.6) !important; 
+            border: 1px solid #334155 !important;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            font-size: 0.875rem;
+            color: #f1f5f9 !important;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        .input-field:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        .document-print { 
+            background: white; 
+            color: #1a1a1a; 
+            font-family: 'Inter', Arial, sans-serif; 
+            width: 210mm; 
+            min-height: 297mm;
+            padding: 25mm 20mm;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            transform: scale(0.65);
+            transform-origin: top center;
+            position: relative;
+        }
+        .document-print::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 5px;
+            background: #1e293b;
+        }
+        #document-preview::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            width: 450px;
+            height: 450px;
+            background-image: url('LogoCPPD.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            opacity: 0.03;
+            pointer-events: none;
+            filter: grayscale(100%);
+        }
+        .hidden-section { display: none; }
+        #preview-faits, #preview-menaces, #preview-demandes { 
+            white-space: pre-wrap; 
+            word-break: break-word; 
+            text-align: justify; 
+            font-size: 11px;
+            line-height: 1.6;
+            color: #334155;
+        }
+        h3.section-title {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 4px;
+            margin-bottom: 8px;
+            color: #0f172a;
+        }
     </style>
 </head>
-<body class="text-slate-300 font-sans min-h-screen flex flex-col antialiased">
+<body class="text-slate-300 font-sans flex flex-col">
 
-    <header class="sticky top-4 z-50 px-4 mb-4">
-        <div class="max-w-7xl mx-auto bg-slate-800/80 backdrop-blur-md border border-slate-700/50 rounded-2xl shadow-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-4">
-                <div class="bg-blue-600/20 p-2 rounded-lg border border-blue-500/30">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold text-white tracking-tight">• CPPD</h1>
-                    <p class="text-xs text-slate-400 font-medium tracking-wide uppercase">Calculateur Pénal</p>
-                </div>
+    <header class="h-20 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md flex items-center px-8 justify-between z-50">
+        <div class="flex items-center gap-4">
+            <img src="LogoCPPD.png" alt="Logo" class="w-10 h-10 object-contain">
+            <div>
+                <h1 class="text-white font-bold tracking-tight uppercase text-sm">CPPD Office</h1>
+                <p class="text-[9px] text-slate-500 uppercase tracking-widest">Générateur Officiel</p>
             </div>
-            <div class="flex items-center gap-4 w-full md:w-auto">
-                <input type="text" id="searchBar" placeholder="Rechercher..." disabled class="block w-full pl-4 pr-3 py-2.5 border border-slate-700 rounded-xl bg-slate-900/50 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all opacity-50 text-sm" onkeyup="filterLaws()">
-                <div class="flex gap-2 text-nowrap">
-                    <a href="Individus.html" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl font-bold text-xs uppercase transition-all">Individus</a>
-                    <a href="Plainte.html" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl font-bold text-xs uppercase transition-all">Plainte</a>
-                </div>
-            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <button onclick="window.location.reload()" class="text-slate-500 hover:text-white text-xs font-bold uppercase transition-all">Vider</button>
+            <button id="download-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-full font-bold text-xs shadow-lg transition-all transform hover:scale-105 uppercase">Télécharger PDF</button>
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto w-full px-4 mb-6">
-        <div id="filterContainer" class="flex flex-wrap gap-2 overflow-x-auto pb-2 no-scrollbar">
-            <button onclick="filterByCategory('all')" class="filter-btn active px-4 py-2 rounded-full border border-slate-700 text-[10px] font-black uppercase transition-all hover:bg-slate-700">Tous</button>
-        </div>
-    </div>
-
-    <main class="flex-grow max-w-7xl mx-auto w-full p-4 flex flex-col-reverse lg:flex-row gap-8 items-start">
-        <div id="lawsContainer" class="flex-1 w-full space-y-8 pb-20">
-            <div class="flex flex-col items-center justify-center h-64 space-y-4">
-                <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        </div>
-
-        <div class="lg:w-[380px] shrink-0 lg:sticky lg:top-32 w-full max-h-[calc(100vh-160px)] overflow-y-auto pr-1 space-y-4">
-            <div class="bg-slate-800/90 rounded-2xl border border-slate-700/50 shadow-2xl overflow-hidden">
-                <div class="bg-slate-850 p-4 border-b border-slate-700 flex justify-between items-center">
-                    <h2 class="text-sm font-bold text-slate-100 uppercase">Sanctions</h2>
-                    <span id="countBadge" class="bg-slate-700 text-slate-200 text-xs font-bold px-2.5 py-0.5 rounded-md">0</span>
-                </div>
-                <div id="cartList" class="max-h-[30vh] overflow-y-auto p-2 space-y-2 min-h-[100px] bg-slate-900/30 text-xs"></div>
-                <div class="p-4 bg-slate-800 border-t border-slate-700 space-y-4">
-                    <label class="group flex items-center p-4 rounded-xl border border-slate-700 bg-slate-850 cursor-pointer transition-all" id="firstOffenseLabel">
-                        <input type="checkbox" id="firstOffenseCheck" class="peer sr-only" onchange="calculate(); updateCheckboxVisual();">
-                        <div class="flex-1">
-                            <div class="flex items-center justify-between">
-                                <span class="font-bold text-sm text-slate-200">1ère Interpellation</span>
-                                <div id="checkboxSquare" class="w-5 h-5 rounded border-2 border-slate-500 bg-slate-900 flex items-center justify-center transition-all">
-                                    <svg id="checkboxIcon" class="w-3 h-3 text-white opacity-0 transition-all scale-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                </div>
-                            </div>
+    <main class="flex flex-1 overflow-hidden">
+        <div class="w-[40%] form-column p-8 border-r border-slate-800 bg-slate-900/30">
+            <div class="max-w-xl mx-auto space-y-8">
+                <section class="space-y-4">
+                    <h2 class="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-slate-800 pb-2">Informations</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[9px] uppercase font-bold text-slate-500 mb-1 block">Plaignant</label>
+                            <input type="text" id="plaignant" placeholder="NOM Prénom" class="input-field">
                         </div>
-                    </label>
-                    <div class="bg-slate-900 rounded-xl p-4 border border-slate-700">
-                        <div class="flex justify-between items-end mb-2">
-                            <span class="text-[10px] uppercase font-bold text-slate-500">Total</span>
-                            <span id="totalFine" class="text-2xl font-bold text-emerald-400">0 $</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4 border-t border-slate-800 pt-3">
-                            <div class="text-center"><span class="text-[10px] uppercase text-slate-500 block">Prison</span><span id="totalPrison" class="text-sm font-bold text-blue-400">0 Min</span></div>
-                            <div class="text-center border-l border-slate-800"><span class="text-[10px] uppercase text-slate-500 block">Ban</span><span id="maxBan" class="text-sm font-bold text-slate-500">-</span></div>
+                        <div>
+                            <label class="text-[9px] uppercase font-bold text-slate-500 mb-1 block">Mis en cause</label>
+                            <input type="text" id="accuse" placeholder="Nom ou X" class="input-field">
                         </div>
                     </div>
-                </div>
-            </div>
+                    <div>
+                        <label class="text-[9px] uppercase font-bold text-slate-500 mb-1 block">Objet</label>
+                        <input type="text" id="objet" placeholder="ex: Vol avec violence" class="input-field">
+                    </div>
+                </section>
 
-            <div class="bg-slate-800/90 rounded-2xl border border-slate-700 shadow-2xl p-6 space-y-4">
-                <h3 class="text-xs font-bold text-white uppercase tracking-widest">Enregistrer Suspect</h3>
-                <input type="text" id="suspectNom" placeholder="Nom Prénom" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="text" id="suspectTel" placeholder="Téléphone" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="text" id="suspectPhoto" placeholder="Lien Photo (Goopics)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500">
-                <select id="suspectStatut" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none">
-                    <option value="En règle">En règle</option>
-                    <option value="Recherché">Recherché</option>
-                </select>
-                <button onclick="saveSuspect()" id="saveBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all uppercase text-[10px] tracking-widest">Valider & Archiver</button>
-                <button onclick="resetAll()" class="w-full py-2 rounded-xl font-bold text-[10px] uppercase text-slate-500 hover:text-white transition-all">Effacer Tout</button>
+                <section class="space-y-4">
+                    <h2 class="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-slate-800 pb-2">Récit</h2>
+                    <textarea id="faits" rows="5" class="input-field resize-none" placeholder="Détaillez les faits..."></textarea>
+                    
+                    <div class="flex items-center justify-between bg-slate-800/40 p-3 rounded-lg border border-slate-700">
+                        <label for="checkMenaces" class="text-[10px] font-bold uppercase text-slate-400">Section Menaces</label>
+                        <input type="checkbox" id="checkMenaces" class="w-4 h-4 rounded border-slate-700 bg-slate-900">
+                    </div>
+
+                    <div id="formMenaces" class="hidden-section">
+                        <label class="text-[9px] uppercase font-bold text-slate-500 mb-1 block">Précision des menaces</label>
+                        <textarea id="valMenaces" rows="2" class="input-field resize-none"></textarea>
+                    </div>
+                </section>
+
+                <section class="space-y-4">
+                    <h2 class="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-slate-800 pb-2">Qualifications & Demandes</h2>
+                    <textarea id="qualifications" rows="2" class="input-field resize-none" placeholder="Qualifications pénales..."></textarea>
+                    <textarea id="demandes" rows="2" class="input-field resize-none" placeholder="Demandes particulières..."></textarea>
+                </section>
+                <div class="h-10"></div>
+            </div>
+        </div>
+
+        <div class="w-[60%] preview-column">
+            <div id="document-preview" class="document-print">
+                <div class="flex justify-between items-start mb-12">
+                    <div class="space-y-1">
+                        <div class="text-[9px] uppercase tracking-widest text-gray-400 font-bold">République de Cayo Perico</div>
+                        <div class="h-px w-8 bg-gray-300 my-2"></div>
+                        <p class="text-[10px] font-bold text-black uppercase underline decoration-gray-300 underline-offset-4">Plaignant :</p>
+                        <p id="preview-plaignant" class="text-[11px] font-semibold text-slate-700 uppercase">[NOM PRÉNOM]</p>
+                        
+                        <div class="pt-6">
+                            <p class="text-[9px] font-bold uppercase text-gray-400">Destinataire</p>
+                            <p class="text-[11px] font-bold text-black">Cayo Perico Police Department</p>
+                            <p class="text-[10px] text-slate-600 italic">Bureau des plaintes et enquêtes</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <img src="LogoCPPD.png" class="w-20 h-20 object-contain mb-1">
+                        <span class="text-[7px] font-mono text-gray-400">DOC-ID: CPPD-2026-PL</span>
+                    </div>
+                </div>
+
+                <div class="text-right text-[10px] mb-8 italic text-gray-500">Fait à Cayo Perico, le <span id="current-date" class="font-bold text-black"></span></div>
+
+                <div class="bg-gray-50 p-4 border-y border-gray-100 mb-10">
+                    <h1 class="text-center text-lg font-bold uppercase tracking-widest text-slate-800">Dépôt de plainte formelle</h1>
+                    <p class="text-center mt-2 text-[10px] font-medium text-slate-600 uppercase">Objet : <span id="preview-objet" class="text-black font-bold">...</span></p>
+                </div>
+
+                <div class="flex-grow space-y-6">
+                    <section>
+                        <h3 class="section-title">I. Désignation du mis en cause</h3>
+                        <p class="text-[11px] text-slate-700">La présente plainte est dirigée à l'encontre de : <span id="preview-accuse" class="font-bold italic">...</span></p>
+                    </section>
+
+                    <section>
+                        <h3 class="section-title">II. Exposé chronologique des faits</h3>
+                        <div id="preview-faits" class="italic text-gray-400">En attente de rédaction...</div>
+                    </section>
+
+                    <section id="sectionMenaces" class="hidden-section">
+                        <h3 class="section-title">III. Nature des menaces</h3>
+                        <div id="preview-menaces" class="italic text-gray-400">...</div>
+                    </section>
+
+                    <section>
+                        <h3 id="labelIII" class="section-title">III. Qualifications Juridiques</h3>
+                        <ul id="list-qualifications" class="list-disc ml-6 text-[11px] font-semibold uppercase text-slate-800"></ul>
+                    </section>
+
+                    <section>
+                        <h3 id="labelIV" class="section-title">IV. Demandes du plaignant</h3>
+                        <p id="header-demandes" class="mb-2 font-bold italic text-[9px] text-slate-500">Le plaignant sollicite :</p>
+                        <div id="preview-demandes" class="italic text-gray-400">...</div>
+                    </section>
+                </div>
+
+                <div class="mt-16 flex justify-end">
+                    <div class="text-center w-60">
+                        <p class="text-[9px] font-bold uppercase mb-8 text-gray-400">Signature du déclarant</p>
+                        <p id="preview-sign" class="text-lg italic px-4 pb-1 text-slate-800">[Signature]</p>
+                        <div class="h-px bg-gray-200 w-full"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
 
     <script>
-        let categories = [];
-        let cart = [];
-        const styles = { 
-            "Code de la route": "from-emerald-900/50 to-emerald-900/10 border-emerald-500/50", 
-            "Délit mineur": "from-blue-900/50 to-blue-900/10 border-blue-500/50", 
-            "Délits moyen": "from-yellow-900/50 to-yellow-900/10 border-yellow-500/50", 
-            "Délits majeur": "from-red-900/50 to-red-900/10 border-red-500/50", 
-            "Objet illégaux et drogues": "from-orange-900/50 to-orange-900/10 border-orange-500/50",
-            "Armes": "from-slate-700 to-slate-800 border-slate-500/50",
-            "Crime": "from-purple-900/50 to-purple-900/10 border-purple-500/50"
-        };
-
-        const logicalOrder = [
-            "Code de la route",
-            "Délit mineur",
-            "Délits moyen",
-            "Délits majeur",
-            "Objet illégaux et drogues",
-            "Armes",
-            "Crime"
-        ];
-
-        async function init() {
-            try {
-                const res = await fetch('/api/individus?type=lois');
-                const data = await res.json();
-                const temp = {};
-                
-                data.forEach(i => {
-                    if(!temp[i.categorie]) temp[i.categorie] = { name: i.categorie, style: styles[i.categorie] || "from-slate-800 to-slate-900 border-slate-700", items: [] };
-                    temp[i.categorie].items.push(i);
-                });
-
-                categories = logicalOrder
-                    .filter(catName => temp[catName])
-                    .map(catName => temp[catName]);
-
-                Object.keys(temp).forEach(catName => {
-                    if (!logicalOrder.includes(catName)) {
-                        categories.push(temp[catName]);
-                    }
-                });
-
-                renderFilters();
-                document.getElementById('searchBar').disabled = false;
-                document.getElementById('searchBar').style.opacity = "1";
-                renderLaws();
-            } catch (e) { document.getElementById('lawsContainer').innerText = "Erreur de connexion."; }
-        }
-
-        function renderFilters() {
-            const container = document.getElementById('filterContainer');
-            categories.forEach(cat => {
-                const btn = document.createElement('button');
-                btn.className = 'filter-btn px-4 py-2 rounded-full border border-slate-700 text-[10px] font-black uppercase transition-all hover:bg-slate-700';
-                btn.innerText = cat.name;
-                btn.onclick = () => filterByCategory(cat.name, btn);
-                container.appendChild(btn);
-            });
-        }
-
-        function filterByCategory(name, element) {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            if (element) {
-                element.classList.add('active');
-            } else {
-                const allBtn = document.querySelector('button[onclick*="all"]');
-                if(allBtn) allBtn.classList.add('active');
-            }
-
-            document.getElementById('searchBar').value = "";
-
-            document.querySelectorAll('.law-category').forEach(c => {
-                const catTitle = c.getAttribute('data-category');
-                if (name === 'all' || catTitle === name) {
-                    c.style.display = "";
-                    c.querySelectorAll('button').forEach(b => b.style.display = "");
-                } else {
-                    c.style.display = "none";
+        const inputs = ['plaignant', 'objet', 'accuse', 'faits', 'demandes', 'qualifications', 'valMenaces'];
+        document.getElementById('checkMenaces').addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            document.getElementById('formMenaces').style.display = isChecked ? 'block' : 'none';
+            document.getElementById('sectionMenaces').style.display = isChecked ? 'block' : 'none';
+            document.getElementById('labelIII').innerText = isChecked ? "IV. Qualifications Juridiques" : "III. Qualifications Juridiques";
+            document.getElementById('labelIV').innerText = isChecked ? "V. Demandes du plaignant" : "IV. Demandes du plaignant";
+        });
+        inputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('input', (e) => {
+                const val = e.target.value;
+                if (id === 'qualifications') {
+                    document.getElementById('list-qualifications').innerHTML = val.split('\n').filter(l => l.trim()).map(l => `<li>${l}</li>`).join('');
+                    return;
+                }
+                const previewElement = document.getElementById(id === 'valMenaces' ? 'preview-menaces' : 'preview-' + id);
+                if (previewElement) {
+                    previewElement.classList.toggle('text-gray-400', !val.trim());
+                    previewElement.innerText = val.trim() || (id === 'faits' ? "En attente de rédaction..." : "...");
+                }
+                if (id === 'plaignant') {
+                    document.getElementById('preview-sign').innerText = val || "[Signature]";
+                    document.getElementById('header-demandes').innerText = `En conséquence, ${val || "le plaignant"} sollicite :`;
                 }
             });
-        }
-
-        function renderLaws() {
-            const container = document.getElementById('lawsContainer');
-            container.innerHTML = categories.map(cat => `
-                <div class="law-category animate-fade-in" data-category="${cat.name}">
-                    <div class="px-4 py-2 rounded-t-xl border-t border-x bg-gradient-to-r ${cat.style}"><h2 class="text-xs font-bold uppercase text-white">${cat.name}</h2></div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-800/50 p-4 rounded-b-xl border-x border-b border-slate-700/50">
-                        ${cat.items.map(i => {
-                            const isDrugCategory = cat.name === "Objet illégaux et drogues";
-                            const isStateMaterial = i.label.toLowerCase().includes("matériel d'état") || i.label.toLowerCase().includes("materiel d'etat");
-                            const useQtyLogic = isDrugCategory && !isStateMaterial;
-
-                            return `
-                            <button id="btn-${i.id}" onclick="toggleItem(${i.id}, ${useQtyLogic})" class="relative text-left p-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-750 transition-all flex flex-col justify-between h-full">
-                                <div class="flex justify-between items-start gap-2 mb-1">
-                                    <span class="font-medium text-slate-200 text-xs leading-tight">${i.label} ${useQtyLogic ? '<span class="text-orange-400 font-bold">(Unité)</span>' : ''}</span>
-                                    <span class="shrink-0 font-mono text-[10px] font-bold text-emerald-400">${i.amende}$</span>
-                                </div>
-                                ${i.sanction ? `<div class="text-[9px] text-orange-300 italic opacity-80 mt-1 line-clamp-2">${i.sanction}</div>` : ''}
-                                <div id="badge-qty-${i.id}" class="hidden absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg z-10">x1</div>
-                                <div class="selection-ring absolute inset-0 border-2 border-blue-500 rounded-xl opacity-0 scale-95 transition-all pointer-events-none"></div>
-                            </button>
-                        `}).join('')}
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function toggleItem(id, askQty = false) {
-            const item = categories.flatMap(c => c.items).find(i => i.id === id);
-            const btn = document.getElementById(`btn-${id}`);
-            const ring = btn.querySelector('.selection-ring');
-            const badge = document.getElementById(`badge-qty-${id}`);
-            const idx = cart.findIndex(i => i.id === id);
-
-            if(idx > -1) { 
-                cart.splice(idx, 1); 
-                ring.classList.replace('opacity-100', 'opacity-0'); 
-                ring.classList.replace('scale-100', 'scale-95');
-                badge.classList.add('hidden');
-            } else { 
-                let qty = 1;
-                if(askQty) {
-                    const input = prompt(`Combien de "${item.label}" ont été trouvés ?`, "1");
-                    qty = parseInt(input) || 1;
-                    if(qty <= 0) return;
-                }
-                
-                cart.push({ ...item, qty: qty }); 
-                ring.classList.replace('opacity-0', 'opacity-100'); 
-                ring.classList.replace('scale-95', 'scale-100');
-                
-                if(qty > 1) {
-                    badge.innerText = `x${qty}`;
-                    badge.classList.remove('hidden');
-                }
-                
-                updateCheckboxVisual();
-            }
-            calculate();
-        }
-
-        function calculate() {
-            const badge = document.getElementById('countBadge');
-            const list = document.getElementById('cartList');
-            if(badge) badge.innerText = cart.length;
-            
-            if(list) list.innerHTML = cart.length ? cart.map(i => `
-                <div class="bg-slate-800 p-2 rounded border border-slate-700/50 flex justify-between items-center">
-                    <div class="flex flex-col">
-                        <span>${i.label}</span>
-                        ${i.qty > 1 ? `<span class="text-[9px] text-slate-500 font-bold uppercase">Quantité: ${i.qty}</span>` : ''}
-                    </div>
-                    <span class="text-emerald-400">${(i.amende * (i.qty || 1)).toLocaleString()}$</span>
-                </div>
-            `).join('') : '<div class="h-20 flex items-center justify-center text-slate-600 italic">Vide</div>';
-
-            let f = cart.reduce((a, i) => a + (i.amende * (i.qty || 1)), 0);
-            let p = cart.reduce((a, i) => a + i.prison, 0);
-            let b = cart.reduce((a, i) => i.ban > a ? i.ban : a, 0);
-
-            const offenseCheck = document.getElementById('firstOffenseCheck');
-            if(offenseCheck && offenseCheck.checked) { 
-                f = Math.floor(f/2); 
-                if(b < 999) b = 0; 
-            }
-
-            const totalFine = document.getElementById('totalFine');
-            const totalPrison = document.getElementById('totalPrison');
-            const maxBan = document.getElementById('maxBan');
-            
-            if(totalFine) totalFine.innerText = f.toLocaleString() + " $";
-            if(totalPrison) totalPrison.innerText = p + " Min";
-            if(maxBan) {
-                maxBan.innerText = b >= 999 ? "DEF" : b > 0 ? b + " J" : "-";
-                maxBan.className = b >= 999 ? "text-sm font-bold text-red-500 animate-pulse" : "text-sm font-bold text-slate-500";
-            }
-        }
-
-        function updateCheckboxVisual() {
-            const offenseCheck = document.getElementById('firstOffenseCheck');
-            if(!offenseCheck) return;
-            const isChecked = offenseCheck.checked;
-            const icon = document.getElementById('checkboxIcon');
-            const square = document.getElementById('checkboxSquare');
-            if(!icon || !square) return;
-
-            if(isChecked) {
-                icon.classList.replace('opacity-0', 'opacity-100');
-                icon.classList.replace('scale-50', 'scale-100');
-                square.classList.replace('border-slate-500', 'border-blue-500');
-                square.classList.add('bg-blue-600');
-            } else {
-                icon.classList.replace('opacity-100', 'opacity-0');
-                icon.classList.replace('scale-100', 'scale-50');
-                square.classList.replace('border-blue-500', 'border-slate-500');
-                square.classList.remove('bg-blue-600');
-            }
-        }
-
-        async function saveSuspect() {
-            const nomInput = document.getElementById('suspectNom');
-            const nom = nomInput ? nomInput.value : "";
-            if(!nom || !cart.length) return alert("Nom et infractions requis.");
-            const btn = document.getElementById('saveBtn');
-            if(btn) {
-                btn.disabled = true; 
-                btn.innerText = "Archivage...";
-            }
-            
-            const motifDetail = cart.map(i => `${i.label}${i.qty > 1 ? ' (x'+i.qty+')' : ''}`).join(', ');
-            
-            const telInput = document.getElementById('suspectTel');
-            const statusInput = document.getElementById('suspectStatut');
-            const photoInput = document.getElementById('suspectPhoto');
-            const fineDisplay = document.getElementById('totalFine');
-            const prisonDisplay = document.getElementById('totalPrison');
-
-            const body = { 
-                nom, 
-                telephone: telInput ? telInput.value || "Inconnu" : "Inconnu", 
-                statut: statusInput ? statusInput.value : "En règle", 
-                photo_url: photoInput ? photoInput.value || "" : "",
-                motif: motifDetail, 
-                casiers: `Amende: ${fineDisplay ? fineDisplay.innerText : "0 $"} | Prison: ${prisonDisplay ? prisonDisplay.innerText : "0 Min"}`, 
-                derniere_intervention: new Date().toLocaleDateString('fr-FR') 
-            };
-            try { 
-                const res = await fetch('/api/individus', { method: 'POST', body: JSON.stringify(body) }); 
-                if(res.ok) {
-                    if(btn) btn.innerText = "Succès !";
-                    setTimeout(() => window.location.href = "Individus.html", 800);
-                } 
-            } catch(e) { 
-                alert("Erreur."); 
-                if(btn) {
-                    btn.disabled = false; 
-                    btn.innerText = "Valider"; 
-                }
-            }
-        }
-
-        function filterLaws() {
-            const searchInput = document.getElementById('searchBar');
-            const t = searchInput ? searchInput.value.toLowerCase() : "";
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            const allBtn = document.querySelector('button[onclick*="all"]');
-            if(allBtn) allBtn.classList.add('active');
-
-            document.querySelectorAll('.law-category').forEach(c => {
-                let h = false;
-                c.querySelectorAll('button').forEach(b => { 
-                    const v = b.innerText.toLowerCase().includes(t); 
-                    b.style.display = v ? "" : "none"; 
-                    if(v) h = true; 
-                });
-                c.style.display = h ? "" : "none";
-            });
-        }
-
-        function resetAll() { 
-            cart = []; 
-            const offenseCheck = document.getElementById('firstOffenseCheck');
-            if(offenseCheck) offenseCheck.checked = false; 
-            updateCheckboxVisual();
-            document.querySelectorAll('.selection-ring').forEach(r => { 
-                r.classList.replace('opacity-100', 'opacity-0'); 
-                r.classList.replace('scale-100', 'scale-95'); 
-            }); 
-            document.querySelectorAll('[id^="badge-qty-"]').forEach(b => b.classList.add('hidden'));
-            calculate(); 
-        }
-        init();
+        });
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+        document.getElementById('download-btn').addEventListener('click', () => {
+            const el = document.getElementById('document-preview');
+            const originalTransform = el.style.transform;
+            el.style.transform = "scale(1)";
+            html2pdf().set({
+                margin: 0,
+                filename: 'Plainte_CPPD_Officielle.pdf',
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: { scale: 3, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(el).save().then(() => el.style.transform = originalTransform);
+        });
     </script>
 </body>
 </html>
