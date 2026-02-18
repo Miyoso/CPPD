@@ -3,287 +3,326 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPPD • Générateur de Plainte</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Libre+Baskerville:italic&display=swap" rel="stylesheet">
+    <title>CPPD • Terminal</title>
     <link rel="icon" type="image/png" href="LogoCPPD.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
+                    colors: { slate: { 750: '#2d3748', 850: '#1a202c', 950: '#0f172a' } }
+                }
+            }
+        }
+    </script>
     <style>
-        body { background-color: #0f172a; height: 100vh; overflow: hidden; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-
-        .form-column { height: calc(100vh - 80px); overflow-y: auto; }
-        .preview-column {
-            height: calc(100vh - 80px);
-            overflow-y: auto;
-            background-color: #020617;
-            display: flex;
-            justify-content: center;
-            padding: 3rem 2rem;
-        }
-        .input-field {
-            width: 100%;
-            background-color: rgba(15, 23, 42, 0.6) !important; 
-            border: 1px solid #334155 !important;
-            border-radius: 0.75rem;
-            padding: 0.75rem;
-            font-size: 0.875rem;
-            color: #f1f5f9 !important;
-            outline: none;
-        }
-
-        .document-print { 
-            background: white; 
-            color: #1a1a1a; 
-            font-family: 'Inter', sans-serif; 
-            width: 210mm; 
-            min-height: 297mm;
-            padding: 20mm;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            display: flex;
-            flex-direction: column;
-            transform: scale(0.62);
-            transform-origin: top center;
-            position: relative;
-            border: 1px solid #e2e8f0;
-        }
-
-        /* Ornements de cadre */
-        .frame-border {
-            position: absolute;
-            top: 10mm;
-            left: 10mm;
-            right: 10mm;
-            bottom: 10mm;
-            border: 1px solid #cbd5e1;
-            pointer-events: none;
-        }
-        .frame-border::after {
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        body { background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%); }
+        body::before {
             content: "";
-            position: absolute;
-            top: 1mm; left: 1mm; right: 1mm; bottom: 1mm;
-            border: 0.5px solid #e2e8f0;
+            position: fixed;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 600px; height: 600px;
+            background-image: url('LogoCPPD.png'); background-repeat: no-repeat;
+            background-position: center; background-size: contain;
+            opacity: 0.03; pointer-events: none; z-index: -1;
         }
-
-        /* Coins stylisés */
-        .corner { position: absolute; width: 15mm; height: 15mm; border: 2px solid #1e293b; pointer-events: none; }
-        .top-left { top: 8mm; left: 8mm; border-right: 0; border-bottom: 0; }
-        .top-right { top: 8mm; right: 8mm; border-left: 0; border-bottom: 0; }
-        .bottom-left { bottom: 8mm; left: 8mm; border-right: 0; border-top: 0; }
-        .bottom-right { bottom: 8mm; right: 8mm; border-left: 0; border-top: 0; }
-
-        #document-preview::before {
-            content: "";
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%) rotate(-30deg);
-            width: 500px; height: 500px;
-            background-image: url('LogoCPPD.png');
-            background-repeat: no-repeat;
-            background-position: center;
-            background-size: contain;
-            opacity: 0.04;
-            pointer-events: none;
-        }
-
-        .hidden-section { display: none; }
-        #preview-faits, #preview-menaces, #preview-demandes { 
-            white-space: pre-wrap; word-break: break-word; text-align: justify; 
-            font-size: 11px; line-height: 1.6; color: #334155;
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .filter-btn.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
         
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
+        .ticket-receipt {
+            background: #f8fafc;
+            color: #1e293b;
+            position: relative;
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
         }
-        .section-line { height: 1px; background: #e2e8f0; flex-grow: 1; }
-        .section-title {
-            font-size: 10px; font-weight: 800; text-transform: uppercase;
-            letter-spacing: 0.1em; color: #0f172a; white-space: nowrap;
+        .ticket-receipt::after {
+            content: "";
+            position: absolute;
+            bottom: -10px; left: 0; right: 0;
+            height: 10px;
+            background: linear-gradient(-135deg, #f8fafc 5px, transparent 0), linear-gradient(135deg, #f8fafc 5px, transparent 0);
+            background-size: 10px 10px;
         }
     </style>
 </head>
-<body class="text-slate-300 font-sans flex flex-col">
+<body class="text-slate-300 font-sans min-h-screen flex flex-col antialiased">
 
-    <header class="h-20 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md flex items-center px-8 justify-between z-50">
-        <div class="flex items-center gap-4">
-            <img src="LogoCPPD.png" alt="Logo" class="w-10 h-10 object-contain">
-            <div>
-                <h1 class="text-white font-bold tracking-tight uppercase text-sm">CPPD Records</h1>
-                <p class="text-[9px] text-slate-500 uppercase tracking-widest">Système de Procédures Judiciaires</p>
+    <header class="sticky top-4 z-50 px-4 mb-4">
+        <div class="max-w-7xl mx-auto bg-slate-800/80 backdrop-blur-md border border-slate-700/50 rounded-2xl shadow-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <img src="LogoCPPD.png" alt="Logo" class="w-12 h-12 object-contain">
+                <div>
+                    <h1 class="text-xl font-bold text-white tracking-tight">• CPPD</h1>
+                    <p class="text-xs text-slate-400 font-medium tracking-wide uppercase">Calculateur Pénal</p>
+                </div>
             </div>
-        </div>
-        <div class="flex items-center gap-4">
-            <button onclick="window.location.reload()" class="text-slate-500 hover:text-white text-xs font-bold uppercase">Réinitialiser</button>
-            <button id="download-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-full font-bold text-xs shadow-lg uppercase">Exporter en PDF</button>
+            <div class="flex items-center gap-4 w-full md:w-auto">
+                <input type="text" id="searchBar" placeholder="Rechercher une loi..." disabled class="block w-full pl-4 pr-3 py-2.5 border border-slate-700 rounded-xl bg-slate-900/50 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all opacity-50 text-sm" onkeyup="filterLaws()">
+                <div class="flex gap-2 text-nowrap">
+                    <a href="Individus.html" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl font-bold text-xs uppercase transition-all">Individus</a>
+                </div>
+            </div>
         </div>
     </header>
 
-    <main class="flex flex-1 overflow-hidden">
-        <div class="w-[40%] form-column p-8 border-r border-slate-800 bg-slate-900/30">
-            <div class="max-w-xl mx-auto space-y-6">
-                <section class="space-y-4">
-                    <h2 class="text-indigo-400 text-[10px] font-black uppercase tracking-[0.2em]">Identité & Objet</h2>
-                    <div class="grid grid-cols-2 gap-4">
-                        <input type="text" id="plaignant" placeholder="Nom du Plaignant" class="input-field">
-                        <input type="text" id="accuse" placeholder="Nom de l'Accusé" class="input-field">
-                    </div>
-                    <input type="text" id="objet" placeholder="Objet de la plainte" class="input-field">
-                </section>
+    <div class="max-w-7xl mx-auto w-full px-4 mb-6">
+        <div id="filterContainer" class="flex flex-wrap gap-2 overflow-x-auto pb-2 no-scrollbar">
+            <button onclick="filterByCategory('all')" class="filter-btn active px-4 py-2 rounded-full border border-slate-700 text-[10px] font-black uppercase transition-all hover:bg-slate-700">Tous</button>
+        </div>
+    </div>
 
-                <section class="space-y-4">
-                    <h2 class="text-indigo-400 text-[10px] font-black uppercase tracking-[0.2em]">Détails</h2>
-                    <textarea id="faits" rows="5" class="input-field resize-none" placeholder="Récit des faits..."></textarea>
-                    
-                    <div class="flex items-center justify-between bg-slate-800/40 p-3 rounded-lg border border-slate-700">
-                        <label for="checkMenaces" class="text-[10px] font-bold uppercase text-slate-400">Ajouter section Menaces</label>
-                        <input type="checkbox" id="checkMenaces" class="w-4 h-4">
-                    </div>
-
-                    <div id="formMenaces" class="hidden-section">
-                        <textarea id="valMenaces" rows="2" class="input-field resize-none" placeholder="Détail des menaces..."></textarea>
-                    </div>
-                </section>
-
-                <section class="space-y-4">
-                    <h2 class="text-indigo-400 text-[10px] font-black uppercase tracking-[0.2em]">Qualifications</h2>
-                    <textarea id="qualifications" rows="2" class="input-field resize-none" placeholder="Articles ou charges..."></textarea>
-                    <textarea id="demandes" rows="2" class="input-field resize-none" placeholder="Réparations demandées..."></textarea>
-                </section>
+    <main class="flex-grow max-w-7xl mx-auto w-full p-4 flex flex-col-reverse lg:flex-row gap-8 items-start">
+        <div id="lawsContainer" class="flex-1 w-full space-y-8 pb-20">
+            <div class="flex flex-col items-center justify-center h-64 space-y-4">
+                <img src="LogoCPPD.png" class="w-24 h-24 animate-pulse opacity-50">
+                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Chargement du terminal...</p>
             </div>
         </div>
 
-        <div class="w-[60%] preview-column">
-            <div id="document-preview" class="document-print">
-                <div class="frame-border"></div>
-                <div class="corner top-left"></div><div class="corner top-right"></div>
-                <div class="corner bottom-left"></div><div class="corner bottom-right"></div>
+        <div class="lg:w-[380px] shrink-0 lg:sticky lg:top-32 w-full space-y-6">
+            <div class="ticket-receipt rounded-t-sm">
+                <div class="text-center border-b border-dashed border-slate-400 pb-4 mb-4">
+                    <h2 class="text-sm font-black uppercase">Procès-Verbal</h2>
+                    <p class="text-[10px] opacity-70" id="ticketDate">--/--/----</p>
+                </div>
+                
+                <div id="cartList" class="space-y-3 text-[11px] mb-6 min-h-[50px]"></div>
 
-                <div class="relative z-10">
-                    <div class="flex justify-between items-start mb-12">
-                        <div class="space-y-1">
-                            <div class="text-[9px] uppercase tracking-[0.3em] text-indigo-900 font-black">État de Cayo Perico</div>
-                            <div class="text-[8px] text-gray-500 uppercase font-bold">Département de la Justice</div>
-                            <div class="h-1 w-12 bg-indigo-900 my-3"></div>
-                            <p class="text-[10px] font-bold text-black uppercase">Déclarant : <span id="preview-plaignant" class="text-indigo-800">[...]</span></p>
-                            <p class="text-[9px] text-gray-500 mt-4 font-bold uppercase">À l'attention du CPPD</p>
-                        </div>
-                        <div class="text-center">
-                            <img src="LogoCPPD.png" class="w-24 h-24 object-contain mx-auto">
-                            <div class="text-[7px] font-mono text-gray-400 mt-2 uppercase tracking-tighter">Official Judicial Document</div>
-                        </div>
+                <div class="border-t border-dashed border-slate-400 pt-4 space-y-2">
+                    <div class="flex justify-between font-black text-lg">
+                        <span>TOTAL AMENDE</span>
+                        <span id="totalFine">0 $</span>
                     </div>
-
-                    <div class="text-right text-[9px] mb-8 italic text-gray-400 uppercase tracking-widest">
-                        Fait le <span id="current-date" class="font-bold text-black"></span>
+                    <div class="flex justify-between text-xs font-bold text-blue-700">
+                        <span>PEINE DE PRISON</span>
+                        <span id="totalPrison">0 Min</span>
                     </div>
-
-                    <div class="border-double border-4 border-gray-100 p-6 mb-10 text-center">
-                        <h1 class="text-xl font-black uppercase tracking-[0.2em] text-slate-900">Plainte Formelle</h1>
-                        <div class="h-px w-20 bg-gray-200 mx-auto my-3"></div>
-                        <p class="text-[10px] font-semibold text-slate-500 uppercase">Dossier relatif à : <span id="preview-objet" class="text-black font-bold">...</span></p>
-                    </div>
-
-                    <div class="space-y-8">
-                        <section>
-                            <div class="section-header">
-                                <span class="section-title">01. Mis en cause</span>
-                                <div class="section-line"></div>
-                            </div>
-                            <p class="text-[11px] text-slate-700 pl-4">L'action est engagée contre : <span id="preview-accuse" class="font-bold uppercase tracking-tight">...</span></p>
-                        </section>
-
-                        <section>
-                            <div class="section-header">
-                                <span class="section-title">02. Exposé des faits</span>
-                                <div class="section-line"></div>
-                            </div>
-                            <div id="preview-faits" class="pl-4 italic text-gray-400">En attente de saisie des éléments...</div>
-                        </section>
-
-                        <section id="sectionMenaces" class="hidden-section">
-                            <div class="section-header">
-                                <span class="section-title">03. Menaces caractérisées</span>
-                                <div class="section-line"></div>
-                            </div>
-                            <div id="preview-menaces" class="pl-4 italic text-gray-400">...</div>
-                        </section>
-
-                        <section>
-                            <div class="section-header">
-                                <span id="labelIII" class="section-title">03. Qualifications</span>
-                                <div class="section-line"></div>
-                            </div>
-                            <p class="text-[11px] mb-2 text-black">Les faits ainsi rapportés sont susceptibles de constituer les infractions suivantes :</p>
-                            <ul id="list-qualifications" class="list-disc ml-10 text-[10px] font-bold uppercase text-indigo-900"></ul>
-                        </section>
-
-                        <section>
-                            <div class="section-header">
-                                <span id="labelIV" class="section-title">04. Prétentions</span>
-                                <div class="section-line"></div>
-                            </div>
-                            <p id="header-demandes" class="mb-2 font-bold italic text-[10px] text-black">Le plaignant sollicite :</p>
-                        <div id="preview-demandes" class="text-gray-500 italic">...</div>
-                        </section>
-                    </div>
-
-                    <div class="mt-20 flex justify-end">
-                        <div class="text-center w-64">
-                            <div class="text-[8px] font-black uppercase text-gray-400 mb-10 tracking-[0.2em]">Signature Certifiée</div>
-                            <p id="preview-sign" class="text-xl font-serif italic text-slate-800">[Signature]</p>
-                            <div class="h-px bg-indigo-900 w-full mt-2"></div>
-                            <p class="text-[7px] text-gray-400 mt-1 italic uppercase">Document soumis à la juridiction de Cayo Perico</p>
-                        </div>
+                    <div id="banSection" class="hidden flex justify-between text-xs font-bold text-red-600">
+                        <span>SANCTION BAN</span>
+                        <span id="maxBan">-</span>
                     </div>
                 </div>
+            </div>
+
+            <div class="bg-slate-800/90 rounded-2xl border border-slate-700 shadow-2xl p-6 space-y-4">
+                <label class="group flex items-center p-3 rounded-xl border border-slate-700 bg-slate-850 cursor-pointer transition-all">
+                    <input type="checkbox" id="firstOffenseCheck" class="peer sr-only" onchange="calculate(); updateCheckboxVisual();">
+                    <span class="font-bold text-xs text-slate-200 flex-1 uppercase">Première fois / Coopération (-50%)</span>
+                    <div id="checkboxSquare" class="w-5 h-5 rounded border-2 border-slate-500 bg-slate-900 flex items-center justify-center transition-all">
+                        <svg id="checkboxIcon" class="w-3 h-3 text-white opacity-0 transition-all scale-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                </label>
+                <input type="text" id="suspectNom" placeholder="Nom du suspect" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="saveSuspect()" id="saveBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all uppercase text-[10px] tracking-widest">Archiver le dossier</button>
+                <button onclick="resetAll()" class="w-full py-2 rounded-xl font-bold text-[10px] uppercase text-slate-500 hover:text-white transition-all">Réinitialiser</button>
             </div>
         </div>
     </main>
 
     <script>
-        const inputs = ['plaignant', 'objet', 'accuse', 'faits', 'demandes', 'qualifications', 'valMenaces'];
-        document.getElementById('checkMenaces').addEventListener('change', (e) => {
-            const isChecked = e.target.checked;
-            document.getElementById('formMenaces').style.display = isChecked ? 'block' : 'none';
-            document.getElementById('sectionMenaces').style.display = isChecked ? 'block' : 'none';
-            document.getElementById('labelIII').innerText = isChecked ? "04. Qualifications" : "03. Qualifications";
-            document.getElementById('labelIV').innerText = isChecked ? "05. Prétentions" : "04. Prétentions";
-        });
-        inputs.forEach(id => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            el.addEventListener('input', (e) => {
-                const val = e.target.value;
-                if (id === 'qualifications') {
-                    document.getElementById('list-qualifications').innerHTML = val.split('\n').filter(l => l.trim()).map(l => `<li>${l}</li>`).join('');
-                    return;
-                }
-                const previewElement = document.getElementById(id === 'valMenaces' ? 'preview-menaces' : 'preview-' + id);
-                if (previewElement) {
-                    previewElement.classList.toggle('text-gray-400', !val.trim());
-                    previewElement.innerText = val.trim() || (id === 'faits' ? "En attente de saisie des éléments..." : "...");
-                }
-                if (id === 'plaignant') document.getElementById('preview-sign').innerText = val || "[Signature]";
+        let categories = [];
+        let cart = [];
+        const styles = { 
+            "Code de la route": "from-emerald-900/50 to-emerald-900/10 border-emerald-500/50", 
+            "Délit mineur": "from-blue-900/50 to-blue-900/10 border-blue-500/50", 
+            "Délits moyen": "from-yellow-900/50 to-yellow-900/10 border-yellow-500/50", 
+            "Délits majeur": "from-red-900/50 to-red-900/10 border-red-500/50", 
+            "Objet illégaux et drogues": "from-orange-900/50 to-orange-900/10 border-orange-500/50",
+            "Armes": "from-slate-700 to-slate-800 border-slate-500/50",
+            "Crime": "from-purple-900/50 to-purple-900/10 border-purple-500/50"
+        };
+
+        const logicalOrder = ["Code de la route", "Délit mineur", "Délits moyen", "Délits majeur", "Objet illégaux et drogues", "Armes", "Crime"];
+
+        function cleanText(text) {
+            return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
+
+        async function init() {
+            document.getElementById('ticketDate').innerText = new Date().toLocaleString('fr-FR');
+            try {
+                const res = await fetch('/api/individus?type=lois');
+                const data = await res.json();
+                const temp = {};
+                data.forEach(i => {
+                    if(!temp[i.categorie]) temp[i.categorie] = { name: i.categorie, style: styles[i.categorie] || "from-slate-800 to-slate-900 border-slate-700", items: [] };
+                    temp[i.categorie].items.push(i);
+                });
+                categories = logicalOrder.filter(catName => temp[catName]).map(catName => temp[catName]);
+                renderFilters();
+                document.getElementById('searchBar').disabled = false;
+                document.getElementById('searchBar').style.opacity = "1";
+                renderLaws();
+            } catch (e) { document.getElementById('lawsContainer').innerText = "Erreur de connexion."; }
+        }
+
+        function renderFilters() {
+            const container = document.getElementById('filterContainer');
+            categories.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn px-4 py-2 rounded-full border border-slate-700 text-[10px] font-black uppercase transition-all hover:bg-slate-700';
+                btn.innerText = cat.name;
+                btn.onclick = () => filterByCategory(cat.name, btn);
+                container.appendChild(btn);
             });
-        });
-        document.getElementById('current-date').innerText = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-        document.getElementById('download-btn').addEventListener('click', () => {
-            const el = document.getElementById('document-preview');
-            const originalTransform = el.style.transform;
-            el.style.transform = "scale(1)";
-            html2pdf().set({
-                margin: 0,
-                filename: 'Plainte_Certifiee.pdf',
-                image: { type: 'jpeg', quality: 1 },
-                html2canvas: { scale: 3, useCORS: true, letterRendering: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(el).save().then(() => el.style.transform = originalTransform);
-        });
+        }
+
+        function filterByCategory(name, element) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            if (element) element.classList.add('active');
+            else document.querySelector('button[onclick*="all"]').classList.add('active');
+            document.getElementById('searchBar').value = "";
+            document.querySelectorAll('.law-category').forEach(c => {
+                c.style.display = (name === 'all' || c.getAttribute('data-category') === name) ? "" : "none";
+                c.querySelectorAll('button').forEach(b => b.style.display = "");
+            });
+        }
+
+        function filterLaws() {
+            const t = cleanText(document.getElementById('searchBar').value);
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('button[onclick*="all"]').classList.add('active');
+
+            document.querySelectorAll('.law-category').forEach(c => {
+                let hasMatch = false;
+                c.querySelectorAll('button').forEach(b => { 
+                    const match = cleanText(b.innerText).includes(t);
+                    b.style.display = match ? "" : "none"; 
+                    if(match) hasMatch = true; 
+                });
+                c.style.display = hasMatch ? "" : "none";
+            });
+        }
+
+        function renderLaws() {
+            const container = document.getElementById('lawsContainer');
+            container.innerHTML = categories.map(cat => `
+                <div class="law-category animate-fade-in" data-category="${cat.name}">
+                    <div class="px-4 py-2 rounded-t-xl border-t border-x bg-gradient-to-r ${cat.style}"><h2 class="text-xs font-bold uppercase text-white">${cat.name}</h2></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-800/50 p-4 rounded-b-xl border-x border-b border-slate-700/50">
+                        ${cat.items.map(i => {
+                            const useQty = cat.name === "Objet illégaux et drogues" && !i.label.toLowerCase().includes("matériel");
+                            return `
+                            <button id="btn-${i.id}" onclick="toggleItem(${i.id}, ${useQty})" class="relative text-left p-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-750 transition-all flex flex-col justify-between h-full group">
+                                <div class="flex justify-between items-start gap-2 mb-1">
+                                    <span class="font-medium text-slate-200 text-xs leading-tight">${i.label} ${useQty ? '<span class="text-orange-400 font-bold">(Qté)</span>' : ''}</span>
+                                    <span class="shrink-0 font-mono text-[10px] font-bold text-emerald-400">${i.amende}$</span>
+                                </div>
+                                <div id="badge-qty-${i.id}" class="hidden absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg z-10">x1</div>
+                                <div class="selection-ring absolute inset-0 border-2 border-blue-500 rounded-xl opacity-0 scale-95 transition-all pointer-events-none group-hover:border-slate-500 group-hover:opacity-30"></div>
+                            </button>
+                        `}).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleItem(id, askQty = false) {
+            const item = categories.flatMap(c => c.items).find(i => i.id === id);
+            const ring = document.getElementById(`btn-${id}`).querySelector('.selection-ring');
+            const badge = document.getElementById(`badge-qty-${id}`);
+            const idx = cart.findIndex(i => i.id === id);
+
+            if(idx > -1) { 
+                cart.splice(idx, 1); 
+                ring.className = "selection-ring absolute inset-0 border-2 border-blue-500 rounded-xl opacity-0 scale-95 transition-all pointer-events-none";
+                badge.classList.add('hidden');
+            } else { 
+                let qty = 1;
+                if(askQty) {
+                    const input = prompt(`Quantité pour : ${item.label}`, "1");
+                    qty = parseInt(input) || 1;
+                    if(qty <= 0) return;
+                }
+                cart.push({ ...item, qty: qty }); 
+                ring.className = "selection-ring absolute inset-0 border-2 border-blue-500 rounded-xl opacity-100 scale-100 transition-all pointer-events-none";
+                if(qty > 1) { badge.innerText = `x${qty}`; badge.classList.remove('hidden'); }
+            }
+            calculate();
+        }
+
+        function calculate() {
+            const list = document.getElementById('cartList');
+            list.innerHTML = cart.length ? cart.map(i => `
+                <div class="flex justify-between items-start gap-2 border-b border-slate-200 pb-1">
+                    <span class="uppercase">${i.label} ${i.qty > 1 ? '(x' + i.qty + ')' : ''}</span>
+                    <span class="font-bold">${(i.amende * (i.qty || 1)).toLocaleString()}$</span>
+                </div>
+            `).join('') : '<div class="text-center opacity-30 py-4">AUCUNE INFRACTION</div>';
+
+            let f = cart.reduce((a, i) => a + (i.amende * (i.qty || 1)), 0);
+            let p = cart.reduce((a, i) => a + i.prison, 0);
+            let b = cart.reduce((a, i) => i.ban > a ? i.ban : a, 0);
+
+            if(document.getElementById('firstOffenseCheck').checked) { f = Math.floor(f/2); if(b < 999) b = 0; }
+
+            document.getElementById('totalFine').innerText = f.toLocaleString() + " $";
+            document.getElementById('totalPrison').innerText = p + " Min";
+            
+            const banEl = document.getElementById('maxBan');
+            const banSec = document.getElementById('banSection');
+            if(b > 0) {
+                banSec.classList.remove('hidden');
+                banEl.innerText = b >= 999 ? "DÉFINITIF" : b + " JOUR(S)";
+            } else {
+                banSec.classList.add('hidden');
+            }
+        }
+
+        function updateCheckboxVisual() {
+            const isChecked = document.getElementById('firstOffenseCheck').checked;
+            const icon = document.getElementById('checkboxIcon');
+            const square = document.getElementById('checkboxSquare');
+            if(isChecked) {
+                icon.className = "w-3 h-3 text-white opacity-100 transition-all scale-100";
+                square.className = "w-5 h-5 rounded border-2 border-blue-500 bg-blue-600 flex items-center justify-center transition-all";
+            } else {
+                icon.className = "w-3 h-3 text-white opacity-0 transition-all scale-50";
+                square.className = "w-5 h-5 rounded border-2 border-slate-500 bg-slate-900 flex items-center justify-center transition-all";
+            }
+        }
+
+        async function saveSuspect() {
+            const nom = document.getElementById('suspectNom').value;
+            if(!nom || !cart.length) return alert("Nom et infractions requis.");
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true; btn.innerText = "Archivage...";
+            
+            const body = { 
+                nom, 
+                motif: cart.map(i => `${i.label}${i.qty > 1 ? ' (x'+i.qty+')' : ''}`).join(', '), 
+                casiers: `Amende: ${document.getElementById('totalFine').innerText} | Prison: ${document.getElementById('totalPrison').innerText}`, 
+                derniere_intervention: new Date().toLocaleDateString('fr-FR') 
+            };
+            try { 
+                const res = await fetch('/api/individus', { method: 'POST', body: JSON.stringify(body) }); 
+                if(res.ok) window.location.href = "Individus.html";
+            } catch(e) { alert("Erreur."); btn.disabled = false; btn.innerText = "Archiver"; }
+        }
+
+        function resetAll() { 
+            cart = []; 
+            document.getElementById('firstOffenseCheck').checked = false; 
+            updateCheckboxVisual();
+            document.querySelectorAll('.selection-ring').forEach(r => r.className = "selection-ring absolute inset-0 border-2 border-blue-500 rounded-xl opacity-0 scale-95 transition-all pointer-events-none"); 
+            document.querySelectorAll('[id^="badge-qty-"]').forEach(b => b.classList.add('hidden'));
+            document.getElementById('suspectNom').value = "";
+            calculate(); 
+        }
+        init();
     </script>
 </body>
 </html>
