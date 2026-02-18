@@ -3,169 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPPD • Logs Crystal</title>
+    <title>CPPD • Terminal de Justice</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --glass: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-blue: #3b82f6;
+        }
+
         body { 
-            background-color: #0f172a;
-            /* Fond avec des formes diffuses pour accentuer l'effet de transparence */
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(147, 51, 234, 0.1) 0%, transparent 40%),
-                radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%);
-            min-height: 100vh;
+            background: radial-gradient(circle at 50% 0%, #1e293b 0%, #020617 100%);
+            background-color: #020617;
+            color: #f1f5f9;
             font-family: 'Inter', sans-serif;
+            min-height: 100vh;
         }
 
-        /* L'effet Glassmorphism central */
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        /* Effet Crystal Glass */
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
         }
 
-        .glass-hover:hover {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        .glass-input {
+            background: rgba(0, 0, 0, 0.3) !important;
+            border: 1px solid var(--glass-border) !important;
+            backdrop-filter: blur(4px);
             transition: all 0.3s ease;
         }
 
+        .glass-input:focus {
+            border-color: var(--accent-blue) !important;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Animation de scan de police */
+        .scanline {
+            width: 100%; height: 2px;
+            background: rgba(59, 130, 246, 0.1);
+            position: fixed; top: 0; z-index: 100;
+            animation: scan 4s linear infinite;
+        }
+
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        
         ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
     </style>
 </head>
-<body class="p-4 md:p-8 text-slate-200 antialiased">
-    <div class="max-w-6xl mx-auto">
-        
-        <header class="glass rounded-[2rem] p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 glass rounded-2xl flex items-center justify-center border border-white/20">
-                    <img src="LogoCPPD.png" class="w-8 h-8 object-contain opacity-80">
-                </div>
-                <div>
-                    <h1 class="text-2xl font-black tracking-tighter uppercase italic text-white">Security Intelligence</h1>
-                    <p class="text-[9px] font-bold tracking-[0.3em] text-blue-400 uppercase opacity-70">Log Analytics v3.0</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center gap-6">
-                <div class="text-center">
-                    <span id="totalLogs" class="block text-2xl font-black text-white">0</span>
-                    <span class="text-[9px] uppercase font-bold text-slate-500 tracking-widest">Entrées</span>
-                </div>
-                <a href="Individus.html" class="glass glass-hover px-6 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest border border-white/10">
-                    Fermer
-                </a>
-            </div>
-        </header>
+<body class="p-4">
+    <div class="scanline"></div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="md:col-span-2 relative">
-                <input type="text" id="logSearch" placeholder="Rechercher un agent ou un dossier..." onkeyup="filterLogs()" 
-                       class="glass w-full rounded-2xl p-4 pl-12 text-sm outline-none focus:border-blue-500/50 transition-all placeholder:text-slate-500">
-                <svg class="w-5 h-5 text-slate-500 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            </div>
-            <select id="actionFilter" onchange="filterLogs()" 
-                    class="glass rounded-2xl px-6 py-4 text-xs font-bold uppercase outline-none cursor-pointer focus:border-blue-500/50">
-                <option value="all" class="bg-slate-900 text-white">Toutes les actions</option>
-                <option value="SUPPRESSION" class="bg-slate-900 text-white">Suppressions</option>
-                <option value="MODIFICATION" class="bg-slate-900 text-white">Modifications</option>
-                <option value="CREATION" class="bg-slate-900 text-white">Créations</option>
-            </select>
-        </div>
-
-        <div class="glass rounded-[2.5rem] overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead>
-                        <tr class="text-[10px] uppercase font-bold text-slate-400 tracking-[0.2em] border-b border-white/5">
-                            <th class="p-6">Time-Stamp</th>
-                            <th class="p-6">Protocole</th>
-                            <th class="p-6">Identifiant Agent</th>
-                            <th class="p-6">Metadata</th>
-                        </tr>
-                    </thead>
-                    <tbody id="logContent" class="text-sm divide-y divide-white/5">
-                        </tbody>
-                </table>
-            </div>
-            <div id="noLogs" class="hidden p-20 text-center text-slate-500 italic uppercase tracking-widest text-xs">
-                Aucune donnée détectée dans la matrice.
+    <header class="max-w-7xl mx-auto glass-card p-6 mb-8 flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <img src="LogoCPPD.png" class="w-12 h-12 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">
+            <div>
+                <h1 class="text-xl font-black tracking-tighter uppercase italic">Central Command</h1>
+                <p class="text-[9px] font-bold tracking-[0.3em] text-blue-400 uppercase">Database Access v3.0</p>
             </div>
         </div>
-    </div>
+        <nav class="flex gap-3">
+            <a href="Individus.html" class="glass-card px-5 py-2 text-[10px] font-bold uppercase hover:bg-blue-600 transition-all">Individus</a>
+            <a href="Logs.html" class="glass-card px-5 py-2 text-[10px] font-bold uppercase hover:bg-red-600 transition-all">Archives</a>
+        </nav>
+    </header>
 
-    <script>
-        let allLogs = [];
-
-        async function fetchLogs() {
-            try {
-                const res = await fetch('/api/individus?type=logs');
-                allLogs = await res.json();
-                document.getElementById('totalLogs').innerText = allLogs.length;
-                renderLogs(allLogs);
-            } catch (e) { console.error(e); }
-        }
-
-        function renderLogs(data) {
-            const container = document.getElementById('logContent');
-            const noLogs = document.getElementById('noLogs');
+    <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 space-y-6">
+            <div class="glass-card p-4 flex gap-4">
+                <input type="text" placeholder="Rechercher dans la matrice..." class="glass-input w-full rounded-xl p-3 text-sm outline-none">
+            </div>
             
-            if (data.length === 0) {
-                container.innerHTML = "";
-                noLogs.classList.remove('hidden');
-                return;
-            }
-            
-            noLogs.classList.add('hidden');
-            container.innerHTML = data.map(l => {
-                const type = l.action;
-                const actionBadge = type === 'SUPPRESSION' 
-                    ? 'border-red-500/30 text-red-400 bg-red-500/5' 
-                    : type === 'MODIFICATION' 
-                        ? 'border-blue-500/30 text-blue-400 bg-blue-500/5' 
-                        : 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5';
+            <div class="glass-card p-6 border-l-4 border-blue-500 hover:scale-[1.01] transition-transform cursor-pointer">
+                <div class="flex justify-between items-start">
+                    <h3 class="font-bold text-white uppercase">Homicide Volontaire</h3>
+                    <span class="font-mono text-blue-400">15,000$</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-2 italic">Atteinte préméditée à la vie d'autrui.</p>
+            </div>
+        </div>
 
-                return `
-                    <tr class="glass-hover transition-all">
-                        <td class="p-6 font-mono text-[11px] text-slate-400">
-                            ${new Date(l.date).toLocaleString('fr-FR')}
-                        </td>
-                        <td class="p-6">
-                            <span class="px-3 py-1 rounded-lg border text-[9px] font-black tracking-widest ${actionBadge}">
-                                ${type}
-                            </span>
-                        </td>
-                        <td class="p-6">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-xl glass flex items-center justify-center text-[10px] font-black border border-white/10 text-white">
-                                    ${l.officier.substring(0,2).toUpperCase()}
-                                </div>
-                                <span class="font-bold text-slate-100">${l.officier}</span>
-                            </div>
-                        </td>
-                        <td class="p-6 italic text-slate-400 text-xs">
-                            ${l.detail}
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function filterLogs() {
-            const query = document.getElementById('logSearch').value.toLowerCase();
-            const action = document.getElementById('actionFilter').value;
-            const filtered = allLogs.filter(l => {
-                const matchesSearch = l.officier.toLowerCase().includes(query) || l.detail.toLowerCase().includes(query);
-                const matchesAction = action === 'all' || l.action === action;
-                return matchesSearch && matchesAction;
-            });
-            renderLogs(filtered);
-        }
-
-        fetchLogs();
-    </script>
+        <aside class="space-y-6">
+            <div class="glass-card p-8 relative overflow-hidden">
+                <div class="text-center mb-6">
+                    <h2 class="font-black text-sm uppercase">Procès-Verbal</h2>
+                    <div class="h-px bg-white/10 my-4"></div>
+                </div>
+                <div class="space-y-3 text-xs font-mono mb-8" id="ticketContent">
+                    <div class="flex justify-between"><span>Délit de fuite</span><span>2,500$</span></div>
+                </div>
+                <button class="w-full bg-blue-600 p-4 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg shadow-blue-900/40">
+                    Calculer la peine
+                </button>
+            </div>
+        </aside>
+    </main>
 </body>
 </html>
