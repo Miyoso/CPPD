@@ -3,200 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPPD • Intelligence</title>
-    <link rel="icon" type="image/png" href="LogoCPPD.png">
+    <title>CPPD • Logs de Sécurité</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { 
             background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%); 
-            background-color: #0f172a; color: #cbd5e1; min-height: 100vh; 
+            background-color: #0f172a; 
+            min-height: 100vh; 
         }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
-        .recidiviste-pulse { animation: pulse-red 2s infinite; }
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-        .custom-scroll::-webkit-scrollbar { width: 3px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #334155; }
+        .log-row:hover { background: rgba(71, 85, 105, 0.1); }
     </style>
 </head>
-<body class="p-4 md:p-8 flex flex-col antialiased">
-
-    <header class="max-w-7xl mx-auto w-full mb-8">
-        <div class="flex flex-col md:flex-row justify-between items-center bg-slate-800/50 p-6 rounded-3xl border border-slate-700/50 shadow-2xl gap-6">
-            <div class="flex items-center gap-5">
-                <img src="LogoCPPD.png" class="w-12 h-12 object-contain">
-                <div>
-                    <h1 class="text-2xl font-black text-white tracking-tighter uppercase italic">Central Database</h1>
-                    <div class="flex gap-2 mt-1">
-                        <span id="totalCount" class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">-- Suspects</span>
-                    </div>
+<body class="p-4 md:p-8 text-slate-300 antialiased font-sans">
+    <div class="max-w-6xl mx-auto">
+        
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 bg-slate-800/50 p-6 rounded-3xl border border-slate-700/50 shadow-2xl gap-6">
+            <div>
+                <h1 class="text-2xl font-black text-white tracking-tighter uppercase italic">Journal de Sécurité</h1>
+                <p class="text-[10px] text-slate-500 uppercase font-bold tracking-[0.2em] mt-1">Surveillance des protocoles terminaux</p>
+            </div>
+            
+            <div class="flex gap-4 items-center">
+                <div class="text-right hidden sm:block">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase">Actions Totales</p>
+                    <p id="totalLogs" class="text-xl font-black text-blue-400">0</p>
                 </div>
+                <a href="Individus.html" class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-2xl font-bold text-xs uppercase transition-all shadow-lg">Retour Base</a>
             </div>
-            <div class="flex gap-3">
-                <a href="index.html" class="bg-slate-700 hover:bg-blue-600 text-white px-6 py-2.5 rounded-2xl font-bold text-xs uppercase transition-all shadow-lg">Calculateur</a>
-                <a href="Logs.html" class="bg-slate-700 hover:bg-red-600 text-white px-6 py-2.5 rounded-2xl font-bold text-xs uppercase transition-all shadow-lg">Logs</a>
-            </div>
-        </div>
-    </header>
+        </header>
 
-    <main class="max-w-7xl mx-auto w-full space-y-8">
-        <div class="flex flex-col md:flex-row gap-4">
+        <div class="mb-6 flex flex-col md:flex-row gap-4">
             <div class="relative flex-grow">
-                <input type="text" id="search" placeholder="Nom, matricule ou infraction..." onkeyup="filter()" class="w-full bg-slate-900/80 border border-slate-700 rounded-2xl p-4 text-white outline-none focus:ring-2 focus:ring-blue-500/50 pl-12 shadow-inner">
+                <input type="text" id="logSearch" placeholder="Filtrer par officier ou détail..." onkeyup="filterLogs()" class="w-full bg-slate-900/80 border border-slate-700 rounded-2xl p-4 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500/50 pl-12 transition-all">
                 <svg class="w-5 h-5 text-slate-500 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
-            <select id="filterStatut" onchange="filter()" class="bg-slate-900 border border-slate-700 text-white rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-blue-500/50 font-bold text-xs uppercase cursor-pointer">
-                <option value="all">Tous les statuts</option>
-                <option value="Recherché">Recherchés</option>
-                <option value="Dette">Impayés</option>
-                <option value="En règle">En règle</option>
+            <select id="actionFilter" onchange="filterLogs()" class="bg-slate-900 border border-slate-700 text-white rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-blue-500/50 font-bold text-xs uppercase cursor-pointer">
+                <option value="all">Toutes les actions</option>
+                <option value="SUPPRESSION">Suppressions</option>
+                <option value="MODIFICATION">Modifications</option>
+                <option value="CREATION">Créations</option>
             </select>
         </div>
 
-        <div id="container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
-    </main>
+        <div class="bg-slate-900/50 rounded-3xl border border-slate-700/50 overflow-hidden shadow-2xl backdrop-blur-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-950/50 text-[10px] uppercase font-black text-slate-500 tracking-widest border-b border-slate-800">
+                            <th class="p-5">Horodatage</th>
+                            <th class="p-5">Type d'Action</th>
+                            <th class="p-5">Agent Responsable</th>
+                            <th class="p-5">Données de l'Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logContent" class="text-sm divide-y divide-slate-800">
+                        </tbody>
+                </table>
+            </div>
+            <div id="noLogs" class="hidden p-10 text-center text-slate-600 italic">
+                Aucune entrée correspondant à la recherche.
+            </div>
+        </div>
+    </div>
 
     <script>
-        let suspects = [];
+        let allLogs = [];
 
-        async function updateStatus(nom, newStatus) {
-            await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ statut: newStatus }) });
-            load();
-        }
-
-        async function editName(ancienNom) {
-            const nouveauNom = prompt("Nouveau Nom Prénom :", ancienNom);
-            if (nouveauNom && nouveauNom !== ancienNom) {
-                await fetch(`/api/individus?nom=${encodeURIComponent(ancienNom)}`, { method: 'PATCH', body: JSON.stringify({ nouveau_nom: nouveauNom }) });
-                load();
-            }
-        }
-
-        async function editPhone(nom, ancienTel) {
-            const nouveauTel = prompt("Nouveau numéro :", ancienTel);
-            if (nouveauTel && nouveauTel !== ancienTel) {
-                await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ nouveau_telephone: nouveauTel }) });
-                load();
-            }
-        }
-
-        async function updatePayment(id, status) {
-            await fetch(`/api/individus?infraction_id=${id}`, { method: 'PATCH', body: JSON.stringify({ paiement: status }) });
-            load();
-        }
-
-        async function updatePhoto(nom) {
-            const newPhoto = prompt("Lien de la photo (URL Goopics/Discord) :");
-            if (newPhoto !== null) {
-                await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ photo_url: newPhoto }) });
-                load();
-            }
-        }
-
-        async function saveNote(nom, noteText) {
-            await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ notes: noteText }) });
-        }
-
-        async function deleteSuspect(nom) {
-            const motif = prompt("Motif de suppression :");
-            const officier = prompt("Votre Matricule :");
-            if (motif && officier) {
-                if (confirm(`Supprimer définitivement ${nom} ?`)) {
-                    await fetch(`/api/individus?nom=${encodeURIComponent(nom)}&motif_suppression=${encodeURIComponent(motif)}&officier=${encodeURIComponent(officier)}`, { method: 'DELETE' });
-                    load();
-                }
-            }
-        }
-
-        function copyCasier(nom) {
-            const s = suspects.find(x => x.nom === nom);
-            if(!s) return;
-            const text = `📁 DOSSIER : ${s.nom}\n📞 Tél: ${s.telephone}\n⚠️ Statut: ${s.statut}\n\n⚖️ CRIMES :\n${s.historique.map(h => `- [${h.derniere_intervention}] ${h.motif} (${h.paiement})`).join('\n')}`;
-            navigator.clipboard.writeText(text);
-            alert("Casier copié !");
-        }
-
-        async function load() {
+        async function fetchLogs() {
             try {
-                const res = await fetch('/api/individus');
-                suspects = await res.json();
-                document.getElementById('totalCount').innerText = `${suspects.length} Individus`;
-                render(suspects);
-            } catch (e) { console.error(e); }
+                const res = await fetch('/api/individus?type=logs');
+                allLogs = await res.json();
+                document.getElementById('totalLogs').innerText = allLogs.length;
+                renderLogs(allLogs);
+            } catch (e) {
+                console.error("Erreur lors de la récupération des logs", e);
+            }
         }
 
-        function render(data) {
-            document.getElementById('container').innerHTML = data.map(i => {
-                const isR = i.statut === "Recherché";
-                const isRecidiviste = i.historique.length >= 3;
+        function renderLogs(data) {
+            const container = document.getElementById('logContent');
+            const noLogs = document.getElementById('noLogs');
+            
+            if (data.length === 0) {
+                container.innerHTML = "";
+                noLogs.classList.remove('hidden');
+                return;
+            }
+            
+            noLogs.classList.add('hidden');
+            container.innerHTML = data.map(l => {
+                const isCritique = l.action === 'SUPPRESSION';
+                const actionColor = isCritique 
+                    ? 'bg-red-500/10 text-red-400 border-red-500/20' 
+                    : l.action === 'MODIFICATION' 
+                        ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
+                        : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
 
                 return `
-                <div class="bg-slate-800/40 border-2 rounded-[2.5rem] overflow-hidden flex flex-col transition-all hover:scale-[1.01] shadow-2xl ${isR ? 'border-red-500 recidiviste-pulse' : 'border-slate-700/50'}">
-                    <div class="relative group h-64 overflow-hidden cursor-pointer" onclick="updatePhoto('${i.nom}')">
-                        <img src="${i.photo_url || 'https://via.placeholder.com/400x600/0f172a/475569?text=PHOTO+MANQUANTE'}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 group-hover:brightness-50">
-                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                             <span class="bg-black/60 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">Changer Photo</span>
-                        </div>
-                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900 p-6 pointer-events-none">
-                            <h2 onclick="event.stopPropagation(); editName('${i.nom}')" class="text-2xl font-black text-white uppercase italic tracking-tighter truncate hover:text-blue-400 cursor-pointer pointer-events-auto">${i.nom}</h2>
-                            <p onclick="event.stopPropagation(); editPhone('${i.nom}', '${i.telephone}')" class="text-[10px] text-blue-400 font-bold uppercase tracking-widest hover:text-white cursor-pointer pointer-events-auto">${i.telephone}</p>
-                        </div>
-                        ${isRecidiviste ? '<span class="absolute top-4 left-4 bg-red-600 text-white text-[8px] font-black px-2 py-1 rounded-full uppercase">Récidiviste</span>' : ''}
-                    </div>
-
-                    <div class="p-6 space-y-4 flex-grow flex flex-col">
-                        <div class="flex gap-2">
-                            <select onchange="updateStatus('${i.nom}', this.value)" class="flex-grow text-[10px] font-black rounded-xl px-4 py-3 outline-none transition-all cursor-pointer ${isR ? 'bg-red-600 text-white' : 'bg-slate-900 text-emerald-400 border border-emerald-500/20'}">
-                                <option value="En règle" ${i.statut === 'En règle' ? 'selected' : ''}>EN RÈGLE</option>
-                                <option value="Recherché" ${i.statut === 'Recherché' ? 'selected' : ''}>RECHERCHÉ</option>
-                            </select>
-                            <button onclick="copyCasier('${i.nom}')" class="bg-slate-900 p-3 rounded-xl border border-slate-700 hover:border-white transition-all shadow-lg">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
-                            </button>
-                        </div>
-
-                        <div class="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scroll">
-                            ${i.historique.map(h => `
-                                <div class="bg-slate-900/50 p-3 rounded-2xl border border-slate-700/30">
-                                    <div class="flex justify-between items-center mb-1">
-                                        <span class="text-[8px] font-bold text-slate-500 uppercase">${h.derniere_intervention}</span>
-                                        <select onchange="updatePayment(${h.id}, this.value)" class="text-[8px] font-black px-1.5 py-0.5 rounded outline-none cursor-pointer ${h.paiement === 'Réglé' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-orange-500/10 text-orange-400'}">
-                                            <option value="Réglé" ${h.paiement === 'Réglé' ? 'selected' : ''}>RÉGLÉ</option>
-                                            <option value="Non réglé" ${h.paiement !== 'Réglé' ? 'selected' : ''}>IMPAYÉ</option>
-                                        </select>
-                                    </div>
-                                    <p class="text-[10px] font-bold text-slate-200 leading-tight">${h.motif}</p>
-                                    <p class="text-[9px] text-slate-500 italic mt-1">${h.casiers}</p>
+                    <tr class="log-row transition-all group">
+                        <td class="p-5 font-mono text-[11px] text-slate-500 group-hover:text-slate-300">
+                            ${new Date(l.date).toLocaleString('fr-FR')}
+                        </td>
+                        <td class="p-5">
+                            <span class="px-3 py-1 rounded-full border text-[9px] font-black tracking-widest ${actionColor}">
+                                ${l.action}
+                            </span>
+                        </td>
+                        <td class="p-5">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-white">
+                                    ${l.officier.charAt(0)}
                                 </div>
-                            `).join('')}
-                        </div>
-
-                        <textarea onblur="saveNote('${i.nom}', this.value)" class="w-full bg-slate-900/80 rounded-2xl p-4 text-[10px] text-slate-400 outline-none h-20 focus:text-white border border-transparent focus:border-blue-500/30 transition-all shadow-inner" placeholder="Notes de l'officier...">${i.notes || ''}</textarea>
-                        
-                        <button onclick="deleteSuspect('${i.nom}')" class="w-full py-3 text-[9px] font-bold text-slate-600 hover:text-red-500 transition-all uppercase tracking-widest">Archiver le dossier</button>
-                    </div>
-                </div>`;
+                                <span class="font-bold text-slate-200">${l.officier}</span>
+                            </div>
+                        </td>
+                        <td class="p-5 italic text-slate-400 text-xs">
+                            ${l.detail}
+                        </td>
+                    </tr>
+                `;
             }).join('');
         }
 
-        function filter() {
-            const v = document.getElementById('search').value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            const statut = document.getElementById('filterStatut').value;
-            
-            let filtered = suspects.filter(i => {
-                const matchName = i.nom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(v);
-                const matchInfraction = i.historique.some(h => h.motif.toLowerCase().includes(v));
-                return matchName || matchInfraction;
+        function filterLogs() {
+            const query = document.getElementById('logSearch').value.toLowerCase();
+            const action = document.getElementById('actionFilter').value;
+
+            const filtered = allLogs.filter(l => {
+                const matchesSearch = l.officier.toLowerCase().includes(query) || l.detail.toLowerCase().includes(query);
+                const matchesAction = action === 'all' || l.action === action;
+                return matchesSearch && matchesAction;
             });
 
-            if(statut === 'Recherché') filtered = filtered.filter(i => i.statut === 'Recherché');
-            if(statut === 'Dette') filtered = filtered.filter(i => i.historique.some(h => h.paiement !== 'Réglé'));
-            if(statut === 'En règle') filtered = filtered.filter(i => i.statut === 'En règle');
-
-            render(filtered);
+            renderLogs(filtered);
         }
 
-        load();
+        // Chargement initial
+        fetchLogs();
     </script>
 </body>
 </html>
