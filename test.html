@@ -90,22 +90,22 @@
             </div>
         </div>
         <div class="flex gap-3">
-            <a href="Individus.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-blue-600">Individus</a>
-            <a href="Logs.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-red-600">Logs</a>
-            <a href="Plainte.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-slate-600">Plaintes</a>
+            <a href="Individus.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-blue-600 transition-all">Individus</a>
+            <a href="Logs.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-red-600 transition-all">Logs</a>
+            <a href="Plainte.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-slate-600 transition-all">Plaintes</a>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="lg:col-span-2 space-y-6">
-            <div class="glass-card p-4 flex gap-4">
-                <div class="relative flex-grow">
-                    <input type="text" id="searchBar" onkeyup="filterLaws()" placeholder="Rechercher une infraction ou un article..." class="glass-input w-full rounded-xl p-4 pl-12 text-sm">
+            <div class="glass-card p-4">
+                <div class="relative w-full">
+                    <input type="text" id="searchBar" onkeyup="filterLaws()" placeholder="Rechercher une infraction..." class="glass-input w-full rounded-xl p-4 pl-12 text-sm">
                     <svg class="w-5 h-5 text-slate-500 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </div>
             </div>
 
-            <div id="filterContainer" class="flex flex-wrap gap-2 mb-4">
+            <div id="filterContainer" class="flex flex-wrap gap-2">
                 <button onclick="filterByCategory('all')" class="filter-btn active px-4 py-2 rounded-full border border-white/10 text-[9px] font-black uppercase tracking-widest transition-all">Tous</button>
             </div>
 
@@ -132,7 +132,7 @@
                     </div>
                 </div>
 
-                <button onclick="copyReport()" class="w-full bg-slate-200 border-2 border-slate-400 text-slate-800 font-bold py-3 rounded text-[10px] uppercase hover:bg-slate-300">
+                <button onclick="copyReport()" class="w-full bg-slate-200 border-2 border-slate-400 text-slate-800 font-bold py-3 rounded text-[10px] uppercase hover:bg-slate-300 transition-all">
                     Copier le rapport
                 </button>
             </div>
@@ -154,7 +154,7 @@
                     <option value="Recherché">Recherché</option>
                 </select>
 
-                <button onclick="saveSuspect()" id="saveBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl transition-all uppercase text-[10px] tracking-widest shadow-lg shadow-blue-900/40">
+                <button onclick="saveSuspect()" id="saveBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl transition-all uppercase text-[10px] tracking-widest shadow-lg">
                     Valider & Archiver
                 </button>
             </div>
@@ -213,37 +213,58 @@
                 <div class="law-group" data-category="${cat.name}">
                     <h2 class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-4 ml-2">${cat.name}</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        ${cat.items.map(i => `
-                            <button onclick="toggleItem(${i.id})" id="law-${i.id}" class="glass-card p-4 text-left border-l-4 ${cat.style} relative group">
+                        ${cat.items.map(i => {
+                            const useQty = cat.name === "Objet illégaux et drogues" && !i.label.toLowerCase().includes("matériel");
+                            return `
+                            <button onclick="toggleItem(${i.id}, ${useQty})" id="law-${i.id}" class="glass-card p-4 text-left border-l-4 ${cat.style} relative group">
                                 <div class="flex justify-between items-start mb-1">
-                                    <span class="text-xs font-bold text-white">${i.label}</span>
+                                    <span class="text-xs font-bold text-white">${i.label} ${useQty ? '<span class="text-orange-400">(Qté)</span>' : ''}</span>
                                     <span class="text-[10px] font-mono text-blue-400 font-bold">${i.amende}$</span>
                                 </div>
                                 ${i.sanction ? `<p class="text-[9px] text-slate-400 italic leading-tight">${i.sanction}</p>` : ''}
+                                <div id="badge-${i.id}" class="hidden absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">x1</div>
                                 <div class="selection-indicator absolute inset-0 border-2 border-blue-500 rounded-2xl opacity-0 transition-all pointer-events-none"></div>
-                            </button>
-                        `).join('')}
+                            </button>`;
+                        }).join('')}
                     </div>
-                </div>
-            `).join('');
+                </div>`).join('');
         }
 
-        function toggleItem(id) {
+        function toggleItem(id, askQty = false) {
             const item = categories.flatMap(c => c.items).find(i => i.id === id);
             const idx = cart.findIndex(i => i.id === id);
             const el = document.getElementById(`law-${id}`).querySelector('.selection-indicator');
-            if(idx > -1) { cart.splice(idx, 1); el.classList.replace('opacity-100', 'opacity-0'); }
-            else { cart.push(item); el.classList.replace('opacity-0', 'opacity-100'); }
+            const badge = document.getElementById(`badge-${id}`);
+
+            if(idx > -1) {
+                cart.splice(idx, 1);
+                el.classList.replace('opacity-100', 'opacity-0');
+                badge.classList.add('hidden');
+            } else {
+                let qty = 1;
+                if(askQty) {
+                    const input = prompt(`Quantité pour : ${item.label}`, "1");
+                    qty = parseInt(input) || 1;
+                    if(qty <= 0) return;
+                }
+                cart.push({ ...item, qty: qty });
+                el.classList.replace('opacity-0', 'opacity-100');
+                if(qty > 1) { badge.innerText = `x${qty}`; badge.classList.remove('hidden'); }
+            }
             calculate();
         }
 
         function calculate() {
-            let f = cart.reduce((a, i) => a + i.amende, 0);
+            let f = cart.reduce((a, i) => a + (i.amende * (i.qty || 1)), 0);
             let p = cart.reduce((a, i) => a + i.prison, 0);
             if(document.getElementById('firstOffenseCheck').checked) f = Math.floor(f/2);
             document.getElementById('totalFine').innerText = f.toLocaleString() + " $";
             document.getElementById('totalPrison').innerText = p + " Min";
-            document.getElementById('cartList').innerHTML = cart.map(i => `<div class="flex justify-between border-b border-slate-200 pb-1 uppercase"><span>${i.label}</span><span class="font-bold">${i.amende}$</span></div>`).join('');
+            document.getElementById('cartList').innerHTML = cart.map(i => `
+                <div class="flex justify-between border-b border-slate-200 pb-1 uppercase">
+                    <span>${i.label} ${i.qty > 1 ? '(x'+i.qty+')' : ''}</span>
+                    <span class="font-bold">${(i.amende * (i.qty || 1)).toLocaleString()}$</span>
+                </div>`).join('');
         }
 
         async function saveSuspect() {
@@ -251,7 +272,7 @@
             if(!nom || !cart.length) return alert("Nom et infractions requis.");
             const body = { 
                 nom, telephone: document.getElementById('suspectTel').value || "Inconnu", statut: document.getElementById('suspectStatut').value,
-                photo_url: document.getElementById('suspectPhoto').value || "", motif: cart.map(i => i.label).join(', '), 
+                photo_url: document.getElementById('suspectPhoto').value || "", motif: cart.map(i => `${i.label}${i.qty > 1 ? ' (x'+i.qty+')' : ''}`).join(', '), 
                 casiers: `Amende: ${document.getElementById('totalFine').innerText} | Prison: ${document.getElementById('totalPrison').innerText}`, 
                 derniere_intervention: new Date().toLocaleDateString('fr-FR') 
             };
