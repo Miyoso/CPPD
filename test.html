@@ -64,7 +64,6 @@
             background-size: 10px 10px;
         }
 
-        /* Scrollbar spécifique pour le ticket (plus discrète) */
         .ticket-scroll::-webkit-scrollbar { width: 4px; }
         .ticket-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; }
     </style>
@@ -112,9 +111,9 @@
                     <p class="text-[9px] opacity-70" id="ticketDate">--/--/----</p>
                 </div>
                 
-                <div id="cartList" class="ticket-scroll overflow-y-auto max-h-[250px] space-y-2 text-[10px] mb-6 min-h-[40px] pr-2"></div>
+                <div id="cartList" class="ticket-scroll overflow-y-auto max-h-[200px] space-y-2 text-[10px] mb-6 min-h-[40px] pr-2"></div>
 
-                <div class="border-t border-dashed border-slate-400 pt-4 space-y-2">
+                <div class="border-t border-dashed border-slate-400 pt-4 space-y-2 mb-4">
                     <div class="flex justify-between font-black text-lg">
                         <span>AMENDE</span>
                         <span id="totalFine">0 $</span>
@@ -128,6 +127,11 @@
                         <span id="maxBan">-</span>
                     </div>
                 </div>
+
+                <button onclick="copyReport()" class="w-full bg-slate-200 border-2 border-slate-400 text-slate-700 font-bold py-2 rounded text-[10px] uppercase hover:bg-slate-300 transition-all flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                    Copier le rapport
+                </button>
             </div>
 
             <div class="bg-slate-800/90 rounded-2xl border border-slate-700 shadow-2xl p-6 space-y-4 mb-10">
@@ -310,6 +314,20 @@
             } else {
                 banSec.classList.add('hidden');
             }
+        }
+
+        function copyReport() {
+            if(!cart.length) return alert("Le ticket est vide.");
+            const nom = document.getElementById('suspectNom').value || "Inconnu";
+            const amende = document.getElementById('totalFine').innerText;
+            const prison = document.getElementById('totalPrison').innerText;
+            const infractions = cart.map(i => `- ${i.label} ${i.qty > 1 ? '(x'+i.qty+')' : ''}`).join('\n');
+            
+            const report = `📋 **RAPPORT D'INTERVENTION**\n👤 **Suspect :** ${nom}\n\n⚖️ **Infractions :**\n${infractions}\n\n💰 **Amende :** ${amende}\n⏳ **Temps :** ${prison}\n📅 **Date :** ${new Date().toLocaleDateString('fr-FR')}`;
+            
+            navigator.clipboard.writeText(report).then(() => {
+                alert("Rapport copié !");
+            });
         }
 
         function updateCheckboxVisual() {
