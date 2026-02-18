@@ -16,6 +16,8 @@
         .stat-card { background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(71, 85, 105, 0.3); }
         .recidiviste-pulse { animation: pulse-red 2s infinite; }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        .custom-scroll::-webkit-scrollbar { width: 3px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #334155; }
     </style>
 </head>
 <body class="p-4 md:p-8 flex flex-col antialiased">
@@ -33,10 +35,9 @@
                     </div>
                 </div>
             </div>
-            <div class="flex flex-wrap gap-3">
-                <a href="index.html" class="bg-slate-700 hover:bg-blue-600 text-white px-5 py-2.5 rounded-2xl font-bold text-xs uppercase transition-all shadow-lg">Calculateur</a>
-                <a href="Logs.html" class="bg-slate-700 hover:bg-red-600 text-white px-5 py-2.5 rounded-2xl font-bold text-xs uppercase transition-all shadow-lg">Logs</a>
-                <button onclick="exportData()" class="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white px-5 py-2.5 rounded-2xl font-bold text-xs uppercase transition-all border border-emerald-500/30">Exporter .CSV</button>
+            <div class="flex gap-3">
+                <a href="index.html" class="bg-slate-700 hover:bg-blue-600 text-white px-6 py-2.5 rounded-2xl font-bold text-xs uppercase transition-all shadow-lg">Calculateur</a>
+                <a href="Logs.html" class="bg-slate-700 hover:bg-red-600 text-white px-6 py-2.5 rounded-2xl font-bold text-xs uppercase transition-all shadow-lg">Logs</a>
             </div>
         </div>
     </header>
@@ -47,7 +48,7 @@
                 <input type="text" id="search" placeholder="Nom, matricule ou infraction..." onkeyup="filter()" class="w-full bg-slate-900/80 border border-slate-700 rounded-2xl p-4 text-white outline-none focus:ring-2 focus:ring-blue-500/50 pl-12 shadow-inner">
                 <svg class="w-5 h-5 text-slate-500 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
-            <select id="filterStatut" onchange="filter()" class="bg-slate-900 border border-slate-700 text-white rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-blue-500/50 font-bold text-xs uppercase">
+            <select id="filterStatut" onchange="filter()" class="bg-slate-900 border border-slate-700 text-white rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-blue-500/50 font-bold text-xs uppercase cursor-pointer">
                 <option value="all">Tous les statuts</option>
                 <option value="Recherché">Recherchés</option>
                 <option value="Dette">Impayés</option>
@@ -60,6 +61,34 @@
 
     <script>
         let suspects = [];
+
+        async function updateStatus(nom, newStatus) {
+            await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ statut: newStatus }) });
+            load();
+        }
+
+        async function saveNote(nom, noteText) {
+            await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ notes: noteText }) });
+        }
+
+        async function deleteSuspect(nom) {
+            const motif = prompt("Motif de suppression :");
+            const officier = prompt("Votre Matricule :");
+            if (motif && officier) {
+                if (confirm(`Supprimer définitivement ${nom} ?`)) {
+                    await fetch(`/api/individus?nom=${encodeURIComponent(nom)}&motif_suppression=${encodeURIComponent(motif)}&officier=${encodeURIComponent(officier)}`, { method: 'DELETE' });
+                    load();
+                }
+            }
+        }
+
+        function copyCasier(nom) {
+            const s = suspects.find(x => x.nom === nom);
+            if(!s) return;
+            const text = `📁 DOSSIER : ${s.nom}\n📞 Tél: ${s.telephone}\n⚠️ Statut: ${s.statut}\n\n⚖️ CRIMES :\n${s.historique.map(h => `- [${h.derniere_intervention}] ${h.motif}`).join('\n')}`;
+            navigator.clipboard.writeText(text);
+            alert("Casier copié !");
+        }
 
         async function load() {
             try {
@@ -93,7 +122,7 @@
                 return `
                 <div class="bg-slate-800/40 border-2 rounded-[2.5rem] overflow-hidden flex flex-col transition-all hover:scale-[1.01] shadow-2xl ${isR ? 'border-red-500 recidiviste-pulse' : 'border-slate-700/50'}">
                     <div class="relative group h-64 overflow-hidden">
-                        <img src="${i.photo_url || 'https://via.placeholder.com/400x600/0f172a/475569?text=NO+IMAGE'}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                        <img src="${i.photo_url || 'https://via.placeholder.com/400x600/0f172a/475569?text=PHOTO+MANQUANTE'}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
                         <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900 p-6">
                             <h2 class="text-2xl font-black text-white uppercase italic tracking-tighter truncate">${i.nom}</h2>
                             <p class="text-[10px] text-blue-400 font-bold uppercase tracking-widest">${i.telephone}</p>
@@ -103,11 +132,11 @@
 
                     <div class="p-6 space-y-4 flex-grow flex flex-col">
                         <div class="flex gap-2">
-                            <select onchange="updateStatus('${i.nom}', this.value)" class="flex-grow text-[10px] font-black rounded-xl px-4 py-3 outline-none transition-all ${isR ? 'bg-red-600 text-white' : 'bg-slate-900 text-emerald-400 border border-emerald-500/20'}">
+                            <select onchange="updateStatus('${i.nom}', this.value)" class="flex-grow text-[10px] font-black rounded-xl px-4 py-3 outline-none transition-all cursor-pointer ${isR ? 'bg-red-600 text-white' : 'bg-slate-900 text-emerald-400 border border-emerald-500/20'}">
                                 <option value="En règle" ${i.statut === 'En règle' ? 'selected' : ''}>EN RÈGLE</option>
                                 <option value="Recherché" ${i.statut === 'Recherché' ? 'selected' : ''}>RECHERCHÉ</option>
                             </select>
-                            <button onclick="copyCasier('${i.nom}')" class="bg-slate-900 p-3 rounded-xl border border-slate-700 hover:border-white transition-all">
+                            <button onclick="copyCasier('${i.nom}')" class="bg-slate-900 p-3 rounded-xl border border-slate-700 hover:border-white transition-all shadow-lg" title="Copier le casier">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
                             </button>
                         </div>
@@ -124,7 +153,7 @@
                             `).join('')}
                         </div>
 
-                        <textarea onblur="saveNote('${i.nom}', this.value)" class="w-full bg-slate-900/80 rounded-2xl p-4 text-[10px] text-slate-400 outline-none h-20 focus:text-white border border-transparent focus:border-blue-500/30 transition-all" placeholder="Notes de l'officier...">${i.notes || ''}</textarea>
+                        <textarea onblur="saveNote('${i.nom}', this.value)" class="w-full bg-slate-900/80 rounded-2xl p-4 text-[10px] text-slate-400 outline-none h-20 focus:text-white border border-transparent focus:border-blue-500/30 transition-all shadow-inner" placeholder="Notes de l'officier...">${i.notes || ''}</textarea>
                         
                         <button onclick="deleteSuspect('${i.nom}')" class="w-full py-3 text-[9px] font-bold text-slate-600 hover:text-red-500 transition-all uppercase tracking-widest">Archiver le dossier</button>
                     </div>
@@ -147,22 +176,6 @@
             if(statut === 'En règle') filtered = filtered.filter(i => i.statut === 'En règle');
 
             render(filtered);
-        }
-
-        function exportData() {
-            let csv = "Nom,Telephone,Statut,Infractions,Notes\n";
-            suspects.forEach(s => {
-                csv += `"${s.nom}","${s.telephone}","${s.statut}","${s.historique.length}","${s.notes || ''}"\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.setAttribute('hidden', '');
-            a.setAttribute('href', url);
-            a.setAttribute('download', 'database_export.csv');
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
         }
 
         load();
