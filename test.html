@@ -11,10 +11,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
                     colors: { slate: { 750: '#2d3748', 850: '#1a202c', 950: '#0f172a' } }
                 }
             }
@@ -25,47 +27,62 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
         
-        .dark body { background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%); background-color: #0f172a; color: #cbd5e1; }
-        body { background-image: radial-gradient(circle at 50% 0%, #f1f5f9 0%, #cbd5e1 100%); background-color: #cbd5e1; color: #1e293b; transition: all 0.3s ease; }
+        body { 
+            background-color: #0f172a;
+            background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%); 
+            color: #cbd5e1;
+        }
 
         body::before {
-            content: ""; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 600px; height: 600px; background-image: url('LogoCPPD.png');
-            background-repeat: no-repeat; background-position: center; background-size: contain;
+            content: "";
+            position: fixed;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 600px; height: 600px;
+            background-image: url('LogoCPPD.png'); background-repeat: no-repeat;
+            background-position: center; background-size: contain;
             opacity: 0.03; pointer-events: none; z-index: -1;
         }
 
-        .filter-btn.active { background-color: #3b82f6 !important; color: white !important; border-color: #3b82f6 !important; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        
+        .filter-btn.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
         
         .ticket-receipt {
-            background: #ffffff; color: #1e293b; position: relative; padding: 20px;
-            font-family: 'JetBrains Mono', monospace; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            background: #f8fafc;
+            color: #1e293b;
+            position: relative;
+            padding: 24px;
+            font-family: 'JetBrains Mono', monospace;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
         }
+
         .ticket-receipt::after {
-            content: ""; position: absolute; bottom: -10px; left: 0; right: 0; height: 10px;
-            background: linear-gradient(-135deg, #ffffff 5px, transparent 0), linear-gradient(135deg, #ffffff 5px, transparent 0);
+            content: "";
+            position: absolute;
+            bottom: -10px; left: 0; right: 0;
+            height: 10px;
+            background: linear-gradient(-135deg, #f8fafc 5px, transparent 0), linear-gradient(135deg, #f8fafc 5px, transparent 0);
             background-size: 10px 10px;
         }
     </style>
 </head>
-<body class="dark min-h-screen flex flex-col antialiased">
+<body class="font-sans min-h-screen flex flex-col antialiased">
 
     <header class="sticky top-4 z-50 px-4 mb-4">
-        <div class="max-w-7xl mx-auto bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200 dark:border-slate-700/50 rounded-2xl shadow-xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="max-w-7xl mx-auto bg-slate-800/80 backdrop-blur-md border border-slate-700/50 rounded-2xl shadow-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-4">
                 <img src="LogoCPPD.png" alt="Logo" class="w-12 h-12 object-contain">
                 <div>
-                    <h1 class="text-xl font-bold dark:text-white text-slate-900 tracking-tight">• CPPD</h1>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase">Calculateur Pénal</p>
+                    <h1 class="text-xl font-bold text-white tracking-tight">• CPPD</h1>
+                    <p class="text-xs text-slate-400 font-medium tracking-wide uppercase">Calculateur Pénal</p>
                 </div>
             </div>
             <div class="flex items-center gap-4 w-full md:w-auto">
-                <input type="text" id="searchBar" placeholder="Rechercher..." disabled class="block w-full pl-4 pr-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900/50 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-50 text-sm" onkeyup="filterLaws()">
-                <div class="flex gap-2">
-                    <button onclick="toggleTheme()" class="p-2.5 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 transition-all">
-                        <span id="themeIcon">☀️</span>
-                    </button>
-                    <a href="Individus.html" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl font-bold text-xs uppercase transition-all">Individus</a>
+                <input type="text" id="searchBar" placeholder="Rechercher..." disabled class="block w-full pl-4 pr-3 py-2.5 border border-slate-700 rounded-xl bg-slate-900/50 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all opacity-50 text-sm" onkeyup="filterLaws()">
+                <div class="flex gap-2 text-nowrap">
+                    <a href="Individus.html" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl font-bold text-xs uppercase transition-all">Individus</a>
+                    <a href="Plainte.html" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl font-bold text-xs uppercase transition-all">Plainte</a>
                 </div>
             </div>
         </div>
@@ -73,46 +90,67 @@
 
     <div class="max-w-7xl mx-auto w-full px-4 mb-6">
         <div id="filterContainer" class="flex flex-wrap gap-2 overflow-x-auto pb-2 no-scrollbar">
-            <button onclick="filterByCategory('all')" class="filter-btn active px-4 py-2 rounded-full border border-slate-300 dark:border-slate-700 text-[10px] font-black uppercase transition-all bg-white dark:bg-slate-800">Tous</button>
+            <button onclick="filterByCategory('all')" class="filter-btn active px-4 py-2 rounded-full border border-slate-700 text-[10px] font-black uppercase transition-all hover:bg-slate-700 text-slate-300">Tous</button>
         </div>
     </div>
 
     <main class="flex-grow max-w-7xl mx-auto w-full p-4 flex flex-col-reverse lg:flex-row gap-8 items-start">
         <div id="lawsContainer" class="flex-1 w-full space-y-8 pb-20">
-            <div class="flex flex-col items-center justify-center h-64 space-y-4 text-slate-500">
+            <div class="flex flex-col items-center justify-center h-64 space-y-4">
                 <img src="LogoCPPD.png" class="w-24 h-24 animate-pulse opacity-50">
-                <p class="text-[10px] uppercase tracking-widest font-bold">Initialisation du terminal...</p>
+                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Chargement du terminal...</p>
             </div>
         </div>
 
         <div class="lg:w-[380px] shrink-0 lg:sticky lg:top-32 w-full space-y-6">
-            <div class="ticket-receipt rounded-t-sm" id="ticketContent">
-                <div class="text-center border-b border-dashed border-slate-300 pb-4 mb-4">
-                    <h2 class="text-sm font-black uppercase">Procès-Verbal</h2>
-                    <p class="text-[10px] opacity-70" id="ticketDate">--/--/----</p>
+            <div class="ticket-receipt rounded-t-sm">
+                <div class="text-center border-b border-dashed border-slate-400 pb-4 mb-4">
+                    <h2 class="text-sm font-black uppercase tracking-tighter">Procès-Verbal Officiel</h2>
+                    <p class="text-[9px] opacity-70" id="ticketDate">--/--/----</p>
                 </div>
-                <div id="cartList" class="space-y-2 text-[11px] mb-6 min-h-[40px]"></div>
-                <div class="border-t border-dashed border-slate-300 pt-4 space-y-1">
-                    <div class="flex justify-between font-black text-lg"><span>TOTAL</span><span id="totalFine">0 $</span></div>
-                    <div class="flex justify-between text-xs font-bold text-blue-700"><span>PRISON</span><span id="totalPrison">0 Min</span></div>
-                    <div id="banSection" class="hidden flex justify-between text-xs font-bold text-red-600"><span>BAN</span><span id="maxBan">-</span></div>
+                
+                <div id="cartList" class="space-y-2 text-[10px] mb-6 min-h-[40px]"></div>
+
+                <div class="border-t border-dashed border-slate-400 pt-4 space-y-2">
+                    <div class="flex justify-between font-black text-lg">
+                        <span>AMENDE</span>
+                        <span id="totalFine">0 $</span>
+                    </div>
+                    <div class="flex justify-between text-[11px] font-bold text-blue-800">
+                        <span>CELLULE</span>
+                        <span id="totalPrison">0 Min</span>
+                    </div>
+                    <div id="banSection" class="hidden flex justify-between text-[11px] font-bold text-red-600">
+                        <span>BANISSEMENT</span>
+                        <span id="maxBan">-</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl p-5 space-y-4">
-                <button onclick="copyTicket()" class="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 dark:text-white font-bold py-3 rounded-xl transition-all uppercase text-[10px] flex items-center justify-center gap-2">
-                    <span>📋 Copier le rapport</span>
-                </button>
-                <label class="flex items-center p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-850 cursor-pointer">
+            <div class="bg-slate-800/90 rounded-2xl border border-slate-700 shadow-2xl p-6 space-y-4">
+                <label class="group flex items-center p-3 rounded-xl border border-slate-700 bg-slate-850 cursor-pointer transition-all">
                     <input type="checkbox" id="firstOffenseCheck" class="peer sr-only" onchange="calculate(); updateCheckboxVisual();">
-                    <span class="font-bold text-[10px] dark:text-slate-200 flex-1 uppercase">1ère fois / Coopération (-50%)</span>
-                    <div id="checkboxSquare" class="w-5 h-5 rounded border-2 border-slate-400 dark:border-slate-500 bg-white dark:bg-slate-900 flex items-center justify-center transition-all">
+                    <div class="flex-1">
+                        <span class="font-bold text-[10px] text-slate-200 uppercase tracking-tight">1ère Interpellation (-50%)</span>
+                    </div>
+                    <div id="checkboxSquare" class="w-5 h-5 rounded border-2 border-slate-500 bg-slate-900 flex items-center justify-center transition-all">
                         <svg id="checkboxIcon" class="w-3 h-3 text-white opacity-0 transition-all scale-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                     </div>
                 </label>
-                <input type="text" id="suspectNom" placeholder="Nom du suspect" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
-                <button onclick="saveSuspect()" id="saveBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all uppercase text-[10px] tracking-widest">Archiver</button>
-                <button onclick="resetAll()" class="w-full py-2 rounded-xl font-bold text-[10px] uppercase text-slate-400 hover:text-red-500 transition-all">Réinitialiser</button>
+
+                <div class="space-y-3">
+                    <h3 class="text-xs font-bold text-white uppercase tracking-widest border-l-2 border-blue-500 pl-2">Suspect</h3>
+                    <input type="text" id="suspectNom" placeholder="Nom Prénom" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="text" id="suspectTel" placeholder="Téléphone" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="text" id="suspectPhoto" placeholder="Lien Photo (Goopics)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500">
+                    <select id="suspectStatut" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none">
+                        <option value="En règle">En règle</option>
+                        <option value="Recherché">Recherché</option>
+                    </select>
+                </div>
+
+                <button onclick="saveSuspect()" id="saveBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl transition-all uppercase text-[10px] tracking-widest shadow-lg shadow-emerald-900/20">Valider & Archiver</button>
+                <button onclick="resetAll()" class="w-full py-2 rounded-xl font-bold text-[10px] uppercase text-slate-500 hover:text-white transition-all">Effacer Tout</button>
             </div>
         </div>
     </main>
@@ -130,20 +168,13 @@
             "Crime": "from-purple-900/50 to-purple-900/10 border-purple-500/50"
         };
 
-        function cleanText(text) { return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+        const logicalOrder = ["Code de la route", "Délit mineur", "Délits moyen", "Délits majeur", "Objet illégaux et drogues", "Armes", "Crime"];
 
-        function toggleTheme() {
-            const html = document.documentElement;
-            const isDark = html.classList.toggle('dark');
-            document.body.classList.toggle('dark');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            document.getElementById('themeIcon').innerText = isDark ? '☀️' : '🌙';
+        function cleanText(text) {
+            return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         }
 
         async function init() {
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            if (savedTheme === 'light') toggleTheme();
-
             document.getElementById('ticketDate').innerText = new Date().toLocaleString('fr-FR');
             try {
                 const res = await fetch('/api/individus?type=lois');
@@ -153,8 +184,7 @@
                     if(!temp[i.categorie]) temp[i.categorie] = { name: i.categorie, style: styles[i.categorie] || "from-slate-800 to-slate-900 border-slate-700", items: [] };
                     temp[i.categorie].items.push(i);
                 });
-                categories = ["Code de la route", "Délit mineur", "Délits moyen", "Délits majeur", "Objet illégaux et drogues", "Armes", "Crime"]
-                    .filter(catName => temp[catName]).map(catName => temp[catName]);
+                categories = logicalOrder.filter(catName => temp[catName]).map(catName => temp[catName]);
                 renderFilters();
                 document.getElementById('searchBar').disabled = false;
                 document.getElementById('searchBar').style.opacity = "1";
@@ -166,7 +196,7 @@
             const container = document.getElementById('filterContainer');
             categories.forEach(cat => {
                 const btn = document.createElement('button');
-                btn.className = 'filter-btn px-4 py-2 rounded-full border border-slate-300 dark:border-slate-700 text-[10px] font-black uppercase transition-all bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700';
+                btn.className = 'filter-btn px-4 py-2 rounded-full border border-slate-700 text-[10px] font-black uppercase transition-all hover:bg-slate-700 text-slate-300';
                 btn.innerText = cat.name;
                 btn.onclick = () => filterByCategory(cat.name, btn);
                 container.appendChild(btn);
@@ -176,6 +206,7 @@
         function filterByCategory(name, element) {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             if (element) element.classList.add('active');
+            else document.querySelector('button[onclick*="all"]').classList.add('active');
             document.getElementById('searchBar').value = "";
             document.querySelectorAll('.law-category').forEach(c => {
                 c.style.display = (name === 'all' || c.getAttribute('data-category') === name) ? "" : "none";
@@ -185,6 +216,9 @@
 
         function filterLaws() {
             const t = cleanText(document.getElementById('searchBar').value);
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('button[onclick*="all"]').classList.add('active');
+
             document.querySelectorAll('.law-category').forEach(c => {
                 let hasMatch = false;
                 c.querySelectorAll('button').forEach(b => { 
@@ -199,19 +233,20 @@
         function renderLaws() {
             const container = document.getElementById('lawsContainer');
             container.innerHTML = categories.map(cat => `
-                <div class="law-category" data-category="${cat.name}">
-                    <div class="px-4 py-2 rounded-t-xl border-t border-x dark:border-slate-700 bg-gradient-to-r ${cat.style}"><h2 class="text-xs font-black uppercase text-white">${cat.name}</h2></div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-white dark:bg-slate-800/50 p-4 rounded-b-xl border-x border-b border-slate-200 dark:border-slate-700/50">
+                <div class="law-category animate-fade-in" data-category="${cat.name}">
+                    <div class="px-4 py-2 rounded-t-xl border-t border-x bg-gradient-to-r ${cat.style}"><h2 class="text-xs font-bold uppercase text-white">${cat.name}</h2></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-800/50 p-4 rounded-b-xl border-x border-b border-slate-700/50">
                         ${cat.items.map(i => {
                             const useQty = cat.name === "Objet illégaux et drogues" && !i.label.toLowerCase().includes("matériel");
                             return `
-                            <button id="btn-${i.id}" onclick="toggleItem(${i.id}, ${useQty})" class="relative text-left p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:border-blue-500 transition-all flex flex-col justify-between h-full group">
+                            <button id="btn-${i.id}" onclick="toggleItem(${i.id}, ${useQty})" class="relative text-left p-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-750 transition-all flex flex-col justify-between h-full group">
                                 <div class="flex justify-between items-start gap-2 mb-1">
-                                    <span class="font-bold text-slate-700 dark:text-slate-200 text-[11px] leading-tight">${i.label}</span>
-                                    <span class="shrink-0 font-mono text-[10px] font-bold text-emerald-600 dark:text-emerald-400">${i.amende}$</span>
+                                    <span class="font-medium text-slate-200 text-xs leading-tight">${i.label} ${useQty ? '<span class="text-orange-400 font-bold">(Qté)</span>' : ''}</span>
+                                    <span class="shrink-0 font-mono text-[10px] font-bold text-emerald-400">${i.amende}$</span>
                                 </div>
-                                <div id="badge-qty-${i.id}" class="hidden absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">x1</div>
-                                <div class="selection-ring absolute inset-0 border-2 border-blue-500 rounded-xl opacity-0 scale-95 transition-all pointer-events-none"></div>
+                                ${i.sanction ? `<div class="text-[9px] text-orange-300 italic opacity-80 mt-1 line-clamp-2">${i.sanction}</div>` : ''}
+                                <div id="badge-qty-${i.id}" class="hidden absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg z-10">x1</div>
+                                <div class="selection-ring absolute inset-0 border-2 border-blue-500 rounded-xl opacity-0 scale-95 transition-all pointer-events-none group-hover:border-slate-500 group-hover:opacity-30"></div>
                             </button>
                         `}).join('')}
                     </div>
@@ -221,13 +256,15 @@
 
         function toggleItem(id, askQty = false) {
             const item = categories.flatMap(c => c.items).find(i => i.id === id);
-            const ring = document.getElementById(`btn-${id}`).querySelector('.selection-ring');
+            const btn = document.getElementById(`btn-${id}`);
+            const ring = btn.querySelector('.selection-ring');
             const badge = document.getElementById(`badge-qty-${id}`);
             const idx = cart.findIndex(i => i.id === id);
 
             if(idx > -1) { 
                 cart.splice(idx, 1); 
-                ring.classList.replace('opacity-100', 'opacity-0');
+                ring.classList.replace('opacity-100', 'opacity-0'); 
+                ring.classList.replace('scale-100', 'scale-95');
                 badge.classList.add('hidden');
             } else { 
                 let qty = 1;
@@ -237,7 +274,8 @@
                     if(qty <= 0) return;
                 }
                 cart.push({ ...item, qty: qty }); 
-                ring.classList.replace('opacity-0', 'opacity-100');
+                ring.classList.replace('opacity-0', 'opacity-100'); 
+                ring.classList.replace('scale-95', 'scale-100');
                 if(qty > 1) { badge.innerText = `x${qty}`; badge.classList.remove('hidden'); }
             }
             calculate();
@@ -246,59 +284,82 @@
         function calculate() {
             const list = document.getElementById('cartList');
             list.innerHTML = cart.length ? cart.map(i => `
-                <div class="flex justify-between items-start gap-2 border-b border-slate-100 pb-1">
-                    <span class="uppercase font-medium">${i.label} ${i.qty > 1 ? '(x' + i.qty + ')' : ''}</span>
+                <div class="flex justify-between items-start gap-2 border-b border-slate-300 pb-1">
+                    <span class="uppercase">${i.label} ${i.qty > 1 ? '(x' + i.qty + ')' : ''}</span>
                     <span class="font-bold">${(i.amende * (i.qty || 1)).toLocaleString()}$</span>
                 </div>
-            `).join('') : '<div class="text-center opacity-30 py-4">AUCUNE INFRACTION</div>';
+            `).join('') : '<div class="text-center opacity-30 py-4 italic">AUCUNE SANCTION</div>';
 
             let f = cart.reduce((a, i) => a + (i.amende * (i.qty || 1)), 0);
             let p = cart.reduce((a, i) => a + i.prison, 0);
             let b = cart.reduce((a, i) => i.ban > a ? i.ban : a, 0);
 
             if(document.getElementById('firstOffenseCheck').checked) { f = Math.floor(f/2); if(b < 999) b = 0; }
+
             document.getElementById('totalFine').innerText = f.toLocaleString() + " $";
             document.getElementById('totalPrison').innerText = p + " Min";
+            
             const banEl = document.getElementById('maxBan');
             const banSec = document.getElementById('banSection');
-            if(b > 0) { banSec.classList.remove('hidden'); banEl.innerText = b >= 999 ? "DÉFINITIF" : b + " J"; } else banSec.classList.add('hidden');
-        }
-
-        function copyTicket() {
-            const nom = document.getElementById('suspectNom').value || "Inconnu";
-            const infractions = cart.map(i => `• ${i.label} ${i.qty > 1 ? '(x' + i.qty + ')' : ''}`).join('\n');
-            const total = document.getElementById('totalFine').innerText;
-            const prison = document.getElementById('totalPrison').innerText;
-            const ban = document.getElementById('maxBan').innerText;
-            const text = `📋 **RAPPORT DE POLICE**\n👤 Suspect: ${nom}\n⚖️ Infractions:\n${infractions}\n💰 Amende: ${total}\n⏳ Prison: ${prison}${document.getElementById('banSection').classList.contains('hidden') ? '' : '\n🚫 Ban: ' + ban}`;
-            navigator.clipboard.writeText(text).then(() => alert("Copié !"));
+            if(b > 0) {
+                banSec.classList.remove('hidden');
+                banEl.innerText = b >= 999 ? "DÉFINITIF" : b + " J";
+            } else {
+                banSec.classList.add('hidden');
+            }
         }
 
         function updateCheckboxVisual() {
-            const check = document.getElementById('firstOffenseCheck').checked;
-            document.getElementById('checkboxIcon').style.opacity = check ? '1' : '0';
-            document.getElementById('checkboxSquare').className = check ? "w-5 h-5 rounded border-2 border-blue-500 bg-blue-600 flex items-center justify-center transition-all" : "w-5 h-5 rounded border-2 border-slate-400 dark:border-slate-500 bg-white dark:bg-slate-900 flex items-center justify-center transition-all";
+            const isChecked = document.getElementById('firstOffenseCheck').checked;
+            const icon = document.getElementById('checkboxIcon');
+            const square = document.getElementById('checkboxSquare');
+            if(isChecked) {
+                icon.classList.replace('opacity-0', 'opacity-100');
+                icon.classList.replace('scale-50', 'scale-100');
+                square.classList.replace('border-slate-500', 'border-blue-500');
+                square.classList.add('bg-blue-600');
+            } else {
+                icon.classList.replace('opacity-100', 'opacity-0');
+                icon.classList.replace('scale-100', 'scale-50');
+                square.classList.replace('border-blue-500', 'border-slate-500');
+                square.classList.remove('bg-blue-600');
+            }
         }
 
         async function saveSuspect() {
             const nom = document.getElementById('suspectNom').value;
-            if(!nom || !cart.length) return alert("Données incomplètes.");
+            if(!nom || !cart.length) return alert("Nom et infractions requis.");
             const btn = document.getElementById('saveBtn');
-            btn.disabled = true; btn.innerText = "Traitement...";
+            btn.disabled = true; btn.innerText = "Archivage...";
+            
+            const body = { 
+                nom, 
+                telephone: document.getElementById('suspectTel').value || "Inconnu",
+                statut: document.getElementById('suspectStatut').value,
+                photo_url: document.getElementById('suspectPhoto').value || "",
+                motif: cart.map(i => `${i.label}${i.qty > 1 ? ' (x'+i.qty+')' : ''}`).join(', '), 
+                casiers: `Amende: ${document.getElementById('totalFine').innerText} | Prison: ${document.getElementById('totalPrison').innerText}`, 
+                derniere_intervention: new Date().toLocaleDateString('fr-FR') 
+            };
             try { 
-                const res = await fetch('/api/individus', { 
-                    method: 'POST', 
-                    body: JSON.stringify({ nom, motif: cart.map(i => i.label).join(', '), casiers: `Amende: ${document.getElementById('totalFine').innerText}`, derniere_intervention: new Date().toLocaleDateString('fr-FR') }) 
-                }); 
+                const res = await fetch('/api/individus', { method: 'POST', body: JSON.stringify(body) }); 
                 if(res.ok) window.location.href = "Individus.html";
-            } catch(e) { alert("Erreur."); btn.disabled = false; btn.innerText = "Archiver"; }
+            } catch(e) { alert("Erreur."); btn.disabled = false; btn.innerText = "Valider"; }
         }
 
         function resetAll() { 
-            cart = []; document.getElementById('firstOffenseCheck').checked = false; updateCheckboxVisual();
-            document.querySelectorAll('.selection-ring').forEach(r => r.classList.replace('opacity-100', 'opacity-0')); 
+            cart = []; 
+            document.getElementById('firstOffenseCheck').checked = false; 
+            updateCheckboxVisual();
+            document.querySelectorAll('.selection-ring').forEach(r => {
+                r.classList.replace('opacity-100', 'opacity-0');
+                r.classList.replace('scale-100', 'scale-95');
+            }); 
             document.querySelectorAll('[id^="badge-qty-"]').forEach(b => b.classList.add('hidden'));
-            document.getElementById('suspectNom').value = ""; calculate(); 
+            document.getElementById('suspectNom').value = "";
+            document.getElementById('suspectTel').value = "";
+            document.getElementById('suspectPhoto').value = "";
+            calculate(); 
         }
         init();
     </script>
