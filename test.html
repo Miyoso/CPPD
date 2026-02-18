@@ -9,10 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --glass: rgba(15, 23, 42, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass: rgba(15, 23, 42, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.1);
             --accent-blue: #3b82f6;
-            --accent-red: #ef4444;
         }
 
         body { 
@@ -21,7 +20,6 @@
             color: #cbd5e1;
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
-            overflow-x: hidden;
         }
 
         body::before {
@@ -36,22 +34,17 @@
 
         .glass {
             background: var(--glass);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--glass-border);
         }
 
         .glass-card {
             background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
             border-radius: 1.5rem;
             transition: all 0.3s ease;
-        }
-
-        .glass-card:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.2);
         }
 
         .glass-input {
@@ -61,10 +54,7 @@
             outline: none;
         }
 
-        .glass-input:focus {
-            border-color: var(--accent-blue) !important;
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
-        }
+        .glass-input:focus { border-color: var(--accent-blue) !important; }
 
         .ticket-receipt {
             background: #f8fafc;
@@ -74,7 +64,7 @@
             border-radius: 4px;
         }
 
-        .filter-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+        .filter-btn.active { background: var(--accent-blue); color: white; }
         
         .scanline {
             width: 100%; height: 2px;
@@ -88,25 +78,21 @@
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
     </style>
 </head>
-<body class="p-4 md:p-8 antialiased">
+<body class="p-4 md:p-8">
     <div class="scanline"></div>
 
-    <header class="max-w-7xl mx-auto glass rounded-[2rem] p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-6 shadow-2xl">
+    <header class="max-w-7xl mx-auto glass rounded-[2rem] p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
         <div class="flex items-center gap-5">
-            <div class="w-14 h-14 glass rounded-2xl flex items-center justify-center border border-white/10">
-                <img src="LogoCPPD.png" class="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]">
-            </div>
+            <img src="LogoCPPD.png" class="w-12 h-12 object-contain">
             <div>
-                <h1 class="text-2xl font-black text-white tracking-tighter uppercase italic">Central Command</h1>
-                <div class="flex gap-2 mt-1">
-                    <span class="text-[9px] font-bold text-blue-400 uppercase tracking-[0.3em]">Justice System v4.0</span>
-                </div>
+                <h1 class="text-2xl font-black text-white tracking-tighter uppercase italic">Central Database</h1>
+                <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Calculateur Pénal • Intelligence</p>
             </div>
         </div>
         <div class="flex gap-3">
-            <a href="Individus.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-blue-600 transition-all">Individus</a>
-            <a href="Logs.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-red-600 transition-all">Logs</a>
-            <a href="Plainte.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-600 transition-all">Plaintes</a>
+            <a href="Individus.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-blue-600">Individus</a>
+            <a href="Logs.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-red-600">Logs</a>
+            <a href="Plainte.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-slate-600">Plaintes</a>
         </div>
     </header>
 
@@ -114,12 +100,12 @@
         <div class="lg:col-span-2 space-y-6">
             <div class="glass-card p-4 flex gap-4">
                 <div class="relative flex-grow">
-                    <input type="text" id="searchBar" onkeyup="filterLaws()" placeholder="Rechercher une infraction..." class="glass-input w-full rounded-xl p-4 pl-12 text-sm">
-                    <svg class="w-5 h-5 text-slate-500 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input type="text" id="searchBar" onkeyup="filterLaws()" placeholder="Rechercher une infraction ou un article..." class="glass-input w-full rounded-xl p-4 pl-12 text-sm">
+                    <svg class="w-5 h-5 text-slate-500 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </div>
             </div>
 
-            <div id="filterContainer" class="flex flex-wrap gap-2 overflow-x-auto pb-2">
+            <div id="filterContainer" class="flex flex-wrap gap-2 mb-4">
                 <button onclick="filterByCategory('all')" class="filter-btn active px-4 py-2 rounded-full border border-white/10 text-[9px] font-black uppercase tracking-widest transition-all">Tous</button>
             </div>
 
@@ -127,7 +113,7 @@
         </div>
 
         <aside class="space-y-6">
-            <div class="ticket-receipt shadow-2xl relative overflow-hidden">
+            <div class="ticket-receipt shadow-2xl">
                 <div class="text-center border-b border-dashed border-slate-400 pb-4 mb-4">
                     <h2 class="text-sm font-black uppercase tracking-tighter">Procès-Verbal Officiel</h2>
                     <p class="text-[9px] opacity-70" id="ticketDate">--/--/----</p>
@@ -146,16 +132,16 @@
                     </div>
                 </div>
 
-                <button onclick="copyReport()" class="w-full bg-slate-200 border-2 border-slate-400 text-slate-800 font-bold py-3 rounded text-[10px] uppercase hover:bg-slate-300 transition-all flex items-center justify-center gap-2">
+                <button onclick="copyReport()" class="w-full bg-slate-200 border-2 border-slate-400 text-slate-800 font-bold py-3 rounded text-[10px] uppercase hover:bg-slate-300">
                     Copier le rapport
                 </button>
             </div>
 
             <div class="glass-card p-6 space-y-4">
-                <h3 class="text-xs font-black text-white uppercase tracking-widest border-l-2 border-blue-500 pl-3">Détails Suspect</h3>
+                <h3 class="text-xs font-black text-white uppercase tracking-widest border-l-2 border-blue-500 pl-3">Suspect</h3>
                 
                 <label class="flex items-center gap-3 p-3 rounded-xl glass-input cursor-pointer">
-                    <input type="checkbox" id="firstOffenseCheck" onchange="calculate()" class="w-4 h-4 rounded border-white/20 accent-blue-500">
+                    <input type="checkbox" id="firstOffenseCheck" onchange="calculate()" class="w-4 h-4 rounded accent-blue-500">
                     <span class="text-[10px] font-bold uppercase text-slate-300">1ère Interpellation (-50%)</span>
                 </label>
 
@@ -168,8 +154,8 @@
                     <option value="Recherché">Recherché</option>
                 </select>
 
-                <button onclick="saveSuspect()" id="saveBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl transition-all uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-blue-900/40">
-                    Archiver le dossier
+                <button onclick="saveSuspect()" id="saveBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl transition-all uppercase text-[10px] tracking-widest shadow-lg shadow-blue-900/40">
+                    Valider & Archiver
                 </button>
             </div>
         </aside>
@@ -229,10 +215,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         ${cat.items.map(i => `
                             <button onclick="toggleItem(${i.id})" id="law-${i.id}" class="glass-card p-4 text-left border-l-4 ${cat.style} relative group">
-                                <div class="flex justify-between items-start gap-3">
-                                    <span class="text-xs font-bold text-slate-200">${i.label}</span>
-                                    <span class="text-[10px] font-mono font-bold text-blue-400">${i.amende}$</span>
+                                <div class="flex justify-between items-start mb-1">
+                                    <span class="text-xs font-bold text-white">${i.label}</span>
+                                    <span class="text-[10px] font-mono text-blue-400 font-bold">${i.amende}$</span>
                                 </div>
+                                ${i.sanction ? `<p class="text-[9px] text-slate-400 italic leading-tight">${i.sanction}</p>` : ''}
                                 <div class="selection-indicator absolute inset-0 border-2 border-blue-500 rounded-2xl opacity-0 transition-all pointer-events-none"></div>
                             </button>
                         `).join('')}
@@ -245,14 +232,8 @@
             const item = categories.flatMap(c => c.items).find(i => i.id === id);
             const idx = cart.findIndex(i => i.id === id);
             const el = document.getElementById(`law-${id}`).querySelector('.selection-indicator');
-
-            if(idx > -1) {
-                cart.splice(idx, 1);
-                el.classList.replace('opacity-100', 'opacity-0');
-            } else {
-                cart.push(item);
-                el.classList.replace('opacity-0', 'opacity-100');
-            }
+            if(idx > -1) { cart.splice(idx, 1); el.classList.replace('opacity-100', 'opacity-0'); }
+            else { cart.push(item); el.classList.replace('opacity-0', 'opacity-100'); }
             calculate();
         }
 
@@ -260,40 +241,28 @@
             let f = cart.reduce((a, i) => a + i.amende, 0);
             let p = cart.reduce((a, i) => a + i.prison, 0);
             if(document.getElementById('firstOffenseCheck').checked) f = Math.floor(f/2);
-
             document.getElementById('totalFine').innerText = f.toLocaleString() + " $";
             document.getElementById('totalPrison').innerText = p + " Min";
-            document.getElementById('cartList').innerHTML = cart.map(i => `
-                <div class="flex justify-between border-b border-slate-200 pb-1 uppercase">
-                    <span>${i.label}</span>
-                    <span class="font-bold">${i.amende}$</span>
-                </div>
-            `).join('');
+            document.getElementById('cartList').innerHTML = cart.map(i => `<div class="flex justify-between border-b border-slate-200 pb-1 uppercase"><span>${i.label}</span><span class="font-bold">${i.amende}$</span></div>`).join('');
         }
 
         async function saveSuspect() {
             const nom = document.getElementById('suspectNom').value;
-            if(!nom || !cart.length) return alert("Données manquantes.");
-            
+            if(!nom || !cart.length) return alert("Nom et infractions requis.");
             const body = { 
-                nom, 
-                telephone: document.getElementById('suspectTel').value || "Inconnu",
-                statut: document.getElementById('suspectStatut').value,
-                photo_url: document.getElementById('suspectPhoto').value || "",
-                motif: cart.map(i => i.label).join(', '), 
+                nom, telephone: document.getElementById('suspectTel').value || "Inconnu", statut: document.getElementById('suspectStatut').value,
+                photo_url: document.getElementById('suspectPhoto').value || "", motif: cart.map(i => i.label).join(', '), 
                 casiers: `Amende: ${document.getElementById('totalFine').innerText} | Prison: ${document.getElementById('totalPrison').innerText}`, 
                 derniere_intervention: new Date().toLocaleDateString('fr-FR') 
             };
-            
             const res = await fetch('/api/individus', { method: 'POST', body: JSON.stringify(body) });
             if(res.ok) window.location.href = "Individus.html";
         }
 
         function copyReport() {
             const nom = document.getElementById('suspectNom').value || "Inconnu";
-            const report = `📋 **RAPPORT CPPD**\n👤 **Suspect :** ${nom}\n⚖️ **Amende :** ${document.getElementById('totalFine').innerText}\n⏳ **Prison :** ${document.getElementById('totalPrison').innerText}`;
-            navigator.clipboard.writeText(report);
-            alert("Rapport copié !");
+            const report = `📋 **RAPPORT CPPD**\n👤 **Suspect :** ${nom}\n⚖️ **Amende :** ${document.getElementById('totalFine').innerText}\n⏳ **Temps :** ${document.getElementById('totalPrison').innerText}`;
+            navigator.clipboard.writeText(report); alert("Rapport copié !");
         }
 
         init();
