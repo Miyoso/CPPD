@@ -11,7 +11,7 @@
         :root { --glass: rgba(15, 23, 42, 0.75); --glass-border: rgba(255, 255, 255, 0.1); --accent-blue: #3b82f6; }
         body { background: radial-gradient(circle at 50% 0%, #1e293b 0%, #020617 100%); background-color: #020617; color: #cbd5e1; font-family: 'Inter', sans-serif; min-height: 100vh; }
         body::before { content: ""; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 600px; height: 600px; background-image: url('LogoCPPD.png'); background-repeat: no-repeat; background-position: center; background-size: contain; opacity: 0.03; pointer-events: none; z-index: -1; }
-        .glass { background: var(--glass); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border); }
+        .glass { background: var(--glass); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); }
         .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid var(--glass-border); border-radius: 1.5rem; transition: all 0.3s ease; }
         .glass-input { background: rgba(0, 0, 0, 0.4) !important; border: 1px solid var(--glass-border) !important; color: white !important; outline: none; }
         .ticket-receipt { background: #f8fafc; color: #1e293b; padding: 24px; font-family: 'JetBrains Mono', monospace; border-radius: 4px; }
@@ -23,15 +23,15 @@
 <body class="p-4 md:p-8">
     <header class="max-w-7xl mx-auto glass rounded-[2rem] p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-6 shadow-2xl">
         <div class="flex items-center gap-5">
-            <img src="LogoCPPD.png" class="w-12 h-12 object-contain drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]">
+            <img src="LogoCPPD.png" class="w-12 h-12 object-contain">
             <div>
                 <h1 class="text-2xl font-black text-white tracking-tighter uppercase italic">Unité de Renseignement C.P.P.D</h1>
-                <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Système de Justice Centralisé</p>
+                <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Calculateur de Sanctions</p>
             </div>
         </div>
         <div class="flex gap-3">
             <a href="Individus.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-blue-600 transition-all">Individus</a>
-            <a href="Stocks.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-emerald-600 transition-all">Armurerie</a>
+            <a href="test.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-emerald-600 transition-all">Armurerie</a>
             <a href="Logs.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-red-600 transition-all">Logs</a>
         </div>
     </header>
@@ -50,24 +50,25 @@
         <aside class="space-y-6">
             <div class="ticket-receipt shadow-2xl">
                 <div class="text-center border-b border-dashed border-slate-400 pb-4 mb-4">
-                    <h2 class="text-sm font-black uppercase">Procès-Verbal Officiel</h2>
-                    <p class="text-[9px] opacity-70" id="ticketDate">--/--/----</p>
+                    <h2 class="text-sm font-black uppercase">Procès-Verbal</h2>
+                    <p class="text-[9px] opacity-70" id="ticketDate"></p>
                 </div>
                 <div id="cartList" class="space-y-2 text-[10px] mb-6 min-h-[50px]"></div>
                 <div class="border-t border-dashed border-slate-400 pt-4 space-y-2 mb-6">
-                    <div class="flex justify-between font-black text-lg"><span>TOTAL</span><span id="totalFine">0 $</span></div>
-                    <div class="flex justify-between text-[11px] font-bold text-blue-800"><span>CELLULE</span><span id="totalPrison">0 Min</span></div>
+                    <div class="flex justify-between font-black text-lg"><span>AMENDE</span><span id="totalFine">0 $</span></div>
+                    <div class="flex justify-between text-[11px] font-bold text-blue-800"><span>PRISON</span><span id="totalPrison">0 Min</span></div>
                     <div id="banSection" class="hidden flex justify-between text-[11px] font-bold text-red-600"><span>BAN</span><span id="maxBan">-</span></div>
                 </div>
-                <button onclick="copyReport()" class="w-full bg-slate-200 border-2 border-slate-400 text-slate-800 font-bold py-3 rounded text-[10px] uppercase hover:bg-slate-300">Générer Rapport</button>
+                <button onclick="copyReport()" class="w-full bg-slate-200 border-2 border-slate-400 text-slate-800 font-bold py-3 rounded text-[10px] uppercase hover:bg-slate-300">Copier Rapport</button>
             </div>
 
             <div class="glass-card p-6 space-y-4">
                 <div class="space-y-2">
-                    <label class="flex items-center gap-3 p-3 rounded-xl glass-input cursor-pointer"><input type="checkbox" id="firstOffenseCheck" onchange="calculate()" class="w-4 h-4 rounded accent-blue-500"><span class="text-[10px] font-bold uppercase text-slate-300">Primo (-50%)</span></label>
+                    <label class="flex items-center gap-3 p-3 rounded-xl glass-input cursor-pointer"><input type="checkbox" id="firstOffenseCheck" onchange="calculate()" class="w-4 h-4 accent-blue-500"><span class="text-[10px] font-bold uppercase text-slate-300">Primo-Délinquant (-50%)</span></label>
+                    <label class="flex items-center gap-3 p-3 rounded-xl glass-input cursor-pointer"><input type="checkbox" id="doubleFineCheck" onchange="calculate()" class="w-4 h-4 accent-red-500"><span class="text-[10px] font-bold uppercase text-slate-300">Problématique (x2)</span></label>
                 </div>
                 <input type="text" id="suspectNom" placeholder="Nom Prénom" class="glass-input w-full rounded-xl p-3 text-sm">
-                <button onclick="saveSuspect()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl uppercase text-[10px] shadow-lg">Archiver</button>
+                <button onclick="saveSuspect()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl uppercase text-[10px] shadow-lg">Finaliser Dossier</button>
             </div>
         </aside>
     </main>
@@ -78,15 +79,17 @@
 
         async function init() {
             document.getElementById('ticketDate').innerText = new Date().toLocaleString('fr-FR');
-            const res = await fetch('/api/individus?type=lois');
-            const data = await res.json();
-            const temp = {};
-            data.forEach(i => {
-                if(!temp[i.categorie]) temp[i.categorie] = { name: i.categorie, style: styles[i.categorie] || "", items: [] };
-                temp[i.categorie].items.push(i);
-            });
-            categories = Object.values(temp);
-            renderFilters(); renderLaws();
+            try {
+                const res = await fetch('/api/individus?type=lois');
+                const data = await res.json();
+                const temp = {};
+                data.forEach(i => {
+                    if(!temp[i.categorie]) temp[i.categorie] = { name: i.categorie, style: styles[i.categorie] || "", items: [] };
+                    temp[i.categorie].items.push(i);
+                });
+                categories = Object.values(temp);
+                renderFilters(); renderLaws();
+            } catch (e) { console.error(e); }
         }
 
         function renderFilters() {
@@ -120,7 +123,7 @@
                                 <div class="flex justify-between items-start mb-1"><span class="text-xs font-bold text-white">${i.label}</span><span class="text-[10px] font-mono text-blue-400 font-bold">${i.amende}$</span></div>
                                 ${i.sanction ? `<p class="text-[9px] text-slate-400 italic leading-tight">${i.sanction}</p>` : ''}
                                 <div id="badge-${i.id}" class="hidden absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">x1</div>
-                                <div class="selection-indicator absolute inset-0 border-2 border-blue-500 rounded-2xl opacity-0 pointer-events-none"></div>
+                                <div class="selection-indicator absolute inset-0 border-2 border-blue-500 rounded-2xl opacity-0 pointer-events-none transition-opacity"></div>
                             </button>`).join('')}
                     </div>
                 </div>`).join('');
@@ -143,4 +146,12 @@
         function calculate() {
             const isPrimo = document.getElementById('firstOffenseCheck').checked;
             const isDouble = document.getElementById('doubleFineCheck').checked;
-            let f = cart.reduce((a, i) => a + (parseInt(i.amende) * (i.qty || 1
+            let f = cart.reduce((a, i) => a + (parseInt(i.amende) * (i.qty || 1)), 0);
+            let p = cart.reduce((a, i) => a + (parseInt(i.prison) * (i.qty || 1)), 0);
+            let b = cart.reduce((a, i) => { let v = parseInt(i.ban) || 0; return v > a ? v : a; }, 0);
+            if(isPrimo) { f = Math.floor(f/2); if(b < 999) b = 0; }
+            if(isDouble) f *= 2;
+            document.getElementById('totalFine').innerText = f.toLocaleString() + " $";
+            document.getElementById('totalPrison').innerText = p + " Min";
+            const bs = document.getElementById('banSection');
+            if(b > 0) { bs.classList.remove('hidden'); document.getElementById('maxBan').innerText = b >= 999 ? "DÉFINITIF" : b + " J"; }
