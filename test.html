@@ -11,6 +11,22 @@
         body { background: radial-gradient(circle at 50% 0%, #1e293b 0%, #020617 100%); background-color: #020617; color: #cbd5e1; font-family: 'Inter', sans-serif; min-height: 100vh; }
         .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid var(--glass-border); border-radius: 1.5rem; transition: all 0.3s ease; }
         .glass-input { background: rgba(0, 0, 0, 0.4) !important; border: 1px solid var(--glass-border) !important; color: white !important; outline: none; }
+        
+        .select-custom {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s ease;
+        }
+        .select-custom:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+        }
+        .select-assigned { color: #fb923c; border-color: rgba(251, 146, 60, 0.3); }
+
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
     </style>
@@ -39,9 +55,7 @@
                     <tr>
                         <th class="p-6">Modèle Matériel</th>
                         <th class="p-6">Numéro de Série</th>
-                        <th class="p-6">Détenteur</th>
-                        <th class="p-6">État</th>
-                        <th class="p-6">Statut</th>
+                        <th class="p-6 text-right">Détenteur & Attribution</th>
                     </tr>
                 </thead>
                 <tbody id="stockTable" class="text-sm divide-y divide-white/5"></tbody>
@@ -60,36 +74,20 @@
                     <tr class="hover:bg-white/5 transition-colors">
                         <td class="p-6 font-bold text-white">${w.modele}</td>
                         <td class="p-6 font-mono text-xs text-blue-400 uppercase">${w.numero_serie}</td>
-                        <td class="p-6">
-                            <select onchange="updateWeapon(${w.id}, this.value, '${w.etat}')" 
-                                    class="bg-slate-900 text-xs text-slate-300 rounded border border-white/10 p-1 outline-none focus:border-blue-500">
+                        <td class="p-6 text-right">
+                            <select onchange="updateWeapon(${w.id}, this.value)" 
+                                    class="select-custom ${isAssigned ? 'select-assigned' : ''} text-[10px] rounded-full px-4 py-2 outline-none cursor-pointer">
                                 <option value="En Stock" ${!isAssigned ? 'selected' : ''}>📦 EN STOCK</option>
-                                <option value="${isAssigned ? w.agent_detenteur : 'Nouvel Agent'}" ${isAssigned ? 'selected' : 'disabled'}>
-                                    ${isAssigned ? '👤 ' + w.agent_detenteur : '⚠️ Non attribuée'}
-                                </option>
-                                <option value="PROMPT_NEW">➕ Attribuer à un agent...</option>
+                                ${isAssigned ? `<option value="${w.agent_detenteur}" selected>👤 ${w.agent_detenteur}</option>` : ''}
+                                <option value="PROMPT_NEW">➕ ATTRIBUER</option>
                             </select>
-                        </td>
-                        <td class="p-6">
-                            <select onchange="updateWeapon(${w.id}, '${w.agent_detenteur}', this.value)"
-                                    class="bg-slate-900 text-[9px] font-black rounded px-2 py-1 outline-none border border-white/10">
-                                <option value="Neuf" ${w.etat === 'Neuf' ? 'selected' : ''}>NEUF</option>
-                                <option value="Bon état" ${w.etat === 'Bon état' ? 'selected' : ''}>BON ÉTAT</option>
-                                <option value="Usé" ${w.etat === 'Usé' ? 'selected' : ''}>USÉ</option>
-                                <option value="Abîmé" ${w.etat === 'Abîmé' ? 'selected' : ''}>ABÎMÉ</option>
-                            </select>
-                        </td>
-                        <td class="p-6">
-                            <span class="px-3 py-1 rounded-lg border text-[9px] font-black ${isAssigned ? 'border-orange-500/30 text-orange-400 bg-orange-500/5' : 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5'}">
-                                ${isAssigned ? 'EN SERVICE' : 'STOCK'}
-                            </span>
                         </td>
                     </tr>`;
                 }).join('');
             } catch (e) { console.error(e); }
         }
 
-        async function updateWeapon(id, agent, etat) {
+        async function updateWeapon(id, agent) {
             let finalAgent = agent;
             if (agent === "PROMPT_NEW") {
                 const nouveau = prompt("Matricule de l'agent :");
@@ -99,7 +97,7 @@
             try {
                 await fetch(`/api/individus?type=update_weapon&id_arme=${id}`, {
                     method: 'PATCH',
-                    body: JSON.stringify({ agent: finalAgent, etat: etat })
+                    body: JSON.stringify({ agent: finalAgent })
                 });
                 loadStock();
             } catch (e) { alert("Erreur mise à jour"); }

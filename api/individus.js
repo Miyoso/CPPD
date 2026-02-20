@@ -35,8 +35,8 @@ export default async function handler(req, res) {
             const data = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 
             if (type === 'add_weapon') {
-                await sql`INSERT INTO stock_armes (modele, numero_serie, agent_detenteur, etat, date_entree) 
-                          VALUES (${data.modele}, ${data.numero_serie}, ${data.agent_detenteur || 'En Stock'}, 'Neuf', NOW())`;
+                await sql`INSERT INTO stock_armes (modele, numero_serie, agent_detenteur, date_entree) 
+                          VALUES (${data.modele}, ${data.numero_serie}, ${data.agent_detenteur || 'En Stock'}, NOW())`;
                 await sql`INSERT INTO logs (action, detail, officier, date) 
                           VALUES ('ARMURERIE', ${'Nouvelle arme enregistrée : ' + data.numero_serie}, 'Système', NOW())`;
                 return res.status(200).json({ message: 'Arme enregistrée' });
@@ -56,7 +56,7 @@ export default async function handler(req, res) {
             const data = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
             
             if (type === 'update_weapon') {
-                await sql`UPDATE stock_armes SET agent_detenteur = ${data.agent}, etat = ${data.etat} WHERE id = ${id_arme}`;
+                await sql`UPDATE stock_armes SET agent_detenteur = ${data.agent} WHERE id = ${id_arme}`;
                 return res.status(200).json({ message: 'Stock mis à jour' });
             }
 
