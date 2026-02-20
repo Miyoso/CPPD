@@ -27,11 +27,15 @@
         .bottom-right { bottom: 8mm; right: 8mm; border-left: 0; border-top: 0; }
         .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); width: 500px; height: 500px; background: url('LogoCPPD.png') no-repeat center/contain; opacity: 0.04; pointer-events: none; }
         section { page-break-inside: avoid; break-inside: avoid; margin-bottom: 25px; position: relative; z-index: 10; }
-        .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; page-break-after: avoid; }
         .section-line { height: 1px; background: #e2e8f0; flex-grow: 1; }
         .section-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #0f172a; }
         #preview-faits, #preview-menaces, #preview-demandes { white-space: pre-wrap; word-break: break-word; text-align: justify; font-size: 11px; line-height: 1.6; color: #334155; }
         .page-break { page-break-before: always; break-before: page; }
+        @media print {
+            .document-print { padding: 0; margin: 0; box-shadow: none; }
+            .relative.z-10 { padding: 20mm; min-height: 297mm; }
+        }
     </style>
 </head>
 <body class="flex flex-col">
@@ -161,10 +165,10 @@
             const originalTransform = el.style.transform;
             el.style.transform = "scale(1)";
             const opt = {
-                margin: [10, 0, 10, 0],
+                margin: 10,
                 filename: `Plainte_${document.getElementById('plaignant').value || 'SansNom'}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
                 pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
             };
