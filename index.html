@@ -123,9 +123,17 @@
 
         function filterLaws() {
             const t = document.getElementById('searchBar').value.toLowerCase();
-            document.querySelectorAll('.law-item-btn').forEach(b => {
-                const match = b.innerText.toLowerCase().includes(t);
-                b.style.display = match ? "" : "none";
+            document.querySelectorAll('.law-group').forEach(group => {
+                let hasVisibleLaw = false;
+                const buttons = group.querySelectorAll('.law-item-btn');
+                
+                buttons.forEach(b => {
+                    const match = b.innerText.toLowerCase().includes(t);
+                    b.style.display = match ? "" : "none";
+                    if(match) hasVisibleLaw = true;
+                });
+
+                group.style.display = hasVisibleLaw ? "" : "none";
             });
         }
 
@@ -152,7 +160,8 @@
         function toggleItem(id) {
             const item = categories.flatMap(c => c.items).find(i => i.id === id);
             const idx = cart.findIndex(i => i.id === id);
-            const el = document.getElementById(`law-${id}`).querySelector('.selection-indicator');
+            const card = document.getElementById(`law-${id}`);
+            const el = card.querySelector('.selection-indicator');
             const badge = document.getElementById(`badge-${id}`);
 
             if(idx > -1) {
