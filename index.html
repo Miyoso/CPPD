@@ -72,6 +72,7 @@
         </div>
         <div class="flex gap-3">
             <a href="Individus.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-blue-600 transition-all">Individus</a>
+            <a href="test.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-emerald-600 transition-all">Armurerie</a>
             <a href="Logs.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-red-600 transition-all">Logs</a>
             <a href="Plainte.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-slate-600 transition-all">Plaintes</a>
         </div>
@@ -99,11 +100,11 @@
                 <div id="cartList" class="space-y-2 text-[10px] mb-6 min-h-[50px]"></div>
                 <div class="border-t border-dashed border-slate-400 pt-4 space-y-2 mb-6">
                     <div class="flex justify-between font-black text-lg">
-                        <span>SANCTION PÉCUNIAIRE</span>
+                        <span>AMENDE TOTALE</span>
                         <span id="totalFine">0 $</span>
                     </div>
                     <div class="flex justify-between text-[11px] font-bold text-blue-800">
-                        <span>PRIVATION DE LIBERTÉ</span>
+                        <span>TEMPS DE CELLULE</span>
                         <span id="totalPrison">0 Min</span>
                     </div>
                     <div id="banSection" class="hidden flex justify-between text-[11px] font-bold text-red-600">
@@ -116,10 +117,16 @@
 
             <div class="glass-card p-6 space-y-4">
                 <h3 class="text-xs font-black text-white uppercase border-l-2 border-blue-500 pl-3">Fiche d'Interpellation</h3>
-                <label class="flex items-center gap-3 p-3 rounded-xl glass-input cursor-pointer">
-                    <input type="checkbox" id="firstOffenseCheck" onchange="calculate()" class="w-4 h-4 rounded accent-blue-500">
-                    <span class="text-[10px] font-bold uppercase text-slate-300">Primo-Délinquant (-50%)</span>
-                </label>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-3 p-3 rounded-xl glass-input cursor-pointer">
+                        <input type="checkbox" id="firstOffenseCheck" onchange="calculate()" class="w-4 h-4 rounded accent-blue-500">
+                        <span class="text-[10px] font-bold uppercase text-slate-300">Primo-Délinquant (-50% amende)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 rounded-xl glass-input cursor-pointer">
+                        <input type="checkbox" id="doubleFineCheck" onchange="calculate()" class="w-4 h-4 rounded accent-red-500">
+                        <span class="text-[10px] font-bold uppercase text-slate-300">Individu Problématique (x2 amende)</span>
+                    </label>
+                </div>
                 <input type="text" id="suspectNom" placeholder="Nom Prénom" class="glass-input w-full rounded-xl p-3 text-sm">
                 <input type="text" id="suspectTel" placeholder="Téléphone" class="glass-input w-full rounded-xl p-3 text-sm">
                 <input type="text" id="suspectPhoto" placeholder="Lien Photo" class="glass-input w-full rounded-xl p-3 text-sm">
@@ -136,13 +143,14 @@
         let categories = [];
         let cart = [];
         const styles = { 
-            "Infractions Routières": "border-emerald-500/30 bg-emerald-500/5", 
-            "Délits de Catégorie I": "border-blue-500/30 bg-blue-500/5", 
-            "Délits de Catégorie II": "border-yellow-500/30 bg-yellow-500/5", 
-            "Délits de Catégorie III": "border-red-500/30 bg-red-500/5", 
-            "Stupéfiants & Contrebande": "border-orange-500/30 bg-orange-500/5",
-            "Armes": "border-slate-500/30 bg-slate-500/5",
-            "Crimes de Haute Gravité": "border-purple-500/30 bg-purple-500/5"
+            "Code de la route": "border-emerald-500/30 bg-emerald-500/5", 
+            "Délit mineur": "border-blue-500/30 bg-blue-500/5", 
+            "Délits moyen": "border-yellow-500/30 bg-yellow-500/5", 
+            "Délits majeur": "border-orange-500/30 bg-orange-500/5", 
+            "Crime": "border-red-500/30 bg-red-500/5",
+            "Stupéfiants & Contrebande": "border-purple-500/30 bg-purple-500/5",
+            "Objet illégaux": "border-purple-500/30 bg-purple-500/5",
+            "Armes": "border-slate-500/30 bg-slate-500/5"
         };
 
         async function init() {
@@ -193,7 +201,7 @@
                     <h2 class="text-[10px] font-black uppercase text-slate-500 mb-4 ml-2">${cat.name}</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         ${cat.items.map(i => {
-                            const useQty = (cat.name === "Stupéfiants & Contrebande" || cat.name === "Objet illégaux et drogues") && !i.label.toLowerCase().includes("matériel");
+                            const useQty = (cat.name === "Stupéfiants & Contrebande" || cat.name === "Objet illégaux et drogues");
                             return `
                             <button onclick="toggleItem(${i.id}, ${useQty})" id="law-${i.id}" class="glass-card p-4 text-left border-l-4 ${cat.style} relative">
                                 <div class="flex justify-between items-start mb-1">
@@ -235,14 +243,17 @@
 
         function calculate() {
             const isPrimo = document.getElementById('firstOffenseCheck').checked;
+            const isDouble = document.getElementById('doubleFineCheck').checked;
+            
             let f = cart.reduce((a, i) => a + (i.amende * (i.qty || 1)), 0);
             let p = cart.reduce((a, i) => a + (i.prison * (i.qty || 1)), 0);
             let b = cart.reduce((a, i) => i.ban > a ? i.ban : a, 0);
 
             if(isPrimo) { 
                 f = Math.floor(f/2);
-                if(b < 999) b = 0; // Annule le ban temporaire si primo, garde le définitif
+                if(b < 999) b = 0; // Annule le ban temporaire si primo
             }
+            if(isDouble) f = f * 2;
 
             document.getElementById('totalFine').innerText = f.toLocaleString() + " $";
             document.getElementById('totalPrison').innerText = p + " Min";
@@ -270,7 +281,7 @@
                 statut: document.getElementById('suspectStatut').value,
                 photo_url: document.getElementById('suspectPhoto').value || "",
                 motif: cart.map(i => `${i.label}${i.qty > 1 ? ' (x'+i.qty+')' : ''}`).join(', '), 
-                casiers: `Amende: ${document.getElementById('totalFine').innerText} | Prison: ${document.getElementById('totalPrison').innerText}`, 
+                casiers: `Amende: ${document.getElementById('totalFine').innerText} | Prison: ${document.getElementById('totalPrison').innerText} | Ban: ${document.getElementById('maxBan').innerText}`, 
                 derniere_intervention: new Date().toLocaleDateString('fr-FR') 
             };
             await fetch('/api/individus', { method: 'POST', body: JSON.stringify(body) });
@@ -278,7 +289,7 @@
         }
 
         function copyReport() {
-            const report = `👤 Individu : ${document.getElementById('suspectNom').value}\n⚖️ Amende : ${document.getElementById('totalFine').innerText}\n⏳ Prison : ${document.getElementById('totalPrison').innerText}`;
+            const report = `👤 Individu : ${document.getElementById('suspectNom').value}\n⚖️ Amende : ${document.getElementById('totalFine').innerText}\n⏳ Prison : ${document.getElementById('totalPrison').innerText}\n🚫 Ban : ${document.getElementById('maxBan').innerText}\n📜 Motifs : ${cart.map(i => i.label).join(', ')}`;
             navigator.clipboard.writeText(report);
             alert("Copié !");
         }
