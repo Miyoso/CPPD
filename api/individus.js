@@ -56,7 +56,15 @@ export default async function handler(req, res) {
             const data = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
             
             if (type === 'update_weapon') {
+                const oldWeapon = await sql`SELECT agent_detenteur, numero_serie FROM stock_armes WHERE id = ${id_arme}`;
+                const oldAgent = oldWeapon[0]?.agent_detenteur || 'Inconnu';
+                const serial = oldWeapon[0]?.numero_serie || 'Inconnu';
+
                 await sql`UPDATE stock_armes SET agent_detenteur = ${data.agent} WHERE id = ${id_arme}`;
+                
+                await sql`INSERT INTO logs (action, detail, officier, date) 
+                          VALUES ('ARMURERIE', ${'Transfert Arme (' + serial + ') : ' + oldAgent + ' --> ' + data.agent}, 'Système', NOW())`;
+                
                 return res.status(200).json({ message: 'Stock mis à jour' });
             }
 
