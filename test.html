@@ -267,7 +267,7 @@
 
         function calculate() {
             let f = cart.reduce((a, i) => a + (i.amende * (i.qty || 1)), 0);
-            let p = cart.reduce((a, i) => a + i.prison, 0);
+            let p = cart.reduce((a, i) => a + (i.prison * (i.qty || 1)), 0);
             if(document.getElementById('firstOffenseCheck').checked) f = Math.floor(f/2);
             document.getElementById('totalFine').innerText = f.toLocaleString() + " $";
             document.getElementById('totalPrison').innerText = p + " Min";
