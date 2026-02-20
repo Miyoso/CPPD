@@ -3,297 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPPD • Unité de Renseignement</title>
-    <link rel="icon" type="image/png" href="LogoCPPD.png">
+    <title>CPPD • Générateur de Plainte</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="LogoCPPD.png">
     <style>
-        :root {
-            --glass: rgba(15, 23, 42, 0.75);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --accent-blue: #3b82f6;
+        :root { --glass: rgba(15, 23, 42, 0.75); --glass-border: rgba(255, 255, 255, 0.1); }
+        body { background: radial-gradient(circle at 50% 0%, #1e293b 0%, #020617 100%); background-color: #020617; color: #cbd5e1; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; }
+        
+        .glass { background: var(--glass); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); }
+        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid var(--glass-border); border-radius: 1.5rem; }
+        
+        .form-column { height: calc(100vh - 80px); overflow-y: auto; padding: 2rem; }
+        .preview-column { height: calc(100vh - 80px); overflow-y: auto; display: flex; justify-content: center; padding: 2rem; background: rgba(0,0,0,0.2); }
+
+        .input-field { width: 100%; background: rgba(0, 0, 0, 0.4) !important; border: 1px solid var(--glass-border) !important; border-radius: 0.75rem; padding: 0.75rem; color: white !important; outline: none; }
+
+        /* REGLAGE MULTI-PAGE */
+        .document-print { 
+            background: white; 
+            color: #1a1a1a; 
+            width: 210mm; 
+            min-height: 297mm; /* Permet au contenu de s'étendre */
+            padding: 20mm;
+            display: flex;
+            flex-direction: column;
+            transform: scale(0.55);
+            transform-origin: top center;
+            position: relative;
         }
-        body { 
-            background: radial-gradient(circle at 50% 0%, #1e293b 0%, #020617 100%);
-            background-color: #020617;
-            color: #cbd5e1;
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-        }
-        body::before {
-            content: "";
-            position: fixed;
-            top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 600px; height: 600px;
-            background-image: url('LogoCPPD.png'); background-repeat: no-repeat;
-            background-position: center; background-size: contain;
-            opacity: 0.03; pointer-events: none; z-index: -1;
-        }
-        .glass {
-            background: var(--glass);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--glass-border);
-        }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: 1.5rem;
-            transition: all 0.3s ease;
-        }
-        .glass-input {
-            background: rgba(0, 0, 0, 0.4) !important;
-            border: 1px solid var(--glass-border) !important;
-            color: white !important;
-            outline: none;
-        }
-        .ticket-receipt {
-            background: #f8fafc;
-            color: #1e293b;
-            padding: 24px;
-            font-family: 'JetBrains Mono', monospace;
-            border-radius: 4px;
-        }
-        .filter-btn.active { background: var(--accent-blue); color: white; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+
+        /* Empêche les sections d'être coupées maladroitement entre deux pages */
+        section { page-break-inside: avoid; margin-bottom: 20px; }
+        
+        .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); width: 500px; height: 500px; background: url('LogoCPPD.png') no-repeat center/contain; opacity: 0.04; pointer-events: none; }
+        .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .section-line { height: 1px; background: #e2e8f0; flex-grow: 1; }
+        .section-title { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #0f172a; }
+        
+        #preview-faits, #preview-menaces, #preview-demandes { white-space: pre-wrap; word-break: break-word; text-align: justify; font-size: 11px; line-height: 1.6; color: #334155; }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="flex flex-col">
 
-    <header class="max-w-7xl mx-auto glass rounded-[2rem] p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-6 shadow-2xl">
+    <header class="h-20 glass flex items-center px-8 justify-between z-50">
         <div class="flex items-center gap-5">
-            <img src="LogoCPPD.png" class="w-12 h-12 object-contain drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]">
+            <img src="LogoCPPD.png" class="w-10 h-10 object-contain">
             <div>
-                <h1 class="text-2xl font-black text-white tracking-tighter uppercase italic">Unité de Renseignement C.P.P.D</h1>
-                <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Système de Justice Centralisé</p>
+                <h1 class="text-white font-black uppercase italic text-sm">C.P.P.D Records</h1>
             </div>
         </div>
         <div class="flex gap-3">
-            <a href="Individus.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-blue-600 transition-all">Individus</a>
-            <a href="test.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-emerald-600 transition-all">Armurerie</a>
-            <a href="Logs.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-red-600 transition-all">Logs</a>
-            <a href="Plainte.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-slate-600 transition-all">Plaintes</a>
+            <a href="index.html" class="glass-card px-5 py-2 text-[9px] font-bold uppercase hover:bg-blue-600 transition-all">Calculateur</a>
+            <button id="download-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-xl font-black text-[9px] uppercase shadow-lg">Exporter PDF Multi-Page</button>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div class="lg:col-span-2 space-y-6">
-            <div class="glass-card p-4">
-                <div class="relative w-full">
-                    <input type="text" id="searchBar" onkeyup="filterLaws()" placeholder="Rechercher une infraction..." class="glass-input w-full rounded-xl p-4 pl-12 text-sm">
-                </div>
+    <main class="flex flex-1 overflow-hidden">
+        <div class="w-[40%] form-column border-r border-white/5">
+            <div class="space-y-6">
+                <input type="text" id="plaignant" placeholder="Nom du Plaignant" class="input-field">
+                <input type="text" id="accuse" placeholder="Nom de l'Accusé" class="input-field">
+                <input type="text" id="objet" placeholder="Objet" class="input-field">
+                <textarea id="faits" rows="10" class="input-field resize-none" placeholder="Récit des faits (Si très long, le PDF créera une page 2 automatiquement)"></textarea>
+                <textarea id="qualifications" rows="3" class="input-field resize-none" placeholder="Qualifications..."></textarea>
+                <textarea id="demandes" rows="3" class="input-field resize-none" placeholder="Demandes..."></textarea>
             </div>
-            <div id="filterContainer" class="flex flex-wrap gap-2">
-                <button onclick="filterByCategory('all')" class="filter-btn active px-4 py-2 rounded-full border border-white/10 text-[9px] font-black uppercase transition-all">Flux Intégral</button>
-            </div>
-            <div id="lawsContainer" class="space-y-8 pb-20"></div>
         </div>
 
-        <aside class="space-y-6">
-            <div class="ticket-receipt shadow-2xl">
-                <div class="text-center border-b border-dashed border-slate-400 pb-4 mb-4">
-                    <h2 class="text-sm font-black uppercase">Procès-Verbal Officiel</h2>
-                    <p class="text-[9px] opacity-70" id="ticketDate">--/--/----</p>
+        <div class="w-[60%] preview-column">
+            <div id="document-preview" class="document-print">
+                <div class="watermark"></div>
+                
+                <div class="flex justify-between items-start mb-12">
+                    <div class="space-y-1">
+                        <div class="text-[10px] font-black italic">ÉTAT DE CAYO PERICO</div>
+                        <p class="text-[10px] font-bold">Déclarant : <span id="preview-plaignant">...</span></p>
+                    </div>
+                    <img src="LogoCPPD.png" class="w-16 h-16">
                 </div>
-                <div id="cartList" class="space-y-2 text-[10px] mb-6 min-h-[50px]"></div>
-                <div class="border-t border-dashed border-slate-400 pt-4 space-y-2 mb-6">
-                    <div class="flex justify-between font-black text-lg">
-                        <span>AMENDE TOTALE</span>
-                        <span id="totalFine">0 $</span>
-                    </div>
-                    <div class="flex justify-between text-[11px] font-bold text-blue-800">
-                        <span>TEMPS DE CELLULE</span>
-                        <span id="totalPrison">0 Min</span>
-                    </div>
-                    <div id="banSection" class="hidden flex justify-between text-[11px] font-bold text-red-600">
-                        <span>BANNISSEMENT</span>
-                        <span id="maxBan">-</span>
-                    </div>
-                </div>
-                <button onclick="copyReport()" class="w-full bg-slate-200 border-2 border-slate-400 text-slate-800 font-bold py-3 rounded text-[10px] uppercase hover:bg-slate-300">Générer le Compte-Rendu</button>
-            </div>
 
-            <div class="glass-card p-6 space-y-4">
-                <h3 class="text-xs font-black text-white uppercase border-l-2 border-blue-500 pl-3">Fiche d'Interpellation</h3>
-                <div class="space-y-2">
-                    <label class="flex items-center gap-3 p-3 rounded-xl glass-input cursor-pointer">
-                        <input type="checkbox" id="firstOffenseCheck" onchange="calculate()" class="w-4 h-4 rounded accent-blue-500">
-                        <span class="text-[10px] font-bold uppercase text-slate-300">Primo-Délinquant (-50% amende)</span>
-                    </label>
-                    <label class="flex items-center gap-3 p-3 rounded-xl glass-input cursor-pointer">
-                        <input type="checkbox" id="doubleFineCheck" onchange="calculate()" class="w-4 h-4 rounded accent-red-500">
-                        <span class="text-[10px] font-bold uppercase text-slate-300">Individu Problématique (x2 amende)</span>
-                    </label>
+                <div class="text-center border-4 border-gray-100 p-4 mb-10">
+                    <h1 class="text-xl font-black uppercase">Plainte Formelle</h1>
                 </div>
-                <input type="text" id="suspectNom" placeholder="Nom Prénom" class="glass-input w-full rounded-xl p-3 text-sm">
-                <input type="text" id="suspectTel" placeholder="Téléphone" class="glass-input w-full rounded-xl p-3 text-sm">
-                <input type="text" id="suspectPhoto" placeholder="Lien Photo" class="glass-input w-full rounded-xl p-3 text-sm">
-                <select id="suspectStatut" class="glass-input w-full rounded-xl p-3 text-sm">
-                    <option value="En règle">En règle</option>
-                    <option value="Recherché">Recherché</option>
-                </select>
-                <button onclick="saveSuspect()" id="saveBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl transition-all uppercase text-[10px] shadow-lg">Finaliser & Archiver</button>
+
+                <div class="space-y-8">
+                    <section>
+                        <div class="section-header"><span class="section-title">01. Mis en cause</span><div class="section-line"></div></div>
+                        <p class="text-[11px] pl-4">Contre : <span id="preview-accuse" class="font-bold underline">...</span></p>
+                    </section>
+
+                    <section>
+                        <div class="section-header"><span class="section-title">02. Exposé des faits</span><div class="section-line"></div></div>
+                        <div id="preview-faits" class="pl-4">En attente...</div>
+                    </section>
+
+                    <section>
+                        <div class="section-header"><span class="section-title">03. Qualifications</span><div class="section-line"></div></div>
+                        <ul id="list-qualifications" class="list-disc ml-10 text-[10px] font-bold text-blue-900"></ul>
+                    </section>
+
+                    <section>
+                        <div class="section-header"><span class="section-title">04. Prétentions</span><div class="section-line"></div></div>
+                        <div id="preview-demandes" class="pl-4 italic">...</div>
+                    </section>
+                </div>
             </div>
-        </aside>
+        </div>
     </main>
 
     <script>
-        let categories = [];
-        let cart = [];
-        const styles = { 
-            "Code de la route": "border-emerald-500/30 bg-emerald-500/5", 
-            "Délit mineur": "border-blue-500/30 bg-blue-500/5", 
-            "Délits moyen": "border-yellow-500/30 bg-yellow-500/5", 
-            "Délits majeur": "border-orange-500/30 bg-orange-500/5", 
-            "Crime": "border-red-500/30 bg-red-500/5",
-            "Stupéfiants & Contrebande": "border-purple-500/30 bg-purple-500/5",
-            "Objet illégaux et drogues": "border-purple-500/30 bg-purple-500/5",
-            "Armes": "border-slate-500/30 bg-slate-500/5"
-        };
-
-        async function init() {
-            document.getElementById('ticketDate').innerText = new Date().toLocaleString('fr-FR');
-            const res = await fetch('/api/individus?type=lois');
-            const data = await res.json();
-            const temp = {};
-            data.forEach(i => {
-                if(!temp[i.categorie]) temp[i.categorie] = { name: i.categorie, style: styles[i.categorie] || "", items: [] };
-                temp[i.categorie].items.push(i);
-            });
-            categories = Object.values(temp);
-            renderFilters();
-            renderLaws();
-        }
-
-        function renderFilters() {
-            const container = document.getElementById('filterContainer');
-            categories.forEach(cat => {
-                const btn = document.createElement('button');
-                btn.className = 'filter-btn px-4 py-2 rounded-full border border-white/10 text-[9px] font-black uppercase transition-all';
-                btn.innerText = cat.name;
-                btn.onclick = () => filterByCategory(cat.name, btn);
-                container.appendChild(btn);
-            });
-        }
-
-        function filterByCategory(name, element) {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            if (element) element.classList.add('active');
-            document.querySelectorAll('.law-group').forEach(c => {
-                c.style.display = (name === 'all' || c.getAttribute('data-category') === name) ? "" : "none";
-            });
-        }
-
-        function filterLaws() {
-            const t = document.getElementById('searchBar').value.toLowerCase();
-            document.querySelectorAll('.law-group button').forEach(b => {
-                const match = b.innerText.toLowerCase().includes(t);
-                b.style.display = match ? "" : "none";
-            });
-        }
-
-        function renderLaws() {
-            const container = document.getElementById('lawsContainer');
-            container.innerHTML = categories.map(cat => `
-                <div class="law-group" data-category="${cat.name}">
-                    <h2 class="text-[10px] font-black uppercase text-slate-500 mb-4 ml-2">${cat.name}</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        ${cat.items.map(i => {
-                            const useQty = (cat.name === "Stupéfiants & Contrebande" || cat.name === "Objet illégaux et drogues");
-                            return `
-                            <button onclick="toggleItem(${i.id}, ${useQty})" id="law-${i.id}" class="glass-card p-4 text-left border-l-4 ${cat.style} relative">
-                                <div class="flex justify-between items-start mb-1">
-                                    <span class="text-xs font-bold text-white">${i.label} ${useQty ? '<span class="text-orange-400">(Qté)</span>' : ''}</span>
-                                    <span class="text-[10px] font-mono text-blue-400 font-bold">${i.amende}$</span>
-                                </div>
-                                ${i.sanction ? `<p class="text-[9px] text-slate-400 italic leading-tight">${i.sanction}</p>` : ''}
-                                <div id="badge-${i.id}" class="hidden absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">x1</div>
-                                <div class="selection-indicator absolute inset-0 border-2 border-blue-500 rounded-2xl opacity-0 pointer-events-none"></div>
-                            </button>`;
-                        }).join('')}
-                    </div>
-                </div>`).join('');
-        }
-
-        function toggleItem(id, askQty = false) {
-            const item = categories.flatMap(c => c.items).find(i => i.id === id);
-            const idx = cart.findIndex(i => i.id === id);
-            const el = document.getElementById(`law-${id}`).querySelector('.selection-indicator');
-            const badge = document.getElementById(`badge-${id}`);
-
-            if(idx > -1) {
-                cart.splice(idx, 1);
-                el.classList.replace('opacity-100', 'opacity-0');
-                badge.classList.add('hidden');
-            } else {
-                let qty = 1;
-                if(askQty) {
-                    const input = prompt(`Quantité pour : ${item.label}`, "1");
-                    qty = parseInt(input) || 1;
-                    if(qty <= 0) return;
+        const inputs = ['plaignant', 'objet', 'accuse', 'faits', 'demandes', 'qualifications'];
+        
+        inputs.forEach(id => {
+            document.getElementById(id).addEventListener('input', (e) => {
+                const val = e.target.value;
+                if (id === 'qualifications') {
+                    document.getElementById('list-qualifications').innerHTML = val.split('\n').filter(l => l.trim()).map(l => `<li>${l}</li>`).join('');
+                } else {
+                    const prev = document.getElementById('preview-' + id);
+                    if (prev) prev.innerText = val || "...";
                 }
-                cart.push({ ...item, qty: qty });
-                el.classList.replace('opacity-0', 'opacity-100');
-                if(qty > 1) { badge.innerText = `x${qty}`; badge.classList.remove('hidden'); }
-            }
-            calculate();
-        }
+            });
+        });
 
-        function calculate() {
-            const isPrimo = document.getElementById('firstOffenseCheck').checked;
-            const isDouble = document.getElementById('doubleFineCheck').checked;
+        document.getElementById('download-btn').addEventListener('click', () => {
+            const el = document.getElementById('document-preview');
+            const originalTransform = el.style.transform;
             
-            let f = cart.reduce((a, i) => a + (i.amende * (i.qty || 1)), 0);
-            let p = cart.reduce((a, i) => a + (i.prison * (i.qty || 1)), 0);
-            let b = cart.reduce((a, i) => i.ban > a ? i.ban : a, 0);
-
-            if(isPrimo) { 
-                f = Math.floor(f/2);
-                if(b < 999) b = 0; // Annule le ban temporaire si primo
-            }
-            if(isDouble) f = f * 2;
-
-            document.getElementById('totalFine').innerText = f.toLocaleString() + " $";
-            document.getElementById('totalPrison').innerText = p + " Min";
+            el.style.transform = "scale(1)"; // Reset scale pour la capture
             
-            const banSec = document.getElementById('banSection');
-            if(b > 0) {
-                banSec.classList.remove('hidden');
-                document.getElementById('maxBan').innerText = b >= 999 ? "DÉFINITIF" : b + " J";
-            } else {
-                banSec.classList.add('hidden');
-            }
-
-            document.getElementById('cartList').innerHTML = cart.map(i => `
-                <div class="flex justify-between border-b border-slate-200 pb-1 uppercase">
-                    <span>${i.label} ${i.qty > 1 ? '(x'+i.qty+')' : ''}</span>
-                    <span class="font-bold">${(i.amende * (i.qty || 1)).toLocaleString()}$</span>
-                </div>`).join('');
-        }
-
-        async function saveSuspect() {
-            const nom = document.getElementById('suspectNom').value;
-            if(!nom || !cart.length) return alert("Données incomplètes.");
-            const body = { 
-                nom, telephone: document.getElementById('suspectTel').value || "Inconnu",
-                statut: document.getElementById('suspectStatut').value,
-                photo_url: document.getElementById('suspectPhoto').value || "",
-                motif: cart.map(i => `${i.label}${i.qty > 1 ? ' (x'+i.qty+')' : ''}`).join(', '), 
-                casiers: `Amende: ${document.getElementById('totalFine').innerText} | Prison: ${document.getElementById('totalPrison').innerText} | Ban: ${document.getElementById('maxBan').innerText}`, 
-                derniere_intervention: new Date().toLocaleDateString('fr-FR') 
+            const opt = {
+                margin: 10, // Marges sur chaque page
+                filename: 'Plainte_MultiPage.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                // ACTION CLEF : Gère la coupure intelligente des pages
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
             };
-            await fetch('/api/individus', { method: 'POST', body: JSON.stringify(body) });
-            window.location.href = "Individus.html";
-        }
 
-        function copyReport() {
-            const report = `👤 Individu : ${document.getElementById('suspectNom').value}\n⚖️ Amende : ${document.getElementById('totalFine').innerText}\n⏳ Prison : ${document.getElementById('totalPrison').innerText}\n🚫 Ban : ${document.getElementById('maxBan').innerText}\n📜 Motifs : ${cart.map(i => i.label).join(', ')}`;
-            navigator.clipboard.writeText(report);
-            alert("Copié !");
-        }
-        init();
+            html2pdf().set(opt).from(el).save().then(() => {
+                el.style.transform = originalTransform;
+            });
+        });
     </script>
 </body>
 </html>
