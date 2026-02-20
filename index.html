@@ -58,6 +58,9 @@
         .filter-btn.active { background: var(--accent-blue); color: white; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        
+        /* Animation pour les badges de sélection */
+        .selection-indicator { transition: opacity 0.2s ease; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -72,7 +75,7 @@
         </div>
         <div class="flex gap-3">
             <a href="Individus.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-blue-600 transition-all">Individus</a>
-            <a href="Stocks.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-emerald-600 transition-all">Armurerie</a>
+            <a href="test.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-emerald-600 transition-all text-white">Armurerie</a>
             <a href="Logs.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-red-600 transition-all">Logs</a>
             <a href="Plainte.html" class="glass-card px-6 py-2.5 text-[10px] font-bold uppercase hover:bg-slate-600 transition-all">Plaintes</a>
         </div>
@@ -85,10 +88,16 @@
                     <input type="text" id="searchBar" onkeyup="filterLaws()" placeholder="Rechercher une infraction..." class="glass-input w-full rounded-xl p-4 pl-12 text-sm">
                 </div>
             </div>
+            
             <div id="filterContainer" class="flex flex-wrap gap-2">
-                <button onclick="filterByCategory('all')" class="filter-btn active px-4 py-2 rounded-full border border-white/10 text-[9px] font-black uppercase transition-all">Flux Intégral</button>
+                <button id="filter-all" onclick="filterByCategory('all', this)" class="filter-btn active px-4 py-2 rounded-full border border-white/10 text-[9px] font-black uppercase transition-all">Flux Intégral</button>
             </div>
-            <div id="lawsContainer" class="space-y-8 pb-20"></div>
+
+            <div id="lawsContainer" class="space-y-8 pb-20">
+                <div class="flex justify-center p-10">
+                    <span class="text-blue-400 font-bold animate-pulse">Chargement des lois...</span>
+                </div>
+            </div>
         </div>
 
         <aside class="space-y-6">
@@ -97,7 +106,11 @@
                     <h2 class="text-sm font-black uppercase">Procès-Verbal Officiel</h2>
                     <p class="text-[9px] opacity-70" id="ticketDate">--/--/----</p>
                 </div>
-                <div id="cartList" class="space-y-2 text-[10px] mb-6 min-h-[50px]"></div>
+                
+                <div id="cartList" class="space-y-2 text-[10px] mb-6 min-h-[50px]">
+                    <p class="text-center opacity-40 italic">Aucune infraction sélectionnée</p>
+                </div>
+                
                 <div class="border-t border-dashed border-slate-400 pt-4 space-y-2 mb-6">
                     <div class="flex justify-between font-black text-lg">
                         <span>AMENDE TOTALE</span>
@@ -112,25 +125,32 @@
                         <span id="maxBan">-</span>
                     </div>
                 </div>
-                <button onclick="copyReport()" class="w-full bg-slate-200 border-2 border-slate-400 text-slate-800 font-bold py-3 rounded text-[10px] uppercase hover:bg-slate-300">Générer le Compte-Rendu</button>
+                
+                <button onclick="copyReport()" class="w-full bg-slate-200 border-2 border-slate-400 text-slate-800 font-bold py-3 rounded text-[10px] uppercase hover:bg-slate-300 transition-colors">Copier le Rapport</button>
             </div>
 
             <div class="glass-card p-6 space-y-4">
                 <h3 class="text-xs font-black text-white uppercase border-l-2 border-blue-500 pl-3">Fiche d'Interpellation</h3>
+                
                 <div class="space-y-2">
                     <label class="flex items-center gap-3 p-3 rounded-xl glass-input cursor-pointer">
                         <input type="checkbox" id="firstOffenseCheck" onchange="calculate()" class="w-4 h-4 rounded accent-blue-500">
-                        <span class="text-[10px] font-bold uppercase text-slate-300">Primo-Délinquant (-50% amende)</span>
+                        <span class="text-[10px] font-bold uppercase text-slate-300">Primo-Délinquant (-50%)</span>
                     </label>
-                    
                 </div>
-                <input type="text" id="suspectNom" placeholder="Nom Prénom" class="glass-input w-full rounded-xl p-3 text-sm">
-                <input type="text" id="suspectTel" placeholder="Téléphone" class="glass-input w-full rounded-xl p-3 text-sm">
-                <input type="text" id="suspectPhoto" placeholder="Lien Photo" class="glass-input w-full rounded-xl p-3 text-sm">
-                <select id="suspectStatut" class="glass-input w-full rounded-xl p-3 text-sm">
-                    <option value="En règle">En règle</option>
-                    <option value="Recherché">Recherché</option>
-                </select>
+
+                <div class="space-y-3 pt-2">
+                    <input type="text" id="suspectNom" placeholder="Nom Prénom" class="glass-input w-full rounded-xl p-3 text-sm">
+                    <input type="text" id="suspectTel" placeholder="Téléphone" class="glass-input w-full rounded-xl p-3 text-sm">
+                    <input type="text" id="suspectPhoto" placeholder="Lien Photo" class="glass-input w-full rounded-xl p-3 text-sm">
+                    
+                    <select id="suspectStatut" class="glass-input w-full rounded-xl p-3 text-sm">
+                        <option value="En règle">Statut : En règle</option>
+                        <option value="Recherché">Statut : Recherché</option>
+                        <option value="Dangereux">Statut : Dangereux</option>
+                    </select>
+                </div>
+
                 <button onclick="saveSuspect()" id="saveBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl transition-all uppercase text-[10px] shadow-lg">Finaliser & Archiver</button>
             </div>
         </aside>
@@ -147,66 +167,88 @@
             "Crime": "border-red-500/30 bg-red-500/5",
             "Stupéfiants & Contrebande": "border-purple-500/30 bg-purple-500/5",
             "Objet illégaux": "border-purple-500/30 bg-purple-500/5",
+            "Objet illégaux et drogues": "border-purple-500/30 bg-purple-500/5",
             "Armes": "border-slate-500/30 bg-slate-500/5"
         };
 
+        [cite_start]// 1. Initialisation : Chargement des données [cite: 1]
         async function init() {
-            document.getElementById('ticketDate').innerText = new Date().toLocaleString('fr-FR');
-            const res = await fetch('/api/individus?type=lois');
-            const data = await res.json();
-            const temp = {};
-            data.forEach(i => {
-                if(!temp[i.categorie]) temp[i.categorie] = { name: i.categorie, style: styles[i.categorie] || "", items: [] };
-                temp[i.categorie].items.push(i);
-            });
-            categories = Object.values(temp);
-            renderFilters();
-            renderLaws();
+            try {
+                document.getElementById('ticketDate').innerText = new Date().toLocaleString('fr-FR');
+                
+                const res = await fetch('/api/individus?type=lois');
+                const data = await res.json();
+                
+                const temp = {};
+                data.forEach(i => {
+                    if(!temp[i.categorie]) {
+                        temp[i.categorie] = { 
+                            name: i.categorie, 
+                            style: styles[i.categorie] || "border-slate-500/30 bg-slate-500/5", 
+                            items: [] 
+                        };
+                    }
+                    temp[i.categorie].items.push(i);
+                });
+                
+                categories = Object.values(temp);
+                renderFilters();
+                renderLaws();
+            } catch (error) {
+                console.error("Erreur d'initialisation:", error);
+                document.getElementById('lawsContainer').innerHTML = `<p class="text-red-500 text-center">Erreur de connexion à la base de données.</p>`;
+            }
         }
 
+        // 2. Création des boutons de filtres
         function renderFilters() {
             const container = document.getElementById('filterContainer');
             categories.forEach(cat => {
                 const btn = document.createElement('button');
                 btn.className = 'filter-btn px-4 py-2 rounded-full border border-white/10 text-[9px] font-black uppercase transition-all';
                 btn.innerText = cat.name;
-                btn.onclick = () => filterByCategory(cat.name, btn);
+                btn.onclick = (e) => filterByCategory(cat.name, e.target);
                 container.appendChild(btn);
             });
         }
 
+        // 3. Logique des Filtres
         function filterByCategory(name, element) {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            if (element) element.classList.add('active');
-            document.querySelectorAll('.law-group').forEach(c => {
-                c.style.display = (name === 'all' || c.getAttribute('data-category') === name) ? "" : "none";
+            element.classList.add('active');
+            
+            document.querySelectorAll('.law-group').forEach(group => {
+                group.style.display = (name === 'all' || group.getAttribute('data-category') === name) ? "block" : "none";
             });
         }
 
+        // 4. Recherche Textuelle
         function filterLaws() {
-            const t = document.getElementById('searchBar').value.toLowerCase();
-            document.querySelectorAll('.law-group button').forEach(b => {
-                const match = b.innerText.toLowerCase().includes(t);
-                b.style.display = match ? "" : "none";
+            const query = document.getElementById('searchBar').value.toLowerCase();
+            document.querySelectorAll('.law-item').forEach(btn => {
+                const text = btn.innerText.toLowerCase();
+                btn.style.display = text.includes(query) ? "block" : "none";
             });
         }
 
+        // 5. Affichage des cartes de lois
         function renderLaws() {
             const container = document.getElementById('lawsContainer');
             container.innerHTML = categories.map(cat => `
                 <div class="law-group" data-category="${cat.name}">
-                    <h2 class="text-[10px] font-black uppercase text-slate-500 mb-4 ml-2">${cat.name}</h2>
+                    <h2 class="text-[10px] font-black uppercase text-slate-500 mb-4 ml-2 tracking-widest">${cat.name}</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         ${cat.items.map(i => {
-                            const useQty = (cat.name === "Stupéfiants & Contrebande" || cat.name === "Objet illégaux et drogues");
+                            // Détection automatique du besoin de quantité pour les drogues/objets
+                            const useQty = (cat.name.includes("Stup") || cat.name.includes("Objet"));
                             return `
-                            <button onclick="toggleItem(${i.id}, ${useQty})" id="law-${i.id}" class="glass-card p-4 text-left border-l-4 ${cat.style} relative">
+                            <button onclick="toggleItem(${i.id}, ${useQty})" id="law-${i.id}" class="law-item glass-card p-4 text-left border-l-4 ${cat.style} relative">
                                 <div class="flex justify-between items-start mb-1">
-                                    <span class="text-xs font-bold text-white">${i.label} ${useQty ? '<span class="text-orange-400">(Qté)</span>' : ''}</span>
-                                    <span class="text-[10px] font-mono text-blue-400 font-bold">${i.amende}$</span>
+                                    <span class="text-xs font-bold text-white uppercase">${i.label} ${useQty ? '<span class="text-orange-400 font-black ml-1">(Qté)</span>' : ''}</span>
+                                    <span class="text-[10px] font-mono text-blue-400 font-black">${i.amende}$</span>
                                 </div>
-                                ${i.sanction ? `<p class="text-[9px] text-slate-400 italic leading-tight">${i.sanction}</p>` : ''}
-                                <div id="badge-${i.id}" class="hidden absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">x1</div>
+                                ${i.sanction ? `<p class="text-[9px] text-slate-400 italic leading-tight mt-1 opacity-70">${i.sanction}</p>` : ''}
+                                <div id="badge-${i.id}" class="hidden absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full z-10 shadow-lg">x1</div>
                                 <div class="selection-indicator absolute inset-0 border-2 border-blue-500 rounded-2xl opacity-0 pointer-events-none"></div>
                             </button>`;
                         }).join('')}
@@ -214,82 +256,134 @@
                 </div>`).join('');
         }
 
+        // 6. Gestion du Panier
         function toggleItem(id, askQty = false) {
-            const item = categories.flatMap(c => c.items).find(i => i.id === id);
+            const allItems = categories.flatMap(c => c.items);
+            const item = allItems.find(i => i.id === id);
             const idx = cart.findIndex(i => i.id === id);
-            const el = document.getElementById(`law-${id}`).querySelector('.selection-indicator');
+            
+            const btn = document.getElementById(`law-${id}`);
+            const indicator = btn.querySelector('.selection-indicator');
             const badge = document.getElementById(`badge-${id}`);
 
             if(idx > -1) {
+                // Déjà sélectionné : on retire
                 cart.splice(idx, 1);
-                el.classList.replace('opacity-100', 'opacity-0');
+                indicator.style.opacity = "0";
                 badge.classList.add('hidden');
             } else {
+                // Pas sélectionné : on ajoute
                 let qty = 1;
                 if(askQty) {
                     const input = prompt(`Quantité pour : ${item.label}`, "1");
-                    qty = parseInt(input) || 1;
-                    if(qty <= 0) return;
+                    qty = parseInt(input);
+                    if(isNaN(qty) || qty <= 0) return;
                 }
+                
                 cart.push({ ...item, qty: qty });
-                el.classList.replace('opacity-0', 'opacity-100');
-                if(qty > 1) { badge.innerText = `x${qty}`; badge.classList.remove('hidden'); }
+                indicator.style.opacity = "1";
+                if(qty > 1) {
+                    badge.innerText = `x${qty}`;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.innerText = `x1`;
+                    badge.classList.remove('hidden');
+                }
             }
             calculate();
         }
 
+        // 7. Calculs des peines
         function calculate() {
             const isPrimo = document.getElementById('firstOffenseCheck').checked;
-            const isDouble = document.getElementById('doubleFineCheck').checked;
             
-            let f = cart.reduce((a, i) => a + (i.amende * (i.qty || 1)), 0);
-            let p = cart.reduce((a, i) => a + (i.prison * (i.qty || 1)), 0);
-            let b = cart.reduce((a, i) => i.ban > a ? i.ban : a, 0);
+            let fine = 0;
+            let prison = 0;
+            let ban = 0;
+
+            cart.forEach(i => {
+                fine += (i.amende * i.qty);
+                prison += (i.prison || 0);
+                if (parseInt(i.ban) > ban) ban = parseInt(i.ban);
+            });
 
             if(isPrimo) { 
-                f = Math.floor(f/2);
-                if(b < 999) b = 0; // Annule le ban temporaire si primo
+                fine = Math.floor(fine / 2);
+                if(ban < 999) ban = 0; // Annule le ban récidive pour les primo
             }
-            if(isDouble) f = f * 2;
 
-            document.getElementById('totalFine').innerText = f.toLocaleString() + " $";
-            document.getElementById('totalPrison').innerText = p + " Min";
+            document.getElementById('totalFine').innerText = fine.toLocaleString() + " $";
+            document.getElementById('totalPrison').innerText = prison + " Min";
             
             const banSec = document.getElementById('banSection');
-            if(b > 0) {
+            if(ban > 0) {
                 banSec.classList.remove('hidden');
-                document.getElementById('maxBan').innerText = b >= 999 ? "DÉFINITIF" : b + " J";
+                document.getElementById('maxBan').innerText = ban >= 999 ? "DÉFINITIF" : ban + " Jours";
             } else {
                 banSec.classList.add('hidden');
             }
 
-            document.getElementById('cartList').innerHTML = cart.map(i => `
+            // Mise à jour de la liste visuelle dans le ticket
+            const cartHtml = cart.length ? cart.map(i => `
                 <div class="flex justify-between border-b border-slate-200 pb-1 uppercase">
                     <span>${i.label} ${i.qty > 1 ? '(x'+i.qty+')' : ''}</span>
-                    <span class="font-bold">${(i.amende * (i.qty || 1)).toLocaleString()}$</span>
-                </div>`).join('');
+                    <span class="font-bold">${(i.amende * i.qty).toLocaleString()}$</span>
+                </div>`).join('') : '<p class="text-center opacity-40 italic">Aucune infraction sélectionnée</p>';
+            
+            document.getElementById('cartList').innerHTML = cartHtml;
         }
 
+        [cite_start]// 8. Sauvegarde dans la base de données [cite: 1]
         async function saveSuspect() {
             const nom = document.getElementById('suspectNom').value;
-            if(!nom || !cart.length) return alert("Données incomplètes.");
-            const body = { 
-                nom, telephone: document.getElementById('suspectTel').value || "Inconnu",
+            const btn = document.getElementById('saveBtn');
+
+            if(!nom || cart.length === 0) {
+                alert("Veuillez saisir un nom et au moins une infraction.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Traitement...";
+
+            const payload = { 
+                nom: nom,
+                telephone: document.getElementById('suspectTel').value || "Non renseigné",
                 statut: document.getElementById('suspectStatut').value,
                 photo_url: document.getElementById('suspectPhoto').value || "",
                 motif: cart.map(i => `${i.label}${i.qty > 1 ? ' (x'+i.qty+')' : ''}`).join(', '), 
                 casiers: `Amende: ${document.getElementById('totalFine').innerText} | Prison: ${document.getElementById('totalPrison').innerText} | Ban: ${document.getElementById('maxBan').innerText}`, 
                 derniere_intervention: new Date().toLocaleDateString('fr-FR') 
             };
-            await fetch('/api/individus', { method: 'POST', body: JSON.stringify(body) });
-            window.location.href = "Individus.html";
+
+            try {
+                await fetch('/api/individus', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload) 
+                });
+                alert("Dossier archivé avec succès !");
+                window.location.href = "Individus.html";
+            } catch (error) {
+                alert("Erreur lors de la sauvegarde.");
+                btn.disabled = false;
+                btn.innerText = "Finaliser & Archiver";
+            }
         }
 
+        // 9. Copie Rapport
         function copyReport() {
-            const report = `👤 Individu : ${document.getElementById('suspectNom').value}\n⚖️ Amende : ${document.getElementById('totalFine').innerText}\n⏳ Prison : ${document.getElementById('totalPrison').innerText}\n🚫 Ban : ${document.getElementById('maxBan').innerText}\n📜 Motifs : ${cart.map(i => i.label).join(', ')}`;
+            const nom = document.getElementById('suspectNom').value || "Suspect Inconnu";
+            const report = `👤 **Individu** : ${nom}
+⚖️ **Amende** : ${document.getElementById('totalFine').innerText}
+⏳ **Prison** : ${document.getElementById('totalPrison').innerText}
+🚫 **Ban** : ${document.getElementById('maxBan').innerText}
+📜 **Motifs** : ${cart.map(i => i.label).join(', ')}`;
+
             navigator.clipboard.writeText(report);
-            alert("Copié !");
+            alert("Rapport copié dans le presse-papier !");
         }
+
         init();
     </script>
 </body>
