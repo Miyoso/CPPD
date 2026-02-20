@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPPD • Terminal de Justice</title>
+    <title>CPPD • Unité de Renseignement</title>
     <link rel="icon" type="image/png" href="LogoCPPD.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
@@ -13,7 +13,6 @@
             --glass-border: rgba(255, 255, 255, 0.1);
             --accent-blue: #3b82f6;
         }
-
         body { 
             background: radial-gradient(circle at 50% 0%, #1e293b 0%, #020617 100%);
             background-color: #020617;
@@ -21,7 +20,6 @@
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
         }
-
         body::before {
             content: "";
             position: fixed;
@@ -31,14 +29,12 @@
             background-position: center; background-size: contain;
             opacity: 0.03; pointer-events: none; z-index: -1;
         }
-
         .glass {
             background: var(--glass);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--glass-border);
         }
-
         .glass-card {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(12px);
@@ -46,16 +42,12 @@
             border-radius: 1.5rem;
             transition: all 0.3s ease;
         }
-
         .glass-input {
             background: rgba(0, 0, 0, 0.4) !important;
             border: 1px solid var(--glass-border) !important;
             color: white !important;
             outline: none;
         }
-
-        .glass-input:focus { border-color: var(--accent-blue) !important; }
-
         .ticket-receipt {
             background: #f8fafc;
             color: #1e293b;
@@ -63,30 +55,19 @@
             font-family: 'JetBrains Mono', monospace;
             border-radius: 4px;
         }
-
         .filter-btn.active { background: var(--accent-blue); color: white; }
-        
-        .scanline {
-            width: 100%; height: 2px;
-            background: rgba(59, 130, 246, 0.05);
-            position: fixed; top: 0; z-index: 100;
-            animation: scan 6s linear infinite;
-        }
-        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
-        
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
     </style>
 </head>
 <body class="p-4 md:p-8">
-    <div class="scanline"></div>
 
-    <header class="max-w-7xl mx-auto glass rounded-[2rem] p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
+    <header class="max-w-7xl mx-auto glass rounded-[2rem] p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-6 shadow-2xl">
         <div class="flex items-center gap-5">
-            <img src="LogoCPPD.png" class="w-12 h-12 object-contain">
+            <img src="LogoCPPD.png" class="w-12 h-12 object-contain drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]">
             <div>
-                <h1 class="text-2xl font-black text-white tracking-tighter uppercase italic">Central Database</h1>
-                <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Calculateur Pénal • Intelligence</p>
+                <h1 class="text-2xl font-black text-white tracking-tighter uppercase italic">Unité de Renseignement C.P.P.D</h1>
+                <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Système de Justice Centralisé</p>
             </div>
         </div>
         <div class="flex gap-3">
@@ -101,62 +82,52 @@
             <div class="glass-card p-4">
                 <div class="relative w-full">
                     <input type="text" id="searchBar" onkeyup="filterLaws()" placeholder="Rechercher une infraction..." class="glass-input w-full rounded-xl p-4 pl-12 text-sm">
-                    <svg class="w-5 h-5 text-slate-500 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </div>
             </div>
-
             <div id="filterContainer" class="flex flex-wrap gap-2">
-                <button onclick="filterByCategory('all')" class="filter-btn active px-4 py-2 rounded-full border border-white/10 text-[9px] font-black uppercase tracking-widest transition-all">Tous</button>
+                <button onclick="filterByCategory('all')" class="filter-btn active px-4 py-2 rounded-full border border-white/10 text-[9px] font-black uppercase transition-all">Flux Intégral</button>
             </div>
-
             <div id="lawsContainer" class="space-y-8 pb-20"></div>
         </div>
 
         <aside class="space-y-6">
             <div class="ticket-receipt shadow-2xl">
                 <div class="text-center border-b border-dashed border-slate-400 pb-4 mb-4">
-                    <h2 class="text-sm font-black uppercase tracking-tighter">Procès-Verbal Officiel</h2>
+                    <h2 class="text-sm font-black uppercase">Procès-Verbal Officiel</h2>
                     <p class="text-[9px] opacity-70" id="ticketDate">--/--/----</p>
                 </div>
-                
                 <div id="cartList" class="space-y-2 text-[10px] mb-6 min-h-[50px]"></div>
-
                 <div class="border-t border-dashed border-slate-400 pt-4 space-y-2 mb-6">
                     <div class="flex justify-between font-black text-lg">
-                        <span>AMENDE</span>
+                        <span>SANCTION PÉCUNIAIRE</span>
                         <span id="totalFine">0 $</span>
                     </div>
                     <div class="flex justify-between text-[11px] font-bold text-blue-800">
-                        <span>CELLULE</span>
+                        <span>PRIVATION DE LIBERTÉ</span>
                         <span id="totalPrison">0 Min</span>
                     </div>
+                    <div id="banSection" class="hidden flex justify-between text-[11px] font-bold text-red-600">
+                        <span>BANNISSEMENT</span>
+                        <span id="maxBan">-</span>
+                    </div>
                 </div>
-
-                <button onclick="copyReport()" class="w-full bg-slate-200 border-2 border-slate-400 text-slate-800 font-bold py-3 rounded text-[10px] uppercase hover:bg-slate-300 transition-all">
-                    Copier le rapport
-                </button>
+                <button onclick="copyReport()" class="w-full bg-slate-200 border-2 border-slate-400 text-slate-800 font-bold py-3 rounded text-[10px] uppercase hover:bg-slate-300">Générer le Compte-Rendu</button>
             </div>
 
             <div class="glass-card p-6 space-y-4">
-                <h3 class="text-xs font-black text-white uppercase tracking-widest border-l-2 border-blue-500 pl-3">Suspect</h3>
-                
+                <h3 class="text-xs font-black text-white uppercase border-l-2 border-blue-500 pl-3">Fiche d'Interpellation</h3>
                 <label class="flex items-center gap-3 p-3 rounded-xl glass-input cursor-pointer">
                     <input type="checkbox" id="firstOffenseCheck" onchange="calculate()" class="w-4 h-4 rounded accent-blue-500">
-                    <span class="text-[10px] font-bold uppercase text-slate-300">1ère Interpellation (-50%)</span>
+                    <span class="text-[10px] font-bold uppercase text-slate-300">Primo-Délinquant (-50%)</span>
                 </label>
-
                 <input type="text" id="suspectNom" placeholder="Nom Prénom" class="glass-input w-full rounded-xl p-3 text-sm">
                 <input type="text" id="suspectTel" placeholder="Téléphone" class="glass-input w-full rounded-xl p-3 text-sm">
-                <input type="text" id="suspectPhoto" placeholder="Lien Photo (URL)" class="glass-input w-full rounded-xl p-3 text-sm">
-                
+                <input type="text" id="suspectPhoto" placeholder="Lien Photo" class="glass-input w-full rounded-xl p-3 text-sm">
                 <select id="suspectStatut" class="glass-input w-full rounded-xl p-3 text-sm">
                     <option value="En règle">En règle</option>
                     <option value="Recherché">Recherché</option>
                 </select>
-
-                <button onclick="saveSuspect()" id="saveBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl transition-all uppercase text-[10px] tracking-widest shadow-lg">
-                    Valider & Archiver
-                </button>
+                <button onclick="saveSuspect()" id="saveBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl transition-all uppercase text-[10px] shadow-lg">Finaliser & Archiver</button>
             </div>
         </aside>
     </main>
@@ -165,13 +136,13 @@
         let categories = [];
         let cart = [];
         const styles = { 
-            "Code de la route": "border-emerald-500/30 bg-emerald-500/5", 
-            "Délit mineur": "border-blue-500/30 bg-blue-500/5", 
-            "Délits moyen": "border-yellow-500/30 bg-yellow-500/5", 
-            "Délits majeur": "border-red-500/30 bg-red-500/5", 
-            "Objet illégaux et drogues": "border-orange-500/30 bg-orange-500/5",
+            "Infractions Routières": "border-emerald-500/30 bg-emerald-500/5", 
+            "Délits de Catégorie I": "border-blue-500/30 bg-blue-500/5", 
+            "Délits de Catégorie II": "border-yellow-500/30 bg-yellow-500/5", 
+            "Délits de Catégorie III": "border-red-500/30 bg-red-500/5", 
+            "Stupéfiants & Contrebande": "border-orange-500/30 bg-orange-500/5",
             "Armes": "border-slate-500/30 bg-slate-500/5",
-            "Crime": "border-purple-500/30 bg-purple-500/5"
+            "Crimes de Haute Gravité": "border-purple-500/30 bg-purple-500/5"
         };
 
         async function init() {
@@ -192,7 +163,7 @@
             const container = document.getElementById('filterContainer');
             categories.forEach(cat => {
                 const btn = document.createElement('button');
-                btn.className = 'filter-btn px-4 py-2 rounded-full border border-white/10 text-[9px] font-black uppercase tracking-widest transition-all';
+                btn.className = 'filter-btn px-4 py-2 rounded-full border border-white/10 text-[9px] font-black uppercase transition-all';
                 btn.innerText = cat.name;
                 btn.onclick = () => filterByCategory(cat.name, btn);
                 container.appendChild(btn);
@@ -207,23 +178,31 @@
             });
         }
 
+        function filterLaws() {
+            const t = document.getElementById('searchBar').value.toLowerCase();
+            document.querySelectorAll('.law-group button').forEach(b => {
+                const match = b.innerText.toLowerCase().includes(t);
+                b.style.display = match ? "" : "none";
+            });
+        }
+
         function renderLaws() {
             const container = document.getElementById('lawsContainer');
             container.innerHTML = categories.map(cat => `
                 <div class="law-group" data-category="${cat.name}">
-                    <h2 class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-4 ml-2">${cat.name}</h2>
+                    <h2 class="text-[10px] font-black uppercase text-slate-500 mb-4 ml-2">${cat.name}</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         ${cat.items.map(i => {
-                            const useQty = cat.name === "Objet illégaux et drogues" && !i.label.toLowerCase().includes("matériel");
+                            const useQty = (cat.name === "Stupéfiants & Contrebande" || cat.name === "Objet illégaux et drogues") && !i.label.toLowerCase().includes("matériel");
                             return `
-                            <button onclick="toggleItem(${i.id}, ${useQty})" id="law-${i.id}" class="glass-card p-4 text-left border-l-4 ${cat.style} relative group">
+                            <button onclick="toggleItem(${i.id}, ${useQty})" id="law-${i.id}" class="glass-card p-4 text-left border-l-4 ${cat.style} relative">
                                 <div class="flex justify-between items-start mb-1">
                                     <span class="text-xs font-bold text-white">${i.label} ${useQty ? '<span class="text-orange-400">(Qté)</span>' : ''}</span>
                                     <span class="text-[10px] font-mono text-blue-400 font-bold">${i.amende}$</span>
                                 </div>
                                 ${i.sanction ? `<p class="text-[9px] text-slate-400 italic leading-tight">${i.sanction}</p>` : ''}
                                 <div id="badge-${i.id}" class="hidden absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">x1</div>
-                                <div class="selection-indicator absolute inset-0 border-2 border-blue-500 rounded-2xl opacity-0 transition-all pointer-events-none"></div>
+                                <div class="selection-indicator absolute inset-0 border-2 border-blue-500 rounded-2xl opacity-0 pointer-events-none"></div>
                             </button>`;
                         }).join('')}
                     </div>
@@ -255,11 +234,27 @@
         }
 
         function calculate() {
+            const isPrimo = document.getElementById('firstOffenseCheck').checked;
             let f = cart.reduce((a, i) => a + (i.amende * (i.qty || 1)), 0);
-            let p = cart.reduce((a, i) => a + i.prison, 0);
-            if(document.getElementById('firstOffenseCheck').checked) f = Math.floor(f/2);
+            let p = cart.reduce((a, i) => a + (i.prison * (i.qty || 1)), 0);
+            let b = cart.reduce((a, i) => i.ban > a ? i.ban : a, 0);
+
+            if(isPrimo) { 
+                f = Math.floor(f/2);
+                if(b < 999) b = 0; // Annule le ban temporaire si primo, garde le définitif
+            }
+
             document.getElementById('totalFine').innerText = f.toLocaleString() + " $";
             document.getElementById('totalPrison').innerText = p + " Min";
+            
+            const banSec = document.getElementById('banSection');
+            if(b > 0) {
+                banSec.classList.remove('hidden');
+                document.getElementById('maxBan').innerText = b >= 999 ? "DÉFINITIF" : b + " J";
+            } else {
+                banSec.classList.add('hidden');
+            }
+
             document.getElementById('cartList').innerHTML = cart.map(i => `
                 <div class="flex justify-between border-b border-slate-200 pb-1 uppercase">
                     <span>${i.label} ${i.qty > 1 ? '(x'+i.qty+')' : ''}</span>
@@ -269,23 +264,24 @@
 
         async function saveSuspect() {
             const nom = document.getElementById('suspectNom').value;
-            if(!nom || !cart.length) return alert("Nom et infractions requis.");
+            if(!nom || !cart.length) return alert("Données incomplètes.");
             const body = { 
-                nom, telephone: document.getElementById('suspectTel').value || "Inconnu", statut: document.getElementById('suspectStatut').value,
-                photo_url: document.getElementById('suspectPhoto').value || "", motif: cart.map(i => `${i.label}${i.qty > 1 ? ' (x'+i.qty+')' : ''}`).join(', '), 
+                nom, telephone: document.getElementById('suspectTel').value || "Inconnu",
+                statut: document.getElementById('suspectStatut').value,
+                photo_url: document.getElementById('suspectPhoto').value || "",
+                motif: cart.map(i => `${i.label}${i.qty > 1 ? ' (x'+i.qty+')' : ''}`).join(', '), 
                 casiers: `Amende: ${document.getElementById('totalFine').innerText} | Prison: ${document.getElementById('totalPrison').innerText}`, 
                 derniere_intervention: new Date().toLocaleDateString('fr-FR') 
             };
-            const res = await fetch('/api/individus', { method: 'POST', body: JSON.stringify(body) });
-            if(res.ok) window.location.href = "Individus.html";
+            await fetch('/api/individus', { method: 'POST', body: JSON.stringify(body) });
+            window.location.href = "Individus.html";
         }
 
         function copyReport() {
-            const nom = document.getElementById('suspectNom').value || "Inconnu";
-            const report = `📋 **RAPPORT CPPD**\n👤 **Suspect :** ${nom}\n⚖️ **Amende :** ${document.getElementById('totalFine').innerText}\n⏳ **Temps :** ${document.getElementById('totalPrison').innerText}`;
-            navigator.clipboard.writeText(report); alert("Rapport copié !");
+            const report = `👤 Individu : ${document.getElementById('suspectNom').value}\n⚖️ Amende : ${document.getElementById('totalFine').innerText}\n⏳ Prison : ${document.getElementById('totalPrison').innerText}`;
+            navigator.clipboard.writeText(report);
+            alert("Copié !");
         }
-
         init();
     </script>
 </body>
