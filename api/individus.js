@@ -8,13 +8,16 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
         try {
             if (type === 'lois') {
-                return res.status(200).json(await sql`SELECT * FROM lois ORDER BY categorie ASC, label ASC`);
+                const lois = await sql`SELECT * FROM lois ORDER BY categorie ASC, label ASC`;
+                return res.status(200).json(lois);
             }
             if (type === 'logs') {
-                return res.status(200).json(await sql`SELECT * FROM logs ORDER BY date DESC LIMIT 100`);
+                const logs = await sql`SELECT * FROM logs ORDER BY date DESC LIMIT 100`;
+                return res.status(200).json(logs);
             }
             if (type === 'stock') {
-                return res.status(200).json(await sql`SELECT * FROM stock_armes ORDER BY modele ASC`);
+                const stock = await sql`SELECT * FROM stock_armes ORDER BY modele ASC`;
+                return res.status(200).json(stock);
             }
 
             const result = await sql`
@@ -59,12 +62,9 @@ export default async function handler(req, res) {
                 const oldWeapon = await sql`SELECT agent_detenteur, numero_serie FROM stock_armes WHERE id = ${id_arme}`;
                 const oldAgent = oldWeapon[0]?.agent_detenteur || 'Inconnu';
                 const serial = oldWeapon[0]?.numero_serie || 'Inconnu';
-
                 await sql`UPDATE stock_armes SET agent_detenteur = ${data.agent} WHERE id = ${id_arme}`;
-                
                 await sql`INSERT INTO logs (action, detail, officier, date) 
                           VALUES ('ARMURERIE', ${'Transfert Arme (' + serial + ') : ' + oldAgent + ' --> ' + data.agent}, 'Système', NOW())`;
-                
                 return res.status(200).json({ message: 'Stock mis à jour' });
             }
 
