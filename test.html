@@ -7,20 +7,14 @@
     <link rel="icon" type="image/png" href="LogoCPPD.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { 
-            background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%); 
-            background-color: #0f172a; color: #cbd5e1; min-height: 100vh; 
-        }
+        body { background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%); background-color: #0f172a; color: #cbd5e1; min-height: 100vh; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
         .recidiviste-pulse { animation: pulse-red 2s infinite; }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-        .custom-scroll::-webkit-scrollbar { width: 3px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #334155; }
     </style>
 </head>
 <body class="p-4 md:p-8 flex flex-col antialiased">
-
     <header class="max-w-7xl mx-auto w-full mb-8">
         <div class="flex flex-col md:flex-row justify-between items-center bg-slate-800/50 p-6 rounded-3xl border border-slate-700/50 shadow-2xl gap-6">
             <div class="flex items-center gap-5">
@@ -42,42 +36,33 @@
     <main class="max-w-7xl mx-auto w-full space-y-8">
         <div class="flex flex-col md:flex-row gap-4">
             <div class="relative flex-grow">
-                <input type="text" id="search" placeholder="Nom, matricule ou infraction..." onkeyup="filter()" class="w-full bg-slate-900/80 border border-slate-700 rounded-2xl p-4 text-white outline-none focus:ring-2 focus:ring-blue-500/50 pl-12 shadow-inner">
+                <input type="text" id="search" placeholder="Nom, matricule ou infraction..." onkeyup="filter()" class="w-full bg-slate-900/80 border border-slate-700 rounded-2xl p-4 text-white outline-none pl-12 shadow-inner">
                 <svg class="w-5 h-5 text-slate-500 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
-            <select id="filterStatut" onchange="filter()" class="bg-slate-900 border border-slate-700 text-white rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-blue-500/50 font-bold text-xs uppercase cursor-pointer">
+            <select id="filterStatut" onchange="filter()" class="bg-slate-900 border border-slate-700 text-white rounded-2xl px-6 py-4 outline-none font-bold text-xs uppercase cursor-pointer">
                 <option value="all">Tous les statuts</option>
                 <option value="Recherché">Recherchés</option>
-                <option value="Dette">Impayés</option>
                 <option value="En règle">En règle</option>
             </select>
         </div>
-
         <div id="container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
     </main>
 
     <script>
         let suspects = [];
 
+        async function load() {
+            try {
+                const res = await fetch('/api/individus');
+                suspects = await res.json();
+                document.getElementById('totalCount').innerText = `${suspects.length} Individus`;
+                render(suspects);
+            } catch (e) { console.error(e); }
+        }
+
         async function updateStatus(nom, newStatus) {
             await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ statut: newStatus }) });
             load();
-        }
-
-        async function editName(ancienNom) {
-            const nouveauNom = prompt("Nouveau Nom Prénom :", ancienNom);
-            if (nouveauNom && nouveauNom !== ancienNom) {
-                await fetch(`/api/individus?nom=${encodeURIComponent(ancienNom)}`, { method: 'PATCH', body: JSON.stringify({ nouveau_nom: nouveauNom }) });
-                load();
-            }
-        }
-
-        async function editPhone(nom, ancienTel) {
-            const nouveauTel = prompt("Nouveau numéro :", ancienTel);
-            if (nouveauTel && nouveauTel !== ancienTel) {
-                await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ nouveau_telephone: nouveauTel }) });
-                load();
-            }
         }
 
         async function updatePayment(id, status) {
@@ -94,8 +79,8 @@
         }
 
         async function updatePhoto(nom) {
-            const newPhoto = prompt("Lien de la photo (URL Goopics/Discord) :");
-            if (newPhoto !== null) {
+            const newPhoto = prompt("Lien de la photo :");
+            if (newPhoto) {
                 await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ photo_url: newPhoto }) });
                 load();
             }
@@ -106,57 +91,56 @@
         }
 
         async function deleteSuspect(nom) {
-            const motif = prompt("Motif de suppression :");
-            const officier = prompt("Votre Matricule :");
-            if (motif && officier) {
-                if (confirm(`Supprimer définitivement ${nom} ?`)) {
-                    await fetch(`/api/individus?nom=${encodeURIComponent(nom)}&motif_suppression=${encodeURIComponent(motif)}&officier=${encodeURIComponent(officier)}`, { method: 'DELETE' });
-                    load();
-                }
+            if (confirm(`Supprimer ${nom} ?`)) {
+                await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'DELETE' });
+                load();
             }
-        }
-
-        function copyCasier(nom) {
-            const s = suspects.find(x => x.nom === nom);
-            if(!s) return;
-            const text = `📁 DOSSIER : ${s.nom}\n📞 Tél: ${s.telephone}\n⚠️ Statut: ${s.statut}\n\n⚖️ CRIMES :\n${s.historique.map(h => `- [${h.derniere_intervention}] ${h.motif} (${h.paiement})`).join('\n')}`;
-            navigator.clipboard.writeText(text);
-            alert("Casier copié !");
-        }
-
-        async function load() {
-            try {
-                const res = await fetch('/api/individus');
-                suspects = await res.json();
-                document.getElementById('totalCount').innerText = `${suspects.length} Individus`;
-                render(suspects);
-            } catch (e) { console.error(e); }
         }
 
         function render(data) {
             document.getElementById('container').innerHTML = data.map(i => {
                 const isR = i.statut === "Recherché";
-                const isRecidiviste = i.historique.length >= 3;
-
                 return `
                 <div class="bg-slate-800/40 border-2 rounded-[2.5rem] overflow-hidden flex flex-col transition-all hover:scale-[1.01] shadow-2xl ${isR ? 'border-red-500 recidiviste-pulse' : 'border-slate-700/50'}">
                     <div class="relative group h-64 overflow-hidden cursor-pointer" onclick="updatePhoto('${i.nom}')">
-                        <img src="${i.photo_url || 'https://via.placeholder.com/400x600/0f172a/475569?text=PHOTO+MANQUANTE'}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 group-hover:brightness-50">
-                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                             <span class="bg-black/60 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">Changer Photo</span>
+                        <img src="${i.photo_url || 'https://via.placeholder.com/400x600/0f172a/475569?text=PHOTO+MANQUANTE'}" class="w-full h-full object-cover">
+                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900 p-6">
+                            <h2 class="text-2xl font-black text-white uppercase italic tracking-tighter truncate">${i.nom}</h2>
+                            <p class="text-[10px] text-blue-400 font-bold uppercase tracking-widest">${i.telephone}</p>
                         </div>
-                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900 p-6 pointer-events-none">
-                            <h2 onclick="event.stopPropagation(); editName('${i.nom}')" class="text-2xl font-black text-white uppercase italic tracking-tighter truncate hover:text-blue-400 cursor-pointer pointer-events-auto">${i.nom}</h2>
-                            <p onclick="event.stopPropagation(); editPhone('${i.nom}', '${i.telephone}')" class="text-[10px] text-blue-400 font-bold uppercase tracking-widest hover:text-white cursor-pointer pointer-events-auto">${i.telephone}</p>
-                        </div>
-                        ${isRecidiviste ? '<span class="absolute top-4 left-4 bg-red-600 text-white text-[8px] font-black px-2 py-1 rounded-full uppercase">Récidiviste</span>' : ''}
                     </div>
-
                     <div class="p-6 space-y-4 flex-grow flex flex-col">
-                        <div class="flex gap-2">
-                            <select onchange="updateStatus('${i.nom}', this.value)" class="flex-grow text-[10px] font-black rounded-xl px-4 py-3 outline-none transition-all cursor-pointer ${isR ? 'bg-red-600 text-white' : 'bg-slate-900 text-emerald-400 border border-emerald-500/20'}">
-                                <option value="En règle" ${i.statut === 'En règle' ? 'selected' : ''}>EN RÈGLE</option>
-                                <option value="Recherché" ${i.statut === 'Recherché' ? 'selected' : ''}>RECHERCHÉ</option>
-                            </select>
-                            <button onclick="copyCasier('${i.nom}')" class="bg-slate-900 p-3 rounded-xl border border-slate-700 hover:border-white transition-all shadow-lg">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1
+                        <select onchange="updateStatus('${i.nom}', this.value)" class="w-full text-[10px] font-black rounded-xl px-4 py-3 outline-none ${isR ? 'bg-red-600 text-white' : 'bg-slate-900 text-emerald-400 border border-emerald-500/20'}">
+                            <option value="En règle" ${i.statut === 'En règle' ? 'selected' : ''}>EN RÈGLE</option>
+                            <option value="Recherché" ${i.statut === 'Recherché' ? 'selected' : ''}>RECHERCHÉ</option>
+                        </select>
+                        <div class="bg-slate-900/50 p-3 rounded-2xl border border-slate-700/30">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[8px] font-bold text-slate-500 uppercase">${i.derniere_intervention}</span>
+                                <select onchange="updatePayment(${i.id}, this.value)" class="text-[8px] font-black px-1.5 py-0.5 rounded outline-none cursor-pointer ${i.paiement === 'Réglé' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-orange-500/10 text-orange-400'}">
+                                    <option value="Réglé" ${i.paiement === 'Réglé' ? 'selected' : ''}>RÉGLÉ</option>
+                                    <option value="Non réglé" ${i.paiement !== 'Réglé' ? 'selected' : ''}>IMPAYÉ</option>
+                                </select>
+                            </div>
+                            <p onclick="editInfraction(${i.id}, '${i.motif ? i.motif.replace(/'/g, "\\'") : ""}')" class="text-[10px] font-bold text-slate-200 leading-tight hover:text-blue-400 cursor-pointer transition-colors">${i.motif || 'Aucun motif'}</p>
+                            <p class="text-[9px] text-slate-500 italic mt-1">${i.casiers || ''}</p>
+                        </div>
+                        <textarea onblur="saveNote('${i.nom}', this.value)" class="w-full bg-slate-900/80 rounded-2xl p-4 text-[10px] text-slate-400 outline-none h-20" placeholder="Notes...">${i.notes || ''}</textarea>
+                        <button onclick="deleteSuspect('${i.nom}')" class="w-full py-3 text-[9px] font-bold text-slate-600 hover:text-red-500 uppercase tracking-widest">Archiver le dossier</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function filter() {
+            const v = document.getElementById('search').value.toLowerCase();
+            const s = document.getElementById('filterStatut').value;
+            let f = suspects.filter(i => i.nom.toLowerCase().includes(v) || (i.motif && i.motif.toLowerCase().includes(v)));
+            if(s !== 'all') f = f.filter(i => i.statut === s);
+            render(f);
+        }
+
+        load();
+    </script>
+</body>
+</html>
