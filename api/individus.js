@@ -19,6 +19,10 @@ export default async function handler(req, res) {
                 const stock = await sql`SELECT * FROM stock_armes ORDER BY modele ASC`;
                 return res.status(200).json(stock);
             }
+            if (type === 'stats') {
+                const stats = await sql`SELECT COUNT(*) as active_bans FROM individus WHERE casiers LIKE '%Bannissement%' OR casiers LIKE '%DÉFINITIF%'`;
+                return res.status(200).json(stats[0]);
+            }
 
             const result = await sql`
                 SELECT id, nom, telephone, statut, photo_url, notes, derniere_intervention, motif, casiers, paiement
@@ -33,7 +37,6 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
         try {
             const data = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-
             if (type === 'add_weapon') {
                 await sql`INSERT INTO stock_armes (modele, numero_serie, agent_detenteur, date_entree) 
                           VALUES (${data.modele}, ${data.numero_serie}, ${data.agent_detenteur || 'En Stock'}, NOW())`;
@@ -41,7 +44,6 @@ export default async function handler(req, res) {
                           VALUES ('ARMURERIE', ${'Nouvelle arme enregistrée : ' + data.numero_serie}, 'Système', NOW())`;
                 return res.status(200).json({ message: 'Arme enregistrée' });
             }
-
             await sql`INSERT INTO individus (nom, telephone, statut, derniere_intervention, casiers, motif, photo_url, notes, paiement)
                       VALUES (${data.nom}, ${data.telephone}, ${data.statut}, ${data.derniere_intervention}, ${data.casiers}, ${data.motif}, ${data.photo_url}, ${data.notes || ''}, 'Réglé')`;
             await sql`INSERT INTO logs (action, detail, officier, date) VALUES ('AJOUT', ${'Ajout du suspect : ' + data.nom}, 'Système', NOW())`;
@@ -54,17 +56,10 @@ export default async function handler(req, res) {
     if (req.method === 'PATCH') {
         try {
             const data = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-            
             if (type === 'update_weapon') {
-                const oldWeapon = await sql`SELECT agent_detenteur, numero_serie FROM stock_armes WHERE id = ${id_arme}`;
-                const oldAgent = oldWeapon[0]?.agent_detenteur || 'Inconnu';
-                const serial = oldWeapon[0]?.numero_serie || 'Inconnu';
                 await sql`UPDATE stock_armes SET agent_detenteur = ${data.agent} WHERE id = ${id_arme}`;
-                await sql`INSERT INTO logs (action, detail, officier, date) 
-                          VALUES ('ARMURERIE', ${'Transfert Arme (' + serial + ') : ' + oldAgent + ' --> ' + data.agent}, 'Système', NOW())`;
                 return res.status(200).json({ message: 'Stock mis à jour' });
             }
-
             if (infraction_id) {
                 if (data.nouveau_motif) {
                     await sql`UPDATE individus SET motif = ${data.nouveau_motif} WHERE id = ${infraction_id}`;
@@ -73,7 +68,6 @@ export default async function handler(req, res) {
                 }
                 return res.status(200).json({ message: 'Updated' });
             }
-
             if (nom) {
                 if (data.nouveau_nom) await sql`UPDATE individus SET nom = ${data.nouveau_nom} WHERE nom = ${nom}`;
                 else if (data.nouveau_telephone) await sql`UPDATE individus SET telephone = ${data.nouveau_telephone} WHERE nom = ${nom}`;

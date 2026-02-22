@@ -22,21 +22,18 @@
         <div class="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-3xl p-6 shadow-2xl flex flex-col max-h-[85vh]">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-black text-white uppercase italic">Modifier les charges</h2>
-                <button onclick="closeModal()" class="text-slate-500 hover:text-white transition-colors">
+                <button onclick="closeModal()" class="text-slate-500 hover:text-white">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            
             <div class="relative mb-4">
-                <input type="text" id="modalSearch" onkeyup="filterModalLaws()" placeholder="Rechercher une loi..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500/50 pl-10">
+                <input type="text" id="modalSearch" onkeyup="filterModalLaws()" placeholder="Rechercher une loi..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none pl-10">
                 <svg class="w-4 h-4 text-slate-500 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
-
-            <div id="lawList" class="flex-grow overflow-y-auto space-y-2 pr-2 mb-6 custom-scroll"></div>
-            
+            <div id="lawList" class="flex-grow overflow-y-auto space-y-2 pr-2 mb-6"></div>
             <div class="flex gap-3">
-                <button onclick="closeModal()" class="flex-1 py-3 bg-slate-800 text-slate-400 rounded-xl font-bold uppercase text-[10px] hover:bg-slate-700 transition-all">Annuler</button>
-                <button onclick="confirmLaws()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold uppercase text-[10px] shadow-lg hover:bg-blue-500 transition-all">Enregistrer</button>
+                <button onclick="closeModal()" class="flex-1 py-3 bg-slate-800 text-slate-400 rounded-xl font-bold uppercase text-[10px]">Annuler</button>
+                <button onclick="confirmLaws()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold uppercase text-[10px]">Enregistrer</button>
             </div>
         </div>
     </div>
@@ -49,6 +46,7 @@
                     <h1 class="text-2xl font-black text-white tracking-tighter uppercase italic">Central Database</h1>
                     <div class="flex gap-2 mt-1">
                         <span id="totalCount" class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">-- Suspects</span>
+                        <span id="banCount" class="text-[10px] font-bold bg-red-500/20 text-red-500 px-2 py-0.5 rounded-full uppercase tracking-widest border border-red-500/30">0 Ban Actifs</span>
                     </div>
                 </div>
             </div>
@@ -62,7 +60,7 @@
     <main class="max-w-7xl mx-auto w-full space-y-8">
         <div class="flex flex-col md:flex-row gap-4">
             <div class="relative flex-grow">
-                <input type="text" id="search" placeholder="Nom ou infraction..." onkeyup="filter()" class="w-full bg-slate-900/80 border border-slate-700 rounded-2xl p-4 text-white outline-none focus:ring-2 focus:ring-blue-500/50 pl-12 shadow-inner">
+                <input type="text" id="search" placeholder="Nom ou infraction..." onkeyup="filter()" class="w-full bg-slate-900/80 border border-slate-700 rounded-2xl p-4 text-white outline-none pl-12 shadow-inner">
                 <svg class="w-5 h-5 text-slate-500 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
         </div>
@@ -76,10 +74,16 @@
 
         async function load() {
             try {
-                const [resS, resL] = await Promise.all([fetch('/api/individus'), fetch('/api/individus?type=lois')]);
+                const [resS, resL, resStats] = await Promise.all([
+                    fetch('/api/individus'), 
+                    fetch('/api/individus?type=lois'),
+                    fetch('/api/individus?type=stats')
+                ]);
                 suspects = await resS.json();
                 allLois = await resL.json();
+                const stats = await resStats.json();
                 document.getElementById('totalCount').innerText = `${suspects.length} Individus`;
+                document.getElementById('banCount').innerText = `${stats.active_bans} Ban Actifs`;
                 render(suspects);
             } catch (e) { console.error(e); }
         }
@@ -87,27 +91,22 @@
         function filterModalLaws() {
             const query = document.getElementById('modalSearch').value.toLowerCase();
             document.querySelectorAll('.law-item').forEach(el => {
-                const text = el.innerText.toLowerCase();
-                el.style.display = text.includes(query) ? 'flex' : 'none';
+                el.style.display = el.innerText.toLowerCase().includes(query) ? 'flex' : 'none';
             });
         }
 
         function openLawModal(id, currentMotif) {
             currentInfractionId = id;
             const currentCharges = currentMotif ? currentMotif.split(', ') : [];
-            const container = document.getElementById('lawList');
-            document.getElementById('modalSearch').value = '';
-            
-            container.innerHTML = allLois.map(l => `
+            document.getElementById('lawList').innerHTML = allLois.map(l => `
                 <label class="law-item flex items-center gap-3 p-3 bg-slate-800/30 rounded-xl cursor-pointer hover:bg-slate-800 transition-all">
                     <input type="checkbox" value="${l.label}" ${currentCharges.includes(l.label) ? 'checked' : ''} class="w-4 h-4 rounded accent-blue-500">
                     <div class="flex flex-col">
                         <span class="text-[10px] font-bold text-white uppercase">${l.label}</span>
-                        <span class="text-[8px] text-slate-500 uppercase tracking-tighter">${l.categorie}</span>
+                        <span class="text-[8px] text-slate-500 uppercase">${l.categorie}</span>
                     </div>
                 </label>
             `).join('');
-            
             document.getElementById('lawModal').classList.add('active');
         }
 
@@ -188,13 +187,11 @@
                                     <option value="Non réglé" ${i.paiement !== 'Réglé' ? 'selected' : ''}>IMPAYÉ</option>
                                 </select>
                             </div>
-                            <p onclick="openLawModal(${i.id}, '${i.motif ? i.motif.replace(/'/g, "\\'") : ""}')" class="text-[10px] font-bold text-slate-200 leading-tight hover:text-blue-400 cursor-pointer transition-colors">
-                                ${i.motif || 'Aucune charge - Cliquez pour modifier'}
-                            </p>
+                            <p onclick="openLawModal(${i.id}, '${i.motif ? i.motif.replace(/'/g, "\\'") : ""}')" class="text-[10px] font-bold text-slate-200 leading-tight hover:text-blue-400 cursor-pointer transition-colors">${i.motif || 'Aucune charge'}</p>
                             <p class="text-[9px] text-slate-500 italic mt-1">${i.casiers || ''}</p>
                         </div>
                         <textarea onblur="saveNote('${i.nom}', this.value)" class="w-full bg-slate-900/80 rounded-2xl p-4 text-[10px] text-slate-400 outline-none h-20" placeholder="Notes...">${i.notes || ''}</textarea>
-                        <button onclick="deleteSuspect('${i.nom}')" class="w-full py-3 text-[9px] font-bold text-slate-600 hover:text-red-500 uppercase tracking-widest">Archiver le dossier</button>
+                        <button onclick="deleteSuspect('${i.nom}')" class="w-full py-3 text-[9px] font-bold text-slate-600 hover:text-red-500 uppercase">Archiver</button>
                     </div>
                 </div>`;
             }).join('');
