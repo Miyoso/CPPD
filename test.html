@@ -10,11 +10,23 @@
         body { background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%); background-color: #0f172a; color: #cbd5e1; min-height: 100vh; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
-        .recidiviste-pulse { animation: pulse-red 2s infinite; }
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+        .modal.active { display: flex; }
     </style>
 </head>
 <body class="p-4 md:p-8 flex flex-col antialiased">
+
+    <div id="lawModal" class="modal">
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-3xl p-6 shadow-2xl flex flex-col max-h-[90vh]">
+            <h2 class="text-xl font-black text-white mb-4 uppercase italic">Modifier les charges</h2>
+            <div id="lawList" class="flex-grow overflow-y-auto space-y-2 pr-2 mb-6"></div>
+            <div class="flex gap-3">
+                <button onclick="closeModal()" class="flex-1 py-3 bg-slate-700 text-white rounded-xl font-bold uppercase text-xs">Annuler</button>
+                <button onclick="confirmLaws()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold uppercase text-xs shadow-lg">Valider</button>
+            </div>
+        </div>
+    </div>
+
     <header class="max-w-7xl mx-auto w-full mb-8">
         <div class="flex flex-col md:flex-row justify-between items-center bg-slate-800/50 p-6 rounded-3xl border border-slate-700/50 shadow-2xl gap-6">
             <div class="flex items-center gap-5">
@@ -36,28 +48,65 @@
     <main class="max-w-7xl mx-auto w-full space-y-8">
         <div class="flex flex-col md:flex-row gap-4">
             <div class="relative flex-grow">
-                <input type="text" id="search" placeholder="Nom, matricule ou infraction..." onkeyup="filter()" class="w-full bg-slate-900/80 border border-slate-700 rounded-2xl p-4 text-white outline-none pl-12 shadow-inner">
+                <input type="text" id="search" placeholder="Nom ou infraction..." onkeyup="filter()" class="w-full bg-slate-900/80 border border-slate-700 rounded-2xl p-4 text-white outline-none pl-12 shadow-inner">
                 <svg class="w-5 h-5 text-slate-500 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
-            <select id="filterStatut" onchange="filter()" class="bg-slate-900 border border-slate-700 text-white rounded-2xl px-6 py-4 outline-none font-bold text-xs uppercase cursor-pointer">
-                <option value="all">Tous les statuts</option>
-                <option value="Recherché">Recherchés</option>
-                <option value="En règle">En règle</option>
-            </select>
         </div>
         <div id="container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
     </main>
 
     <script>
         let suspects = [];
+        let allLois = [];
+        let currentInfractionId = null;
 
         async function load() {
             try {
-                const res = await fetch('/api/individus');
-                suspects = await res.json();
+                const [resS, resL] = await Promise.all([fetch('/api/individus'), fetch('/api/individus?type=lois')]);
+                suspects = await resS.json();
+                allLois = await resL.json();
                 document.getElementById('totalCount').innerText = `${suspects.length} Individus`;
                 render(suspects);
             } catch (e) { console.error(e); }
+        }
+
+        function openLawModal(id, currentMotif) {
+            currentInfractionId = id;
+            const currentCharges = currentMotif ? currentMotif.split(', ') : [];
+            document.getElementById('lawList').innerHTML = allLois.map(l => `
+                <label class="flex items-center gap-3 p-3 bg-slate-800/50 rounded-xl cursor-pointer hover:bg-slate-800 border border-transparent has-[:checked]:border-blue-500/50">
+                    <input type="checkbox" value="${l.label}" ${currentCharges.includes(l.label) ? 'checked' : ''} class="w-4 h-4 rounded accent-blue-500">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-bold text-white uppercase">${l.label}</span>
+                        <span class="text-[8px] text-slate-500 uppercase">${l.categorie}</span>
+                    </div>
+                </label>
+            `).join('');
+            document.getElementById('lawModal').classList.add('active');
+        }
+
+        function closeModal() { document.getElementById('lawModal').classList.remove('active'); }
+
+        async function confirmLaws() {
+            const selected = Array.from(document.querySelectorAll('#lawList input:checked')).map(i => i.value);
+            await fetch(`/api/individus?infraction_id=${currentInfractionId}`, { method: 'PATCH', body: JSON.stringify({ nouveau_motif: selected.join(', ') }) });
+            closeModal(); load();
+        }
+
+        async function editName(ancienNom) {
+            const nouveauNom = prompt("Nouveau Nom Prénom :", ancienNom);
+            if (nouveauNom && nouveauNom !== ancienNom) {
+                await fetch(`/api/individus?nom=${encodeURIComponent(ancienNom)}`, { method: 'PATCH', body: JSON.stringify({ nouveau_nom: nouveauNom }) });
+                load();
+            }
+        }
+
+        async function editPhone(nom, ancienTel) {
+            const nouveauTel = prompt("Nouveau numéro :", ancienTel);
+            if (nouveauTel && nouveauTel !== ancienTel) {
+                await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ nouveau_telephone: nouveauTel }) });
+                load();
+            }
         }
 
         async function updateStatus(nom, newStatus) {
@@ -70,20 +119,9 @@
             load();
         }
 
-        async function editInfraction(id, ancienMotif) {
-            const nouveauMotif = prompt("Modifier le chef d'accusation :", ancienMotif);
-            if (nouveauMotif && nouveauMotif !== ancienMotif) {
-                await fetch(`/api/individus?infraction_id=${id}`, { method: 'PATCH', body: JSON.stringify({ nouveau_motif: nouveauMotif }) });
-                load();
-            }
-        }
-
         async function updatePhoto(nom) {
             const newPhoto = prompt("Lien de la photo :");
-            if (newPhoto) {
-                await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ photo_url: newPhoto }) });
-                load();
-            }
+            if (newPhoto) { await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ photo_url: newPhoto }) }); load(); }
         }
 
         async function saveNote(nom, noteText) {
@@ -91,8 +129,10 @@
         }
 
         async function deleteSuspect(nom) {
-            if (confirm(`Supprimer ${nom} ?`)) {
-                await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'DELETE' });
+            const motif = prompt("Motif de suppression :");
+            const officier = prompt("Votre Matricule :");
+            if (motif && officier && confirm(`Supprimer ${nom} ?`)) {
+                await fetch(`/api/individus?nom=${encodeURIComponent(nom)}&motif_suppression=${encodeURIComponent(motif)}&officier=${encodeURIComponent(officier)}`, { method: 'DELETE' });
                 load();
             }
         }
@@ -101,28 +141,30 @@
             document.getElementById('container').innerHTML = data.map(i => {
                 const isR = i.statut === "Recherché";
                 return `
-                <div class="bg-slate-800/40 border-2 rounded-[2.5rem] overflow-hidden flex flex-col transition-all hover:scale-[1.01] shadow-2xl ${isR ? 'border-red-500 recidiviste-pulse' : 'border-slate-700/50'}">
+                <div class="bg-slate-800/40 border-2 rounded-[2.5rem] overflow-hidden flex flex-col transition-all hover:scale-[1.01] shadow-2xl ${isR ? 'border-red-500' : 'border-slate-700/50'}">
                     <div class="relative group h-64 overflow-hidden cursor-pointer" onclick="updatePhoto('${i.nom}')">
                         <img src="${i.photo_url || 'https://via.placeholder.com/400x600/0f172a/475569?text=PHOTO+MANQUANTE'}" class="w-full h-full object-cover">
-                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900 p-6">
-                            <h2 class="text-2xl font-black text-white uppercase italic tracking-tighter truncate">${i.nom}</h2>
-                            <p class="text-[10px] text-blue-400 font-bold uppercase tracking-widest">${i.telephone}</p>
+                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900 p-6 pointer-events-none">
+                            <h2 onclick="event.stopPropagation(); editName('${i.nom}')" class="text-2xl font-black text-white uppercase italic tracking-tighter truncate hover:text-blue-400 cursor-pointer pointer-events-auto">${i.nom}</h2>
+                            <p onclick="event.stopPropagation(); editPhone('${i.nom}', '${i.telephone}')" class="text-[10px] text-blue-400 font-bold uppercase tracking-widest hover:text-white cursor-pointer pointer-events-auto">${i.telephone}</p>
                         </div>
                     </div>
                     <div class="p-6 space-y-4 flex-grow flex flex-col">
-                        <select onchange="updateStatus('${i.nom}', this.value)" class="w-full text-[10px] font-black rounded-xl px-4 py-3 outline-none ${isR ? 'bg-red-600 text-white' : 'bg-slate-900 text-emerald-400 border border-emerald-500/20'}">
+                        <select onchange="updateStatus('${i.nom}', this.value)" class="w-full text-[10px] font-black rounded-xl px-4 py-3 outline-none ${isR ? 'bg-red-600 text-white' : 'bg-slate-900 text-emerald-400'}">
                             <option value="En règle" ${i.statut === 'En règle' ? 'selected' : ''}>EN RÈGLE</option>
                             <option value="Recherché" ${i.statut === 'Recherché' ? 'selected' : ''}>RECHERCHÉ</option>
                         </select>
-                        <div class="bg-slate-900/50 p-3 rounded-2xl border border-slate-700/30">
-                            <div class="flex justify-between items-center mb-1">
+                        <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-700/30">
+                            <div class="flex justify-between items-center mb-2">
                                 <span class="text-[8px] font-bold text-slate-500 uppercase">${i.derniere_intervention}</span>
-                                <select onchange="updatePayment(${i.id}, this.value)" class="text-[8px] font-black px-1.5 py-0.5 rounded outline-none cursor-pointer ${i.paiement === 'Réglé' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-orange-500/10 text-orange-400'}">
+                                <select onchange="updatePayment(${i.id}, this.value)" class="text-[8px] font-black px-1.5 py-0.5 rounded outline-none ${i.paiement === 'Réglé' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-orange-500/10 text-orange-400'}">
                                     <option value="Réglé" ${i.paiement === 'Réglé' ? 'selected' : ''}>RÉGLÉ</option>
                                     <option value="Non réglé" ${i.paiement !== 'Réglé' ? 'selected' : ''}>IMPAYÉ</option>
                                 </select>
                             </div>
-                            <p onclick="editInfraction(${i.id}, '${i.motif ? i.motif.replace(/'/g, "\\'") : ""}')" class="text-[10px] font-bold text-slate-200 leading-tight hover:text-blue-400 cursor-pointer transition-colors">${i.motif || 'Aucun motif'}</p>
+                            <p onclick="openLawModal(${i.id}, '${i.motif ? i.motif.replace(/'/g, "\\'") : ""}')" class="text-[10px] font-bold text-slate-200 leading-tight hover:text-blue-400 cursor-pointer transition-colors">
+                                ${i.motif || 'Aucune charge - Cliquez pour modifier'}
+                            </p>
                             <p class="text-[9px] text-slate-500 italic mt-1">${i.casiers || ''}</p>
                         </div>
                         <textarea onblur="saveNote('${i.nom}', this.value)" class="w-full bg-slate-900/80 rounded-2xl p-4 text-[10px] text-slate-400 outline-none h-20" placeholder="Notes...">${i.notes || ''}</textarea>
@@ -134,10 +176,7 @@
 
         function filter() {
             const v = document.getElementById('search').value.toLowerCase();
-            const s = document.getElementById('filterStatut').value;
-            let f = suspects.filter(i => i.nom.toLowerCase().includes(v) || (i.motif && i.motif.toLowerCase().includes(v)));
-            if(s !== 'all') f = f.filter(i => i.statut === s);
-            render(f);
+            render(suspects.filter(i => i.nom.toLowerCase().includes(v) || (i.motif && i.motif.toLowerCase().includes(v))));
         }
 
         load();
