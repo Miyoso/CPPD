@@ -22,18 +22,16 @@
         <div class="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-3xl p-6 shadow-2xl flex flex-col max-h-[85vh]">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-black text-white uppercase italic">Modifier les charges</h2>
-                <button onclick="closeModal()" class="text-slate-500 hover:text-white">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
+                <button onclick="closeModal()" class="text-slate-500 hover:text-white"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
             </div>
             <div class="relative mb-4">
-                <input type="text" id="modalSearch" onkeyup="filterModalLaws()" placeholder="Rechercher une loi..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none pl-10">
+                <input type="text" id="modalSearch" onkeyup="filterModalLaws()" placeholder="Rechercher une loi..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm text-white outline-none pl-10 shadow-inner">
                 <svg class="w-4 h-4 text-slate-500 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </div>
             <div id="lawList" class="flex-grow overflow-y-auto space-y-2 pr-2 mb-6"></div>
             <div class="flex gap-3">
                 <button onclick="closeModal()" class="flex-1 py-3 bg-slate-800 text-slate-400 rounded-xl font-bold uppercase text-[10px]">Annuler</button>
-                <button onclick="confirmLaws()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold uppercase text-[10px]">Enregistrer</button>
+                <button onclick="confirmLaws()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold uppercase text-[10px] shadow-lg">Enregistrer</button>
             </div>
         </div>
     </div>
@@ -46,7 +44,7 @@
                     <h1 class="text-2xl font-black text-white tracking-tighter uppercase italic">Central Database</h1>
                     <div class="flex gap-2 mt-1">
                         <span id="totalCount" class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">-- Suspects</span>
-                        <span id="activeBans" class="text-[10px] font-bold bg-red-500/20 text-red-500 px-2 py-0.5 rounded-full uppercase tracking-widest border border-red-500/30">0 Bans Actifs</span>
+                        <span id="banCount" class="text-[10px] font-bold bg-red-500/20 text-red-500 px-2 py-0.5 rounded-full uppercase tracking-widest border border-red-500/30">0 Ban ce jour</span>
                     </div>
                 </div>
             </div>
@@ -59,7 +57,7 @@
 
     <main class="max-w-7xl mx-auto w-full space-y-8">
         <div class="relative w-full">
-            <input type="text" id="search" placeholder="Rechercher un suspect ou une charge..." onkeyup="filter()" class="w-full bg-slate-900/80 border border-slate-700 rounded-2xl p-4 text-white outline-none pl-12 shadow-inner">
+            <input type="text" id="search" placeholder="Nom ou infraction..." onkeyup="filter()" class="w-full bg-slate-900/80 border border-slate-700 rounded-2xl p-4 text-white outline-none pl-12 shadow-inner">
             <svg class="w-5 h-5 text-slate-500 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
         </div>
         <div id="container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
@@ -72,9 +70,12 @@
 
         async function load() {
             try {
-                const [resS, resL] = await Promise.all([fetch('/api/individus'), fetch('/api/individus?type=lois')]);
+                const [resS, resL, resStats] = await Promise.all([fetch('/api/individus'), fetch('/api/individus?type=lois'), fetch('/api/individus?type=stats')]);
                 suspects = await resS.json();
                 allLois = await resL.json();
+                const stats = await resStats.json();
+                document.getElementById('totalCount').innerText = `${suspects.length} Individus`;
+                document.getElementById('banCount').innerText = `${stats.active_bans || 0} Ban ce jour`;
                 render(suspects);
             } catch (e) { console.error(e); }
         }
@@ -92,7 +93,7 @@
                     <input type="checkbox" value="${l.label}" ${currentCharges.includes(l.label) ? 'checked' : ''} class="w-4 h-4 rounded accent-blue-500">
                     <div class="flex flex-col">
                         <span class="text-[10px] font-bold text-white uppercase">${l.label}</span>
-                        <span class="text-[8px] text-slate-500 uppercase">${l.categorie} (Ban: ${l.ban}j)</span>
+                        <span class="text-[8px] text-slate-500 uppercase">Ban: ${l.ban}j</span>
                     </div>
                 </label>
             `).join('');
@@ -107,28 +108,27 @@
             closeModal(); load();
         }
 
-        async function updateStatus(nom, newStatus) {
-            await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ statut: newStatus }) });
-            load();
+        async function editName(ancienNom) {
+            const nouveauNom = prompt("Nouveau Nom Prénom :", ancienNom);
+            if (nouveauNom && nouveauNom !== ancienNom) {
+                await fetch(`/api/individus?nom=${encodeURIComponent(ancienNom)}`, { method: 'PATCH', body: JSON.stringify({ nouveau_nom: nouveauNom }) });
+                load();
+            }
         }
 
-        async function updatePayment(id, status) {
-            await fetch(`/api/individus?infraction_id=${id}`, { method: 'PATCH', body: JSON.stringify({ paiement: status }) });
-            load();
+        async function editPhone(nom, ancienTel) {
+            const nouveauTel = prompt("Nouveau numéro :", ancienTel);
+            if (nouveauTel && nouveauTel !== ancienTel) {
+                await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ nouveau_telephone: nouveauTel }) });
+                load();
+            }
         }
 
-        async function updatePhoto(nom) {
-            const newPhoto = prompt("Lien de la photo :");
-            if (newPhoto) { await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ photo_url: newPhoto }) }); load(); }
-        }
-
-        async function saveNote(nom, noteText) {
-            await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ notes: noteText }) });
-        }
-
-        async function deleteSuspect(nom) {
-            if (confirm(`Supprimer ${nom} ?`)) { await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'DELETE' }); load(); }
-        }
+        async function updateStatus(nom, s) { await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ statut: s }) }); load(); }
+        async function updatePayment(id, p) { await fetch(`/api/individus?infraction_id=${id}`, { method: 'PATCH', body: JSON.stringify({ paiement: p }) }); load(); }
+        async function updatePhoto(nom) { const p = prompt("URL Photo :"); if (p) { await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ photo_url: p }) }); load(); } }
+        async function saveNote(nom, n) { await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ notes: n }) }); }
+        async function deleteSuspect(nom) { if (confirm(`Supprimer ${nom} ?`)) { await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'DELETE' }); load(); } }
 
         function parseDate(str) {
             const [d, m, y] = str.split('/');
@@ -136,42 +136,34 @@
         }
 
         function updateCountdowns() {
-            let activeCount = 0;
             document.querySelectorAll('[data-ban-end]').forEach(el => {
                 const end = new Date(parseInt(el.dataset.banEnd));
                 const diff = end - new Date();
-                
                 if (diff > 0) {
-                    activeCount++;
                     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
                     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                     el.innerHTML = `<span class="bg-red-600 text-white px-2 py-0.5 rounded text-[8px] font-black uppercase shadow-lg">Banni - Reste ${days}j ${hours}h</span>`;
-                } else {
-                    el.innerHTML = '';
-                }
+                } else { el.innerHTML = ''; }
             });
-            document.getElementById('activeBans').innerText = `${activeCount} Bans Actifs`;
         }
 
         function render(data) {
-            document.getElementById('totalCount').innerText = `${data.length} Individus`;
             document.getElementById('container').innerHTML = data.map(i => {
                 const isR = i.statut === "Recherché";
-                const startDate = parseDate(i.derniere_intervention);
-                const endDate = new Date(startDate.getTime() + (i.max_ban * 24 * 60 * 60 * 1000));
-                
+                const start = parseDate(i.derniere_intervention);
+                const end = new Date(start.getTime() + (i.max_ban * 24 * 60 * 60 * 1000));
                 return `
                 <div class="bg-slate-800/40 border-2 rounded-[2.5rem] overflow-hidden flex flex-col transition-all hover:scale-[1.01] shadow-2xl ${isR ? 'border-red-500' : 'border-slate-700/50'}">
                     <div class="relative h-64 overflow-hidden cursor-pointer" onclick="updatePhoto('${i.nom}')">
-                        <img src="${i.photo_url || 'https://via.placeholder.com/400x600/0f172a/475569?text=PHOTO+MANQUANTE'}" class="w-full h-full object-cover">
-                        <div class="absolute top-4 right-4" data-ban-end="${endDate.getTime()}"></div>
-                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900 p-6">
-                            <h2 class="text-2xl font-black text-white uppercase italic tracking-tighter truncate">${i.nom}</h2>
-                            <p class="text-[10px] text-blue-400 font-bold uppercase tracking-widest">${i.telephone}</p>
+                        <img src="${i.photo_url || 'https://via.placeholder.com/400x600/0f172a/475569?text=PHOTO'}" class="w-full h-full object-cover">
+                        <div class="absolute top-4 right-4" data-ban-end="${end.getTime()}"></div>
+                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900 p-6 pointer-events-none">
+                            <h2 onclick="event.stopPropagation(); editName('${i.nom}')" class="text-2xl font-black text-white uppercase italic tracking-tighter truncate hover:text-blue-400 cursor-pointer pointer-events-auto">${i.nom}</h2>
+                            <p onclick="event.stopPropagation(); editPhone('${i.nom}', '${i.telephone}')" class="text-[10px] text-blue-400 font-bold uppercase tracking-widest hover:text-white cursor-pointer pointer-events-auto">${i.telephone}</p>
                         </div>
                     </div>
-                    <div class="p-6 space-y-4 flex-grow flex flex-col">
-                        <select onchange="updateStatus('${i.nom}', this.value)" class="w-full text-[10px] font-black rounded-xl px-4 py-3 outline-none ${isR ? 'bg-red-600 text-white' : 'bg-slate-900 text-emerald-400'}">
+                    <div class="p-6 space-y-4 flex flex-col">
+                        <select onchange="updateStatus('${i.nom}', this.value)" class="w-full text-[10px] font-black rounded-xl px-4 py-3 outline-none ${isR ? 'bg-red-600' : 'bg-slate-900 text-emerald-400'}">
                             <option value="En règle" ${i.statut === 'En règle' ? 'selected' : ''}>EN RÈGLE</option>
                             <option value="Recherché" ${i.statut === 'Recherché' ? 'selected' : ''}>RECHERCHÉ</option>
                         </select>
@@ -200,7 +192,7 @@
         }
 
         load();
-        setInterval(updateCountdowns, 60000); // Mise à jour du temps restant chaque minute
+        setInterval(updateCountdowns, 60000);
     </script>
 </body>
 </html>

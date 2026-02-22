@@ -19,6 +19,11 @@ export default async function handler(req, res) {
                 const stock = await sql`SELECT * FROM stock_armes ORDER BY modele ASC`;
                 return res.status(200).json(stock);
             }
+            if (type === 'stats') {
+                const today = new Date().toLocaleDateString('fr-FR');
+                const stats = await sql`SELECT COUNT(*) as active_bans FROM individus WHERE (casiers LIKE '%Bannissement%' OR casiers LIKE '%DÉFINITIF%') AND derniere_intervention = ${today}`;
+                return res.status(200).json(stats[0]);
+            }
 
             const [individuals, lois] = await Promise.all([
                 sql`SELECT id, nom, telephone, statut, photo_url, notes, derniere_intervention, motif, casiers, paiement FROM individus ORDER BY id DESC`,
@@ -43,8 +48,12 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
         try {
             const data = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-            await sql`INSERT INTO individus (nom, telephone, statut, derniere_intervention, casiers, motif, photo_url, notes, paiement)
-                      VALUES (${data.nom}, ${data.telephone}, ${data.statut}, ${data.derniere_intervention}, ${data.casiers}, ${data.motif}, ${data.photo_url}, ${data.notes || ''}, 'Réglé')`;
+            if (type === 'add_weapon') {
+                await sql`INSERT INTO stock_armes (modele, numero_serie, agent_detenteur, date_entree) VALUES (${data.modele}, ${data.numero_serie}, ${data.agent_detenteur || 'En Stock'}, NOW())`;
+                return res.status(200).json({ message: 'Success' });
+            }
+            await sql`INSERT INTO individus (nom, telephone, statut, derniere_intervention, casiers, motif, photo_url, notes, paiement) VALUES (${data.nom}, ${data.telephone}, ${data.statut}, ${data.derniere_intervention}, ${data.casiers}, ${data.motif}, ${data.photo_url}, ${data.notes || ''}, 'Réglé')`;
+            await sql`INSERT INTO logs (action, detail, officier, date) VALUES ('AJOUT', ${'Ajout du suspect : ' + data.nom}, 'Système', NOW())`;
             return res.status(200).json({ message: 'Success' });
         } catch (error) {
             return res.status(500).json({ error: error.message });
@@ -61,6 +70,7 @@ export default async function handler(req, res) {
             }
             if (nom) {
                 if (data.nouveau_nom) await sql`UPDATE individus SET nom = ${data.nouveau_nom} WHERE nom = ${nom}`;
+                else if (data.nouveau_telephone) await sql`UPDATE individus SET telephone = ${data.nouveau_telephone} WHERE nom = ${nom}`;
                 else if (data.photo_url !== undefined) await sql`UPDATE individus SET photo_url = ${data.photo_url} WHERE nom = ${nom}`;
                 else if (data.notes !== undefined) await sql`UPDATE individus SET notes = ${data.notes} WHERE nom = ${nom}`;
                 else await sql`UPDATE individus SET statut = ${data.statut} WHERE nom = ${nom}`;
