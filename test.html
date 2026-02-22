@@ -46,7 +46,7 @@
                     <h1 class="text-2xl font-black text-white tracking-tighter uppercase italic">Central Database</h1>
                     <div class="flex gap-2 mt-1">
                         <span id="totalCount" class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">-- Suspects</span>
-                        <span id="banCount" class="text-[10px] font-bold bg-red-500/20 text-red-500 px-2 py-0.5 rounded-full uppercase tracking-widest border border-red-500/30">0 Ban Actifs</span>
+                        <span id="banCount" class="text-[10px] font-bold bg-red-500/20 text-red-500 px-2 py-0.5 rounded-full uppercase tracking-widest border border-red-500/30">0 Ban ce jour</span>
                     </div>
                 </div>
             </div>
@@ -83,7 +83,7 @@
                 allLois = await resL.json();
                 const stats = await resStats.json();
                 document.getElementById('totalCount').innerText = `${suspects.length} Individus`;
-                document.getElementById('banCount').innerText = `${stats.active_bans} Ban Actifs`;
+                document.getElementById('banCount').innerText = `${stats.active_bans} Ban ce jour`;
                 render(suspects);
             } catch (e) { console.error(e); }
         }
@@ -118,22 +118,6 @@
             closeModal(); load();
         }
 
-        async function editName(ancienNom) {
-            const nouveauNom = prompt("Nouveau Nom Prénom :", ancienNom);
-            if (nouveauNom && nouveauNom !== ancienNom) {
-                await fetch(`/api/individus?nom=${encodeURIComponent(ancienNom)}`, { method: 'PATCH', body: JSON.stringify({ nouveau_nom: nouveauNom }) });
-                load();
-            }
-        }
-
-        async function editPhone(nom, ancienTel) {
-            const nouveauTel = prompt("Nouveau numéro :", ancienTel);
-            if (nouveauTel && nouveauTel !== ancienTel) {
-                await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ nouveau_telephone: nouveauTel }) });
-                load();
-            }
-        }
-
         async function updateStatus(nom, newStatus) {
             await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'PATCH', body: JSON.stringify({ statut: newStatus }) });
             load();
@@ -154,10 +138,8 @@
         }
 
         async function deleteSuspect(nom) {
-            const motif = prompt("Motif de suppression :");
-            const officier = prompt("Votre Matricule :");
-            if (motif && officier && confirm(`Supprimer ${nom} ?`)) {
-                await fetch(`/api/individus?nom=${encodeURIComponent(nom)}&motif_suppression=${encodeURIComponent(motif)}&officier=${encodeURIComponent(officier)}`, { method: 'DELETE' });
+            if (confirm(`Supprimer ${nom} ?`)) {
+                await fetch(`/api/individus?nom=${encodeURIComponent(nom)}`, { method: 'DELETE' });
                 load();
             }
         }
@@ -165,14 +147,17 @@
         function render(data) {
             document.getElementById('container').innerHTML = data.map(i => {
                 const isR = i.statut === "Recherché";
+                const hasBan = i.casiers && (i.casiers.includes('Bannissement') || i.casiers.includes('DÉFINITIF'));
+
                 return `
                 <div class="bg-slate-800/40 border-2 rounded-[2.5rem] overflow-hidden flex flex-col transition-all hover:scale-[1.01] shadow-2xl ${isR ? 'border-red-500' : 'border-slate-700/50'}">
                     <div class="relative group h-64 overflow-hidden cursor-pointer" onclick="updatePhoto('${i.nom}')">
                         <img src="${i.photo_url || 'https://via.placeholder.com/400x600/0f172a/475569?text=PHOTO+MANQUANTE'}" class="w-full h-full object-cover">
-                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900 p-6 pointer-events-none">
-                            <h2 onclick="event.stopPropagation(); editName('${i.nom}')" class="text-2xl font-black text-white uppercase italic tracking-tighter truncate hover:text-blue-400 cursor-pointer pointer-events-auto">${i.nom}</h2>
-                            <p onclick="event.stopPropagation(); editPhone('${i.nom}', '${i.telephone}')" class="text-[10px] text-blue-400 font-bold uppercase tracking-widest hover:text-white cursor-pointer pointer-events-auto">${i.telephone}</p>
+                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900 p-6">
+                            <h2 class="text-2xl font-black text-white uppercase italic tracking-tighter truncate">${i.nom}</h2>
+                            <p class="text-[10px] text-blue-400 font-bold uppercase tracking-widest">${i.telephone}</p>
                         </div>
+                        ${hasBan ? '<span class="absolute top-4 right-4 bg-red-600 text-white text-[8px] font-black px-2 py-1 rounded-full uppercase shadow-lg">Banni</span>' : ''}
                     </div>
                     <div class="p-6 space-y-4 flex-grow flex flex-col">
                         <select onchange="updateStatus('${i.nom}', this.value)" class="w-full text-[10px] font-black rounded-xl px-4 py-3 outline-none ${isR ? 'bg-red-600 text-white' : 'bg-slate-900 text-emerald-400'}">
