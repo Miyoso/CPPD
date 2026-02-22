@@ -69,6 +69,10 @@ export default async function handler(req, res) {
             }
 
             if (infraction_id) {
+                if (data.nouveau_motif) {
+                    await sql`UPDATE individus SET motif = ${data.nouveau_motif} WHERE id = ${infraction_id}`;
+                    return res.status(200).json({ message: 'Motif Updated' });
+                }
                 await sql`UPDATE individus SET paiement = ${data.paiement} WHERE id = ${infraction_id}`;
                 return res.status(200).json({ message: 'Payment Updated' });
             }
