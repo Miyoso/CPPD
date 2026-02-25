@@ -176,18 +176,39 @@
         }
 
         function calculate() {
-            const isPrimo = document.getElementById('firstOffenseCheck').checked;
-            let f = cart.reduce((a, i) => a + i.amende, 0);
-            let p = cart.reduce((a, i) => a + i.prison, 0);
-            let b = cart.reduce((a, i) => i.ban > a ? i.ban : a, 0);
-            if(isPrimo) f = Math.floor(f/2);
-            document.getElementById('totalFine').innerText = f.toLocaleString() + " $";
-            document.getElementById('totalPrison').innerText = p + " Min";
-            const banSec = document.getElementById('banSection');
-            if(b > 0) { banSec.classList.remove('hidden'); document.getElementById('maxBan').innerText = b >= 999 ? "DÉFINITIF" : b + " J"; }
-            else { banSec.classList.add('hidden'); }
-            document.getElementById('cartList').innerHTML = cart.map(i => `<div class="flex justify-between border-b border-slate-200 pb-1 uppercase"><span>${i.label}</span><span class="font-bold">${i.amende.toLocaleString()}$</span></div>`).join('');
-        }
+    const isPrimo = document.getElementById('firstOffenseCheck').checked;
+    
+    
+    let f = cart.reduce((a, i) => a + i.amende, 0);
+    let p = cart.reduce((a, i) => a + i.prison, 0);
+    let b = cart.reduce((a, i) => i.ban > a ? i.ban : a, 0);
+    
+    
+    if(isPrimo) {
+        f = Math.floor(f / 2);      
+        p = Math.floor(p / 2);      
+        b = 0;                      
+    }
+    
+    
+    document.getElementById('totalFine').innerText = f.toLocaleString() + " $";
+    document.getElementById('totalPrison').innerText = p + " Min";
+    
+    const banSec = document.getElementById('banSection');
+    if(b > 0) { 
+        banSec.classList.remove('hidden'); 
+        document.getElementById('maxBan').innerText = b >= 999 ? "DÉFINITIF" : b + " J"; 
+    } else { 
+        banSec.classList.add('hidden'); 
+    }
+    
+    document.getElementById('cartList').innerHTML = cart.map(i => 
+        `<div class="flex justify-between border-b border-slate-200 pb-1 uppercase">
+            <span>${i.label}</span>
+            <span class="font-bold">${i.amende.toLocaleString()}$</span>
+        </div>`
+    ).join('');
+}
 
         async function saveSuspect() {
             const nom = document.getElementById('suspectNom').value;
