@@ -211,18 +211,31 @@
 }
 
         async function saveSuspect() {
-            const nom = document.getElementById('suspectNom').value;
-            if(!nom || !cart.length) return alert("Données incomplètes.");
-            const body = { nom, telephone: document.getElementById('suspectTel').value || "Inconnu", statut: document.getElementById('suspectStatut').value, photo_url: document.getElementById('suspectPhoto').value || "", motif: cart.map(i => i.label).join(', '), casiers: `Amende: ${document.getElementById('totalFine').innerText} | Prison: ${document.getElementById('totalPrison').innerText}`, derniere_intervention: new Date().toLocaleDateString('fr-FR') };
-            await fetch('/api/individus', { method: 'POST', body: JSON.stringify(body), headers: {'Content-Type': 'application/json'} });
-            window.location.href = "Individus.html";
-        }
+    const nom = document.getElementById('suspectNom').value;
+    const isPrimo = document.getElementById('firstOffenseCheck').checked; 
+    
+    if(!nom || !cart.length) return alert("Données incomplètes.");
 
-        function copyReport() {
-            const report = `👤 Individu : ${document.getElementById('suspectNom').value}\n⚖️ Amende : ${document.getElementById('totalFine').innerText}\n⏳ Prison : ${document.getElementById('totalPrison').innerText}\n📜 Motifs : ${cart.map(i => i.label).join(', ')}`;
-            navigator.clipboard.writeText(report);
-            alert("Copié !");
-        }
+    
+    let casierTexte = `Amende: ${document.getElementById('totalFine').innerText} | Prison: ${document.getElementById('totalPrison').innerText}`;
+    
+    const body = { 
+        nom, 
+        telephone: document.getElementById('suspectTel').value || "Inconnu", 
+        statut: document.getElementById('suspectStatut').value, 
+        photo_url: document.getElementById('suspectPhoto').value || "", 
+        motif: cart.map(i => i.label).join(', '), 
+        casiers: casierTexte, // Utilise le texte sans bannissement
+        derniere_intervention: new Date().toLocaleDateString('fr-FR') 
+    };
+
+    await fetch('/api/individus', { 
+        method: 'POST', 
+        body: JSON.stringify(body), 
+        headers: {'Content-Type': 'application/json'} 
+    });
+    window.location.href = "Individus.html";
+}
         init();
     </script>
 </body>
