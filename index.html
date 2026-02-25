@@ -126,13 +126,11 @@
             document.querySelectorAll('.law-group').forEach(group => {
                 let hasVisibleLaw = false;
                 const buttons = group.querySelectorAll('.law-item-btn');
-                
                 buttons.forEach(b => {
                     const match = b.innerText.toLowerCase().includes(t);
                     b.style.display = match ? "" : "none";
                     if(match) hasVisibleLaw = true;
                 });
-
                 group.style.display = hasVisibleLaw ? "" : "none";
             });
         }
@@ -163,7 +161,6 @@
             const card = document.getElementById(`law-${id}`);
             const el = card.querySelector('.selection-indicator');
             const badge = document.getElementById(`badge-${id}`);
-
             if(idx > -1) {
                 cart.splice(idx, 1);
                 el.style.opacity = "0";
@@ -176,66 +173,48 @@
         }
 
         function calculate() {
-    const isPrimo = document.getElementById('firstOffenseCheck').checked;
-    
-    
-    let f = cart.reduce((a, i) => a + i.amende, 0);
-    let p = cart.reduce((a, i) => a + i.prison, 0);
-    let b = cart.reduce((a, i) => i.ban > a ? i.ban : a, 0);
-    
-    
-    if(isPrimo) {
-        f = Math.floor(f / 2);      
-        p = Math.floor(p / 2);      
-        b = 0;                      
-    }
-    
-    
-    document.getElementById('totalFine').innerText = f.toLocaleString() + " $";
-    document.getElementById('totalPrison').innerText = p + " Min";
-    
-    const banSec = document.getElementById('banSection');
-    if(b > 0) { 
-        banSec.classList.remove('hidden'); 
-        document.getElementById('maxBan').innerText = b >= 999 ? "DÉFINITIF" : b + " J"; 
-    } else { 
-        banSec.classList.add('hidden'); 
-    }
-    
-    document.getElementById('cartList').innerHTML = cart.map(i => 
-        `<div class="flex justify-between border-b border-slate-200 pb-1 uppercase">
-            <span>${i.label}</span>
-            <span class="font-bold">${i.amende.toLocaleString()}$</span>
-        </div>`
-    ).join('');
-}
+            const isPrimo = document.getElementById('firstOffenseCheck').checked;
+            let f = cart.reduce((a, i) => a + i.amende, 0);
+            let p = cart.reduce((a, i) => a + i.prison, 0);
+            let b = cart.reduce((a, i) => i.ban > a ? i.ban : a, 0);
+            if(isPrimo) {
+                f = Math.floor(f / 2);
+                p = Math.floor(p / 2);
+                b = 0;
+            }
+            document.getElementById('totalFine').innerText = f.toLocaleString() + " $";
+            document.getElementById('totalPrison').innerText = p + " Min";
+            const banSec = document.getElementById('banSection');
+            if(b > 0) { 
+                banSec.classList.remove('hidden'); 
+                document.getElementById('maxBan').innerText = b >= 999 ? "DÉFINITIF" : b + " J"; 
+            } else { banSec.classList.add('hidden'); }
+            document.getElementById('cartList').innerHTML = cart.map(i => `<div class="flex justify-between border-b border-slate-200 pb-1 uppercase"><span>${i.label}</span><span class="font-bold">${i.amende.toLocaleString()}$</span></div>`).join('');
+        }
 
         async function saveSuspect() {
-    const nom = document.getElementById('suspectNom').value;
-    const isPrimo = document.getElementById('firstOffenseCheck').checked; 
-    
-    if(!nom || !cart.length) return alert("Données incomplètes.");
+            const nom = document.getElementById('suspectNom').value;
+            const isPrimo = document.getElementById('firstOffenseCheck').checked;
+            if(!nom || !cart.length) return alert("Données incomplètes.");
+            let casierTexte = `Amende: ${document.getElementById('totalFine').innerText} | Prison: ${document.getElementById('totalPrison').innerText}`;
+            const body = { 
+                nom, 
+                telephone: document.getElementById('suspectTel').value || "Inconnu", 
+                statut: document.getElementById('suspectStatut').value, 
+                photo_url: document.getElementById('suspectPhoto').value || "", 
+                motif: isPrimo ? "PRIMO : " + cart.map(i => i.label).join(', ') : cart.map(i => i.label).join(', '), 
+                casiers: casierTexte, 
+                derniere_intervention: new Date().toLocaleDateString('fr-FR') 
+            };
+            await fetch('/api/individus', { method: 'POST', body: JSON.stringify(body), headers: {'Content-Type': 'application/json'} });
+            window.location.href = "Individus.html";
+        }
 
-    
-    let casierTexte = `Amende: ${document.getElementById('totalFine').innerText} | Prison: ${document.getElementById('totalPrison').innerText}`;
-    
-    const body = { 
-        nom, 
-        telephone: document.getElementById('suspectTel').value || "Inconnu", 
-        statut: document.getElementById('suspectStatut').value, 
-        photo_url: document.getElementById('suspectPhoto').value || "", 
-        motif: cart.map(i => i.label).join(', '), 
-        casiers: casierTexte, // Utilise le texte sans bannissement
-        derniere_intervention: new Date().toLocaleDateString('fr-FR') 
-    };
-
-    await fetch('/api/individus', { 
-        method: 'POST', 
-        body: JSON.stringify(body), 
-        headers: {'Content-Type': 'application/json'} 
-    });
-    window.location.href = "Individus.html";
-}
+        function copyReport() {
+            const report = `👤 Individu : ${document.getElementById('suspectNom').value}\n⚖️ Amende : ${document.getElementById('totalFine').innerText}\n⏳ Prison : ${document.getElementById('totalPrison').innerText}\n📜 Motifs : ${cart.map(i => i.label).join(', ')}`;
+            navigator.clipboard.writeText(report);
+            alert("Copié !");
+        }
         init();
     </script>
 </body>
