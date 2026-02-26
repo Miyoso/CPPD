@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPPD • Générateur d'Attestation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="LogoCPPD.png">
+    <style>
+        :root { --glass: rgba(15, 23, 42, 0.75); --glass-border: rgba(255, 255, 255, 0.1); }
+        body { background: radial-gradient(circle at 50% 0%, #1e293b 0%, #020617 100%); background-color: #020617; color: #cbd5e1; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; }
+        
+        .glass { background: var(--glass); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); }
+        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid var(--glass-border); border-radius: 1.5rem; }
+        
+        .form-column { height: calc(100vh - 80px); overflow-y: auto; padding-bottom: 50px; }
+        .preview-column { height: calc(100vh - 80px); overflow-y: auto; display: flex; justify-content: center; padding: 2rem; background: rgba(0,0,0,0.3); }
+
+        .input-field {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            font-size: 0.875rem;
+            color: white;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-field:focus { border-color: #3b82f6; }
+
+        /* Style du document A4 pour l'export */
+        .document-print { 
+            background: white; 
+            color: #0f172a; 
+            width: 210mm; 
+            min-height: 297mm;
+            padding: 15mm;
+            display: flex;
+            flex-direction: column;
+            transform: scale(0.55);
+            transform-origin: top center;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+
+        .doc-border { border: 2px solid #0f172a; padding: 10mm; height: 100%; display: flex; flex-direction: column; position: relative; }
+        .navy-text { color: #001f3f; }
+        .line-fill { border-bottom: 1px solid #94a3b8; display: inline-block; min-width: 50px; padding: 0 5px; font-weight: 600; }
+        
+        .watermark {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg);
+            width: 400px; height: 400px; background: url('LogoCPPD.png') no-repeat center/contain;
+            opacity: 0.05; pointer-events: none;
+        }
+    </style>
+</head>
+<body class="flex flex-col">
+
+    <!-- Header Navigation -->
+    <header class="h-20 glass flex items-center px-8 justify-between z-50">
+        <div class="flex items-center gap-5">
+            <img src="LogoCPPD.png" class="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]">
+            <div>
+                <h1 class="text-white font-black tracking-tighter uppercase italic text-sm">C.P.P.D Academy</h1>
+                <p class="text-[9px] font-bold text-blue-400 uppercase tracking-widest">Certification & Formation</p>
+            </div>
+        </div>
+        <div class="flex gap-3">
+            <a href="index.html" class="glass-card px-5 py-2 text-[9px] font-bold uppercase hover:bg-blue-600 transition-all">Calculateur</a>
+            <a href="Individus.html" class="glass-card px-5 py-2 text-[9px] font-bold uppercase hover:bg-blue-600 transition-all">Individus</a>
+            <button id="download-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-xl font-black text-[9px] uppercase shadow-lg transition-all">Télécharger PDF</button>
+        </div>
+    </header>
+
+    <main class="flex flex-1 overflow-hidden">
+        <!-- Formulaire de saisie -->
+        <div class="w-[40%] form-column p-8 border-r border-white/5 space-y-8">
+            <section class="space-y-4">
+                <h2 class="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] border-l-2 border-blue-500 pl-3">Organisme & Formateur</h2>
+                <div class="grid grid-cols-1 gap-4">
+                    <input type="text" id="form-org" value="CPPD" placeholder="Nom de l'Organisme" class="input-field">
+                    <input type="text" id="form-addr" value="Cayo Perico" placeholder="Adresse" class="input-field">
+                    <input type="text" id="form-instr" placeholder="Nom du Formateur" class="input-field">
+                    <input type="text" id="form-instr-q" value="Agent Formateur" placeholder="Qualité / Titre" class="input-field">
+                </div>
+            </section>
+
+            <section class="space-y-4">
+                <h2 class="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] border-l-2 border-blue-500 pl-3">Stagiaire</h2>
+                <div class="grid grid-cols-1 gap-4">
+                    <input type="text" id="form-stag" placeholder="Nom & Prénom" class="input-field">
+                    <input type="text" id="form-birth" placeholder="Date de naissance (JJ/MM/AAAA)" class="input-field">
+                    <input type="text" id="form-func" placeholder="Fonction" class="input-field">
+                </div>
+            </section>
+
+            <section class="space-y-4">
+                <h2 class="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] border-l-2 border-blue-500 pl-3">Formation</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="form-dur" placeholder="Durée (Heures)" class="input-field">
+                    <input type="text" id="form-date" placeholder="Dates (ex: du 01 au 02/03)" class="input-field">
+                </div>
+                <input type="text" id="form-loc" value="Centre de formation CPPD" placeholder="Lieu" class="input-field">
+            </section>
+
+            <section class="space-y-4">
+                <h2 class="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] border-l-2 border-blue-500 pl-3">Résultat</h2>
+                <select id="form-res" class="input-field">
+                    <option value="Apte">Apte</option>
+                    <option value="Apte avec réserve">Apte avec réserve</option>
+                    <option value="Non apte">Non apte</option>
+                </select>
+                <textarea id="form-obs" rows="2" class="input-field resize-none" placeholder="Observations..."></textarea>
+            </section>
+        </div>
+
+        <!-- Preview Document -->
+        <div class="w-[60%] preview-column">
+            <div id="attestation-doc" class="document-print">
+                <div class="doc-border">
+                    <div class="watermark"></div>
+                    
+                    <!-- En-tête -->
+                    <div class="text-center mb-10">
+                        <div class="navy-text font-black text-xs uppercase tracking-widest">Organisme de Formation</div>
+                        <div class="mt-2 text-sm font-bold">Nom : <span id="prev-org" class="line-fill">---</span></div>
+                        <div class="text-sm font-bold">Adresse : <span id="prev-addr" class="line-fill">---</span></div>
+                    </div>
+
+                    <!-- Titre -->
+                    <div class="text-center mb-10">
+                        <div class="navy-text font-black text-4xl italic tracking-tighter">ATTESTATION</div>
+                        <div class="navy-text font-black text-2xl uppercase mt-1">De fin de formation</div>
+                        <div class="text-lg font-bold mt-4">Pistolet à Impulsions Électriques (PIE – TASER)</div>
+                    </div>
+
+                    <!-- Texte Principal -->
+                    <div class="space-y-6 text-sm">
+                        <p>Je soussigné(e), <br>
+                        <span class="font-bold">Nom du formateur :</span> <span id="prev-instr" class="line-fill">---</span><br>
+                        <span class="font-bold">Qualité :</span> <span id="prev-instr-q" class="line-fill">---</span></p>
+
+                        <p>Atteste que : <br>
+                        <span class="font-bold">Nom du stagiaire :</span> <span id="prev-stag" class="line-fill">---</span><br>
+                        <span class="font-bold">Date de naissance :</span> <span id="prev-birth" class="line-fill">---</span><br>
+                        <span class="font-bold">Fonction :</span> <span id="prev-func" class="line-fill">---</span></p>
+
+                        <p>A suivi avec assiduité et a validé la formation : <br>
+                        <span class="italic font-bold">Formation à l’utilisation du Pistolet à Impulsions Électriques (TASER)</span></p>
+
+                        <div class="flex justify-between">
+                            <span><span class="font-bold">Durée :</span> <span id="prev-dur" class="line-fill">---</span> heures</span>
+                            <span><span class="font-bold">Dates :</span> <span id="prev-date" class="line-fill">---</span></span>
+                        </div>
+                        <p><span class="font-bold">Lieu :</span> <span id="prev-loc" class="line-fill">---</span></p>
+                    </div>
+
+                    <!-- Compétences -->
+                    <div class="mt-10">
+                        <div class="bg-gray-100 text-center py-1 font-bold text-xs uppercase mb-4 tracking-widest">Compétences Acquises</div>
+                        <ul class="text-xs space-y-1 ml-10">
+                            <li>✔ Connaissance du cadre légal et réglementaire</li>
+                            <li>✔ Principes de nécessité et de proportionnalité</li>
+                            <li>✔ Fonctionnement technique du PIE</li>
+                            <li>✔ Règles de sécurité et zones à risque</li>
+                            <li>✔ Procédures d'engagement et d'intervention</li>
+                            <li>✔ Conduite à tenir après usage</li>
+                            <li>✔ Mise en situation pratique et manipulation</li>
+                        </ul>
+                    </div>
+
+                    <!-- Résultat -->
+                    <div class="mt-8 text-sm">
+                        <span class="font-bold">Résultat de l'évaluation :</span> 
+                        <span class="ml-4"><span id="box-apte">☐</span> Apte</span>
+                        <span class="ml-4"><span id="box-reserve">☐</span> Apte avec réserve</span>
+                        <span class="ml-4"><span id="box-non">☐</span> Non apte</span>
+                    </div>
+
+                    <div class="mt-4 text-sm">
+                        <span class="font-bold">Observations :</span> <span id="prev-obs" class="line-fill w-full">---</span>
+                    </div>
+
+                    <!-- Signature -->
+                    <div class="mt-auto flex justify-between items-end">
+                        <div class="text-sm">
+                            Fait à : <span id="prev-final-loc" class="font-bold">---</span><br>
+                            Le : <span id="prev-final-date" class="font-bold">---</span>
+                        </div>
+                        <div class="text-center w-64 border-t border-navy-text pt-2">
+                            <span class="text-[10px] font-black uppercase text-gray-400">Signature du Formateur</span>
+                            <div class="h-20"></div>
+                            <span class="text-[10px] italic">(Cachet de l'organisme)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const mapping = {
+            'form-org': 'prev-org',
+            'form-addr': 'prev-addr',
+            'form-instr': 'prev-instr',
+            'form-instr-q': 'prev-instr-q',
+            'form-stag': 'prev-stag',
+            'form-birth': 'prev-birth',
+            'form-func': 'prev-func',
+            'form-dur': 'prev-dur',
+            'form-date': 'prev-date',
+            'form-loc': 'prev-loc',
+            'form-obs': 'prev-obs'
+        };
+
+        // Mise à jour en temps réel
+        Object.keys(mapping).forEach(id => {
+            const input = document.getElementById(id);
+            input.addEventListener('input', () => {
+                const val = input.value.trim();
+                document.getElementById(mapping[id]).innerText = val || "---";
+                
+                if(id === 'form-loc') document.getElementById('prev-final-loc').innerText = val || "---";
+            });
+            // Init
+            document.getElementById(mapping[id]).innerText = input.value || "---";
+        });
+
+        // Gestion des cases à cocher de résultat
+        const resSelect = document.getElementById('form-res');
+        const updateCheckboxes = () => {
+            const val = resSelect.value;
+            document.getElementById('box-apte').innerText = val === 'Apte' ? '☑' : '☐';
+            document.getElementById('box-reserve').innerText = val === 'Apte avec réserve' ? '☑' : '☐';
+            document.getElementById('box-non').innerText = val === 'Non apte' ? '☑' : '☐';
+        };
+        resSelect.addEventListener('change', updateCheckboxes);
+        updateCheckboxes();
+
+        // Date du jour automatique pour la fin
+        document.getElementById('prev-final-date').innerText = new Date().toLocaleDateString('fr-FR');
+        document.getElementById('prev-final-loc').innerText = document.getElementById('form-loc').value;
+
+        // Export PDF
+        document.getElementById('download-btn').addEventListener('click', () => {
+            const el = document.getElementById('attestation-doc');
+            const originalTransform = el.style.transform;
+            el.style.transform = "scale(1)";
+            
+            const opt = {
+                margin: 0,
+                filename: `Attestation_Taser_${document.getElementById('form-stag').value || 'Inconnu'}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 3, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opt).from(el).save().then(() => {
+                el.style.transform = originalTransform;
+            });
+        });
+    </script>
+</body>
+</html>
