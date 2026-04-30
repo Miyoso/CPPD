@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Administration Patron</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background-color: #f8f9fa; }
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 5px rgba(0,0,0,0.1); }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #1a73e8; color: white; }
+        .btn-valider { background: #28a745; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Comptes en attente (Piers 76 & Pond Café)</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Email</th>
+                <th>Entreprise (ID)</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="listeAttente">
+            <tr><td colspan="4">Chargement des données...</td></tr>
+        </tbody>
+    </table>
+
+    <script>
+        // 1. Charger les utilisateurs en attente
+        async function chargerAttentes() {
+            const tbody = document.getElementById('listeAttente');
+            try {
+                const res = await fetch('http://localhost:3000/api/attente');
+                const utilisateurs = await res.json();
+                
+                tbody.innerHTML = '';
+                if(utilisateurs.length === 0) tbody.innerHTML = '<tr><td colspan="4">Aucune attente</td></tr>';
+
+                utilisateurs.forEach(user => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${user.nom}</td>
+                            <td>${user.email}</td>
+                            <td>${user.entreprise_id}</td>
+                            <td><button class="btn-valider" onclick="valider(${user.id})">Valider</button></td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="4">Erreur de chargement</td></tr>';
+            }
+        }
+
+        // 2. Valider un utilisateur
+        async function valider(idUtilisateur) {
+            const res = await fetch(`http://localhost:3000/api/valider/${idUtilisateur}`, { method: 'PUT' });
+            if(res.ok) {
+                alert("Compte validé avec succès !");
+                chargerAttentes(); // On rafraîchit la liste
+            }
+        }
+
+        // Lancer au démarrage
+        document.addEventListener('DOMContentLoaded', chargerAttentes);
+    </script>
+</body>
+</html>

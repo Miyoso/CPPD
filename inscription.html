@@ -2,17 +2,15 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Compta - Inscription</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        h2 { color: #1a73e8; margin-top: 0; text-align: center; }
+        h2 { color: #1a73e8; text-align: center; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
         input, select { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background-color: #1a73e8; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; transition: background 0.3s; }
+        button { width: 100%; padding: 12px; background-color: #1a73e8; color: white; border: none; border-radius: 6px; cursor: pointer; }
         button:hover { background-color: #1557b0; }
-        .info { font-size: 0.8em; color: #666; text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -20,25 +18,64 @@
         <h2>Créer un compte</h2>
         <form id="registerForm">
             <label>Nom complet</label>
-            <input type="text" placeholder="Ex: Jean Martin" required>
+            <input type="text" id="nom" required>
 
             <label>Email professionnel</label>
-            <input type="email" placeholder="nom@entreprise.com" required>
+            <input type="email" id="email" required>
 
             <label>Mot de passe</label>
-            <input type="password" placeholder="********" required>
+            <input type="password" id="mdp" required>
 
-            <label>Votre Entreprise</label>
+            <label>Sélectionnez votre établissement</label>
             <select id="entrepriseSelect" required>
-                <option value="">-- Choisir une entreprise --</option>
-                <option value="1">Entreprise Alpha</option>
-                <option value="2">Boulangerie Soleil</option>
-                <option value="3">Garage Auto-Pro</option>
+                <option value="">-- Chargement... --</option>
             </select>
 
-            <button type="submit">Demander l'accès</button>
+            <button type="submit">S'inscrire</button>
         </form>
-        <p class="info">Votre accès devra être validé par un responsable de votre entreprise.</p>
     </div>
+
+    <script>
+        // 1. Charger les entreprises au démarrage
+        document.addEventListener('DOMContentLoaded', async () => {
+            const select = document.getElementById('entrepriseSelect');
+            try {
+                const res = await fetch('http://localhost:3000/api/entreprises');
+                const entreprises = await res.json();
+                
+                select.innerHTML = '<option value="">-- Choisir un établissement --</option>';
+                entreprises.forEach(ent => {
+                    select.innerHTML += `<option value="${ent.id}">${ent.nom_entreprise}</option>`;
+                });
+            } catch (err) {
+                select.innerHTML = '<option value="">Erreur de chargement</option>';
+            }
+        });
+
+        // 2. Envoyer le formulaire
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Empêche la page de recharger
+            
+            const donnees = {
+                nom: document.getElementById('nom').value,
+                email: document.getElementById('email').value,
+                mot_de_passe: document.getElementById('mdp').value,
+                entreprise_id: document.getElementById('entrepriseSelect').value
+            };
+
+            const res = await fetch('http://localhost:3000/api/inscription', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(donnees)
+            });
+
+            if(res.ok) {
+                alert("Inscription réussie ! En attente de validation du patron.");
+                window.location.reload();
+            } else {
+                alert("Erreur lors de l'inscription.");
+            }
+        });
+    </script>
 </body>
 </html>
